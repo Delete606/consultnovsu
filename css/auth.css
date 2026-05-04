@@ -1,0 +1,113 @@
+.auth-body {
+    background: linear-gradient(135deg, #003d7c 0%, #0056a7 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-container {
+    max-width: 500px;
+    width: 90%;
+}
+
+.auth-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.university-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.auth-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.auth-header h2 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.role-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    background: #f0f4fc;
+    padding: 5px;
+    border-radius: 12px;
+}
+
+.role-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.role-btn.active {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: var(--primary-blue);
+}
+
+.auth-form {
+    margin-top: 20px;
+}
+
+.btn-full {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    margin-top: 20px;
+}
+
+.error-message {
+    color: var(--danger);
+    background: #fff0f0;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.auth-footer {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-soft);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.demo-credentials {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.credential-item {
+    padding: 5px 0;
+    font-size: 0.85rem;
+}

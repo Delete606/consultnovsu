@@ -1,0 +1,106 @@
+.admin-header {
+    background: linear-gradient(to right, #1a1a2e, #16213e);
+    color: white;
+}
+
+.admin-header .logo-text h2,
+.admin-header .logo-text span {
+    color: white;
+}
+
+.admin-badge {
+    background: #ffd700;
+    color: #1a1a2e;
+}
+
+.admin-nav {
+    background: #16213e;
+}
+
+.admin-nav .nav-tab {
+    color: #a0aec0;
+}
+
+.admin-nav .nav-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.admin-nav .nav-tab.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-bottom-color: #ffd700;
+}
+
+.users-table-wrapper {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.users-table th {
+    background: var(--primary-light);
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--primary-deep);
+}
+
+.users-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.users-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    padding: 10px 20px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    min-width: 250px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.stats-detail {
+    padding: 20px;
+    background: var(--primary-light);
+    border-radius: 10px;
+}
+
+.role-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.slot-admin-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--primary-blue);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.slot-actions {
+    display: flex;
+    gap: 8px;
+}
