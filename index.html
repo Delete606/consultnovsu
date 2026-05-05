@@ -186,15 +186,15 @@
         <div class="auth-card">
             <div class="role-selector" id="roleSelector">
                 <button class="role-btn active" data-role="student">
-                    <span class="role-icon">🎓</span>
+                    <span class="role-icon"></span>
                     <span>Студент</span>
                 </button>
                 <button class="role-btn" data-role="teacher">
-                    <span class="role-icon">👨‍🏫</span>
+                    <span class="role-icon"></span>
                     <span>Преподаватель</span>
                 </button>
                 <button class="role-btn" data-role="admin">
-                    <span class="role-icon">⚙️</span>
+                    <span class="role-icon"></span>
                     <span>Админ</span>
                 </button>
             </div>
@@ -219,18 +219,18 @@
             </form>
 
             <div class="demo-section">
-                <h4>🔑 Демо-доступы:</h4>
+                <h4> Демо-доступы:</h4>
                 <div class="demo-credentials">
                     <div class="demo-item" data-email="student@novsu.ru" data-password="123" data-role="student">
-                        <span class="demo-role">🎓 Студент</span>
+                        <span class="demo-role">Студент</span>
                         <span class="demo-login">student@novsu.ru / 123</span>
                     </div>
                     <div class="demo-item" data-email="teacher@novsu.ru" data-password="123" data-role="teacher">
-                        <span class="demo-role">👨‍🏫 Преподаватель</span>
+                        <span class="demo-role">Преподаватель</span>
                         <span class="demo-login">teacher@novsu.ru / 123</span>
                     </div>
                     <div class="demo-item" data-email="admin@novsu.ru" data-password="admin" data-role="admin">
-                        <span class="demo-role">⚙️ Администратор</span>
+                        <span class="demo-role">Администратор</span>
                         <span class="demo-login">admin@novsu.ru / admin</span>
                     </div>
                 </div>
@@ -393,7 +393,7 @@
 
                     console.log('Вход выполнен:', user);
                     
-                    showSuccess('✅ Вход выполнен! Перенаправление...');
+                    showSuccess('Вход выполнен! Перенаправление...');
 
                     const sessionUser = {
                         id: user.id,
@@ -415,13 +415,13 @@
                     const userByEmail = DB.users.find(u => u.email === email);
                     
                     if (!userByEmail) {
-                        showError('❌ Пользователь с таким email не найден');
+                        showError('Пользователь с таким email не найден');
                     } else if (userByEmail.role !== selectedRole) {
-                        showError(`❌ Этот email принадлежит роли "${getRoleName(userByEmail.role)}", а не "${getRoleName(selectedRole)}"`);
+                        showError(`Этот email принадлежит роли "${getRoleName(userByEmail.role)}", а не "${getRoleName(selectedRole)}"`);
                     } else if (!userByEmail.active) {
-                        showError('❌ Учетная запись деактивирована. Обратитесь к администратору.');
+                        showError('Учетная запись деактивирована. Обратитесь к администратору.');
                     } else {
-                        showError('❌ Неверный пароль');
+                        showError('Неверный пароль');
                         passwordInput.classList.add('error');
                     }
                     
