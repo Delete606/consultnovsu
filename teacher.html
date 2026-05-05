@@ -120,7 +120,7 @@
             </div>
             <div class="user-info">
                 <span id="teacherName" style="font-weight:600;"></span>
-                <span class="badge">👨‍🏫 Преподаватель</span>
+                <span class="badge">Преподаватель</span>
                 <button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button>
             </div>
         </div>
@@ -129,12 +129,12 @@
     <div class="nav">
         <div class="container">
             <ul class="nav-tabs" id="teacherNavTabs">
-                <li class="nav-tab active" data-tab="dashboard">📊 Дашборд</li>
-                <li class="nav-tab" data-tab="create-slot">➕ Создать консультацию</li>
-                <li class="nav-tab" data-tab="manage-bookings">👥 Управление записями</li>
-                <li class="nav-tab" data-tab="support">💬 Поддержка</li>
-                <li class="nav-tab" data-tab="notifications">🔔 Уведомления <span id="notifBadge" style="background:#dc3545;color:white;padding:2px 8px;border-radius:12px;font-size:12px;display:none;">0</span></li>
-                <li class="nav-tab" data-tab="statistics">📈 Статистика</li>
+                <li class="nav-tab active" data-tab="dashboard">Дашборд</li>
+                <li class="nav-tab" data-tab="create-slot">Создать консультацию</li>
+                <li class="nav-tab" data-tab="manage-bookings">Управление записями</li>
+                <li class="nav-tab" data-tab="support">Поддержка</li>
+                <li class="nav-tab" data-tab="notifications">Уведомления <span id="notifBadge" style="background:#dc3545;color:white;padding:2px 8px;border-radius:12px;font-size:12px;display:none;">0</span></li>
+                <li class="nav-tab" data-tab="statistics">Статистика</li>
             </ul>
         </div>
     </div>
@@ -147,14 +147,14 @@
                 <div class="stat-card"><h3>Записалось студентов</h3><p id="totalBookings" class="stat-number">0</p></div>
                 <div class="stat-card"><h3>Сегодня</h3><p id="todaySlots" class="stat-number">0</p></div>
             </div>
-            <h3 style="margin-bottom:15px;">📅 Ближайшие консультации</h3>
+            <h3 style="margin-bottom:15px;">Ближайшие консультации</h3>
             <div id="upcomingSlots"></div>
         </div>
 
 
         <div id="create-slot" class="tab-content">
             <div class="card">
-                <h2>➕ Создание новой консультации</h2>
+                <h2>Создание новой консультации</h2>
                 <form id="createSlotForm">
                     <div class="form-row">
                         <div class="form-group">
@@ -181,21 +181,21 @@
                         <div class="form-group"><label>Макс. студентов *</label><input type="number" id="slotLimit" min="1" max="20" value="5" required></div>
                     </div>
                     <div class="form-group"><label>Описание</label><textarea id="slotDescription" rows="3"></textarea></div>
-                    <button type="submit" class="btn btn-primary">✅ Создать консультацию</button>
+                    <button type="submit" class="btn btn-primary">Создать консультацию</button>
                 </form>
             </div>
         </div>
 
 
         <div id="manage-bookings" class="tab-content">
-            <h2>👥 Управление записями студентов</h2>
+            <h2>Управление записями студентов</h2>
             
             <!-- Фильтры по статусу -->
             <div class="status-filters">
-                <button class="status-filter-btn active" data-filter="all">📋 Все</button>
-                <button class="status-filter-btn" data-filter="active">🟢 Активные</button>
-                <button class="status-filter-btn" data-filter="completed">🔵 Завершённые</button>
-                <button class="status-filter-btn" data-filter="cancelled">🔴 Отменённые</button>
+                <button class="status-filter-btn active" data-filter="all">Все</button>
+                <button class="status-filter-btn" data-filter="active">Активные</button>
+                <button class="status-filter-btn" data-filter="completed">Завершённые</button>
+                <button class="status-filter-btn" data-filter="cancelled">Отменённые</button>
             </div>
             
             <div id="teacherSlotsList"></div>
@@ -203,7 +203,7 @@
 
 
         <div id="support" class="tab-content">
-            <h2>💬 Связь с администрацией</h2>
+            <h2>Связь с администрацией</h2>
             <div class="card">
                 <div class="chat-box" id="teacherSupportChat"></div>
                 <div style="display:flex;gap:10px;">
@@ -215,13 +215,13 @@
 
 
         <div id="notifications" class="tab-content">
-            <h2>🔔 Уведомления</h2>
+            <h2>Уведомления</h2>
             <div id="teacherNotificationsList"></div>
         </div>
 
 
         <div id="statistics" class="tab-content">
-            <h2>📈 Статистика</h2>
+            <h2>Статистика</h2>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
                 <div class="card"><h4>По дням недели</h4><div id="weekdayStats"></div></div>
                 <div class="card"><h4>Явка студентов</h4><div id="attendanceStats"></div></div>
@@ -350,10 +350,10 @@
                 const bookings = DB.getSlotBookings(slot.id);
                 const free = slot.limit - bookings.length;
                 
-                let statusText = '🟢 Свободно';
+                let statusText = 'Свободно';
                 let statusColor = '#0f6e3f';
-                if (free <= 0) { statusText = '🔴 Нет мест'; statusColor = '#dc3545'; }
-                else if (free <= 2) { statusText = '🟡 Почти заполнено'; statusColor = '#ffc107'; }
+                if (free <= 0) { statusText = 'Нет мест'; statusColor = '#dc3545'; }
+                else if (free <= 2) { statusText = 'Почти заполнено'; statusColor = '#ffc107'; }
                 
                 return `
                     <div class="consultation-card">
@@ -362,12 +362,12 @@
                             <span style="color:${statusColor};font-weight:600;">${statusText}</span>
                         </div>
                         <div class="consultation-info">
-                            <p>📅 ${formatDate(slot.date)}</p>
-                            <p>⏰ ${slot.timeStart} - ${slot.timeEnd}</p>
-                            <p>📍 ${slot.format === 'очно' ? 'Ауд. ' + slot.room : 'Онлайн'}</p>
-                            <p>👥 Записано: ${bookings.length}/${slot.limit}</p>
+                            <p> ${formatDate(slot.date)}</p>
+                            <p> ${slot.timeStart} - ${slot.timeEnd}</p>
+                            <p> ${slot.format === 'очно' ? 'Ауд. ' + slot.room : 'Онлайн'}</p>
+                            <p> Записано: ${bookings.length}/${slot.limit}</p>
                         </div>
-                        ${slot.description ? `<p style="margin-top:8px;color:#666;">📝 ${slot.description}</p>` : ''}
+                        ${slot.description ? `<p style="margin-top:8px;color:#666;"> ${slot.description}</p>` : ''}
                     </div>
                 `;
             }).join('');
@@ -407,7 +407,7 @@
             });
             
             saveDB();
-            alert('✅ Консультация создана!');
+            alert('Консультация создана!');
             document.getElementById('createSlotForm').reset();
             loadDashboard();
         }
@@ -444,21 +444,21 @@
 
             if (activeSlots.length > 0) {
                 html += '<div class="status-section status-active">';
-                html += '<h3>🟢 Активные консультации</h3>';
+                html += '<h3>Активные консультации</h3>';
                 html += activeSlots.map(slot => renderSlotCard(slot)).join('');
                 html += '</div>';
             }
 
             if (completedSlots.length > 0) {
                 html += '<div class="status-section status-completed">';
-                html += '<h3>🔵 Завершённые консультации</h3>';
+                html += '<h3>Завершённые консультации</h3>';
                 html += completedSlots.map(slot => renderSlotCard(slot)).join('');
                 html += '</div>';
             }
 
             if (cancelledSlots.length > 0) {
                 html += '<div class="status-section status-cancelled">';
-                html += '<h3>🔴 Отменённые консультации</h3>';
+                html += '<h3>Отменённые консультации</h3>';
                 html += cancelledSlots.map(slot => renderSlotCard(slot)).join('');
                 html += '</div>';
             }
@@ -490,10 +490,10 @@
                         <span class="badge-status badge-${slot.status}">${slot.status === 'active' ? 'Активна' : slot.status === 'completed' ? 'Завершена' : 'Отменена'}</span>
                     </div>
                     <div class="consultation-info">
-                        <p><strong>⏰ Время:</strong> ${slot.timeStart}-${slot.timeEnd}</p>
-                        <p><strong>📍 Формат:</strong> ${slot.format} ${slot.room ? '| Ауд. '+slot.room : ''}</p>
-                        <p><strong>👥 Записано:</strong> ${activeBookings.length}/${slot.limit}</p>
-                        <p><strong>📝 Описание:</strong> ${slot.description || 'Нет'}</p>
+                        <p><strong>Время:</strong> ${slot.timeStart}-${slot.timeEnd}</p>
+                        <p><strong>Формат:</strong> ${slot.format} ${slot.room ? '| Ауд. '+slot.room : ''}</p>
+                        <p><strong>Записано:</strong> ${activeBookings.length}/${slot.limit}</p>
+                        <p><strong>Описание:</strong> ${slot.description || 'Нет'}</p>
                     </div>
                     
                     ${allBookings.length > 0 ? `
@@ -504,16 +504,16 @@
                                 
                                 let statusBadge = '';
                                 if (b.status === 'active') {
-                                    statusBadge = '<span style="color:#0f6e3f;font-weight:600;">✅ Активна</span>';
+                                    statusBadge = '<span style="color:#0f6e3f;font-weight:600;">Активна</span>';
                                 } else if (b.status === 'cancelled') {
                                     if (b.cancelledBy === 'admin') {
-                                        statusBadge = '<span style="color:#dc3545;">❌ Отменена администратором</span>';
+                                        statusBadge = '<span style="color:#dc3545;">Отменена администратором</span>';
                                     } else if (b.cancelledBy === 'teacher') {
-                                        statusBadge = '<span style="color:#ffc107;">⚠️ Отменена вами</span>';
+                                        statusBadge = '<span style="color:#ffc107;">Отменена вами</span>';
                                     } else if (b.cancelledBy === 'student') {
-                                        statusBadge = '<span style="color:#dc3545;">❌ Отменена студентом</span>';
+                                        statusBadge = '<span style="color:#dc3545;">Отменена студентом</span>';
                                     } else {
-                                        statusBadge = '<span style="color:#dc3545;">❌ Отменена</span>';
+                                        statusBadge = '<span style="color:#dc3545;">Отменена</span>';
                                     }
                                 }
                                 
@@ -527,7 +527,7 @@
                                         ${b.status === 'active' ? `
                                             <button class="btn btn-sm mark-attendance-btn" data-bid="${b.id}" 
                                                     style="background:${b.attended?'#0f6e3f':'#0056a7'};color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">
-                                                ${b.attended ? '✅ Присутствовал' : '⬜ Отметить явку'}
+                                                ${b.attended ? 'Присутствовал' : 'Отметить явку'}
                                             </button>
                                         ` : ''}
                                     </div>
@@ -537,7 +537,7 @@
                     ` : '<p style="color:#666;margin-top:10px;">Нет записавшихся студентов</p>'}
                     
                     ${slot.status === 'active' ? 
-                        `<button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${slot.id}" style="margin-top:15px;">❌ Отменить консультацию</button>` : 
+                        `<button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${slot.id}" style="margin-top:15px;">Отменить консультацию</button>` : 
                         ''}
                 </div>
             `;
@@ -568,7 +568,7 @@
                                 DB.notifications.push({
                                     id: 'n' + Date.now() + Math.random(),
                                     userId: student.id,
-                                    message: `❌ Преподаватель ${currentTeacher.surname} ${currentTeacher.name} отменил консультацию "${slot.subject}" ${formatDate(slot.date)}`,
+                                    message: `Преподаватель ${currentTeacher.surname} ${currentTeacher.name} отменил консультацию "${slot.subject}" ${formatDate(slot.date)}`,
                                     type: 'cancellation',
                                     read: false,
                                     createdAt: new Date().toISOString()
@@ -611,7 +611,7 @@
                             <input type="text" id="teacherReply_${t.id}" placeholder="Ответ..." style="flex:1;padding:8px;border:1px solid #dce3f0;border-radius:6px;">
                             <button class="btn btn-primary btn-sm reply-ticket-btn" data-tid="${t.id}">Отправить</button>
                         </div>
-                    `:'<p style="color:green;">✅ Закрыто</p>'}
+                    `:'<p style="color:green;">Закрыто</p>'}
                 </div>
             `).join('');
             
@@ -639,7 +639,7 @@
                 DB.notifications.push({
                     id: 'n'+Date.now()+Math.random(),
                     userId: a.id,
-                    message: `💬 Обращение от преподавателя ${currentTeacher.surname}`,
+                    message: `Обращение от преподавателя ${currentTeacher.surname}`,
                     type: 'support', read: false, createdAt: new Date().toISOString()
                 });
             });
@@ -661,7 +661,7 @@
                     DB.notifications.push({
                         id: 'n'+Date.now()+Math.random(),
                         userId: a.id,
-                        message: `💬 Ответ в тикете от преподавателя`,
+                        message: `Ответ в тикете от преподавателя`,
                         type: 'support', read: false, createdAt: new Date().toISOString()
                     });
                 });
