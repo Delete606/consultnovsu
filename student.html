@@ -94,7 +94,7 @@
             </div>
             <div class="user-info">
                 <span id="studentName" style="font-weight:600;"></span>
-                <span class="badge">🎓 Студент</span>
+                <span class="badge">Студент</span>
                 <button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button>
             </div>
         </div>
@@ -103,11 +103,11 @@
     <div class="nav">
         <div class="container">
             <ul class="nav-tabs" id="studentNavTabs">
-                <li class="nav-tab active" data-tab="consultations">📋 Консультации</li>
-                <li class="nav-tab" data-tab="search-teacher">🔍 Поиск преподавателя</li>
-                <li class="nav-tab" data-tab="my-bookings">📅 Мои записи</li>
-                <li class="nav-tab" data-tab="support">💬 Поддержка</li>
-                <li class="nav-tab" data-tab="notifications">🔔 Уведомления <span id="notifCount" style="background:#dc3545;color:white;padding:2px 8px;border-radius:12px;font-size:12px;display:none;">0</span></li>
+                <li class="nav-tab active" data-tab="consultations">Консультации</li>
+                <li class="nav-tab" data-tab="search-teacher">Поиск преподавателя</li>
+                <li class="nav-tab" data-tab="my-bookings">Мои записи</li>
+                <li class="nav-tab" data-tab="support">Поддержка</li>
+                <li class="nav-tab" data-tab="notifications">Уведомления <span id="notifCount" style="background:#dc3545;color:white;padding:2px 8px;border-radius:12px;font-size:12px;display:none;">0</span></li>
             </ul>
         </div>
     </div>
@@ -133,7 +133,7 @@
 
         <div id="search-teacher" class="tab-content">
             <div class="search-teacher-box">
-                <h3>🔍 Поиск преподавателя</h3>
+                <h3>Поиск преподавателя</h3>
                 <p style="color:#666;margin-bottom:15px;">Введите фамилию преподавателя для поиска</p>
                 <div style="display:flex;gap:10px;">
                     <input type="text" id="teacherSearchInput" placeholder="Например: Кириллов" style="flex:1;padding:10px;border:1px solid #dce3f0;border-radius:6px;">
@@ -144,20 +144,20 @@
         </div>
 
         <div id="my-bookings" class="tab-content">
-            <h2>📅 Мои записи на консультации</h2>
+            <h2>Мои записи на консультации</h2>
 
             <div class="status-filters" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-                <button class="status-filter-btn active" data-filter="all" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">📋 Все</button>
-                <button class="status-filter-btn" data-filter="active" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">🟢 Активные</button>
-                <button class="status-filter-btn" data-filter="completed" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">🔵 Завершённые</button>
-                <button class="status-filter-btn" data-filter="cancelled" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">🔴 Отменённые</button>
+                <button class="status-filter-btn active" data-filter="all" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">Все</button>
+                <button class="status-filter-btn" data-filter="active" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">Активные</button>
+                <button class="status-filter-btn" data-filter="completed" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">Завершённые</button>
+                <button class="status-filter-btn" data-filter="cancelled" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">Отменённые</button>
             </div>
             
             <div id="myBookingsList"></div>
         </div>
 
         <div id="support" class="tab-content">
-            <h2>💬 Связь с администрацией</h2>
+            <h2>Связь с администрацией</h2>
             <div class="card">
                 <div class="chat-box" id="supportChat"></div>
                 <div style="display:flex;gap:10px;">
@@ -168,7 +168,7 @@
         </div>
 
         <div id="notifications" class="tab-content">
-            <h2>🔔 Уведомления</h2>
+            <h2>Уведомления</h2>
             <div id="notificationsList"></div>
         </div>
     </main>
@@ -176,7 +176,7 @@
     <div id="requestModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h3>📝 Запрос на добавление преподавателя</h3>
+            <h3>Запрос на добавление преподавателя</h3>
             <p style="margin:15px 0;">Преподаватель не найден в системе. Хотите отправить запрос администратору на его добавление?</p>
             <form id="requestTeacherForm">
                 <div class="form-group"><label>Фамилия *</label><input type="text" id="requestSurname" required></div>
@@ -287,11 +287,11 @@
                 const slotDateTime = new Date(slot.date + 'T' + slot.timeStart);
                 const hoursUntilSlot = (slotDateTime - now) / (1000 * 60 * 60);
                 
-                let statusText = '🟢 Свободно', statusColor = '#0f6e3f', canBook = true;
-                if (hoursUntilSlot <= 0) { statusText = '⏰ Началась'; statusColor = '#dc3545'; canBook = false; }
-                else if (free <= 0) { statusText = '🔴 Нет мест'; statusColor = '#dc3545'; canBook = false; }
-                else if (free <= 2) { statusText = '🟡 Почти заполнено'; statusColor = '#ffc107'; }
-                if (hoursUntilSlot > 0 && hoursUntilSlot < 12 && free > 0) { canBook = false; statusText = '🔒 Запись закрыта'; statusColor = '#ffc107'; }
+                let statusText = 'Свободно', statusColor = '#0f6e3f', canBook = true;
+                if (hoursUntilSlot <= 0) { statusText = 'Началась'; statusColor = '#dc3545'; canBook = false; }
+                else if (free <= 0) { statusText = 'Нет мест'; statusColor = '#dc3545'; canBook = false; }
+                else if (free <= 2) { statusText = 'Почти заполнено'; statusColor = '#ffc107'; }
+                if (hoursUntilSlot > 0 && hoursUntilSlot < 12 && free > 0) { canBook = false; statusText = 'Запись закрыта'; statusColor = '#ffc107'; }
                 
                 return `
                     <div class="consultation-card">
@@ -306,7 +306,7 @@
                         <p><strong>Мест:</strong> ${free} из ${slot.limit}</p>
                         ${slot.description?`<p><strong>Описание:</strong> ${slot.description}</p>`:''}
                         <div style="margin-top:15px;">
-                            ${!booked&&canBook?`<button class="btn btn-primary book-btn" data-sid="${slot.id}">📝 Записаться</button>`:booked?'<span style="color:green;font-weight:600;">✅ Вы записаны</span>':''}
+                            ${!booked&&canBook?`<button class="btn btn-primary book-btn" data-sid="${slot.id}">Записаться</button>`:booked?'<span style="color:green;font-weight:600;">Вы записаны</span>':''}
                         </div>
                     </div>
                 `;
@@ -324,24 +324,24 @@
             const hoursUntilSlot = (slotDateTime - now) / (1000 * 60 * 60);
             
             if (hoursUntilSlot < 12) {
-                alert('❌ До начала консультации осталось менее 12 часов. Запись невозможна.');
+                alert('До начала консультации осталось менее 12 часов. Запись невозможна.');
                 return;
             }
             
             const bookings = DB.getSlotBookings(slotId);
-            if (bookings.length >= slot.limit) { alert('❌ Все места заняты.'); return; }
-            if (bookings.some(b => b.studentId === studentUser?.id)) { alert('⚠️ Вы уже записаны.'); return; }
+            if (bookings.length >= slot.limit) { alert('Все места заняты.'); return; }
+            if (bookings.some(b => b.studentId === studentUser?.id)) { alert('Вы уже записаны.'); return; }
             
             const topic = prompt('Укажите тему вопроса:', 'Нужна консультация');
             if (!topic || !topic.trim()) return;
             
             DB.bookings.push({ id: 'b'+Date.now(), slotId, studentId: studentUser.id, topic: topic.trim(), status: 'active', attended: false, cancelledBy: null, timestamp: new Date().toISOString() });
             
-            DB.notifications.push({ id: 'n'+Date.now(), userId: slot.teacherId, relatedSlotId: slotId, message: `📝 Студент ${studentUser.surname} ${studentUser.name} записался на "${slot.subject}" ${formatDate(slot.date)} в ${slot.timeStart}`, type: 'new_booking', read: false, createdAt: new Date().toISOString() });
-            DB.notifications.push({ id: 'n'+(Date.now()+1), userId: studentUser.id, message: `✅ Вы записаны на "${slot.subject}" на ${formatDate(slot.date)} в ${slot.timeStart}`, type: 'booking', read: false, createdAt: new Date().toISOString() });
+            DB.notifications.push({ id: 'n'+Date.now(), userId: slot.teacherId, relatedSlotId: slotId, message: `Студент ${studentUser.surname} ${studentUser.name} записался на "${slot.subject}" ${formatDate(slot.date)} в ${slot.timeStart}`, type: 'new_booking', read: false, createdAt: new Date().toISOString() });
+            DB.notifications.push({ id: 'n'+(Date.now()+1), userId: studentUser.id, message: `Вы записаны на "${slot.subject}" на ${formatDate(slot.date)} в ${slot.timeStart}`, type: 'booking', read: false, createdAt: new Date().toISOString() });
             
             saveDB();
-            alert('✅ Вы успешно записаны!');
+            alert('Вы успешно записаны!');
             loadConsultations();
             updateNotifBadge();
         }
@@ -404,21 +404,21 @@ function updateSlotsAndBookingsStatus() {
             
      
             if (activeBookings.length > 0) {
-                html += `<div class="status-section status-active"><h3>🟢 Активные записи (${activeBookings.length})</h3>`;
+                html += `<div class="status-section status-active"><h3>Активные записи (${activeBookings.length})</h3>`;
                 html += activeBookings.map(b => renderBookingCard(b, 'active')).join('');
                 html += '</div>';
             }
             
  
             if (completedBookings.length > 0) {
-                html += `<div class="status-section status-completed"><h3>🔵 Завершённые записи (${completedBookings.length})</h3>`;
+                html += `<div class="status-section status-completed"><h3>Завершённые записи (${completedBookings.length})</h3>`;
                 html += completedBookings.map(b => renderBookingCard(b, 'completed')).join('');
                 html += '</div>';
             }
             
   
             if (cancelledBookings.length > 0) {
-                html += `<div class="status-section status-cancelled"><h3>🔴 Отменённые записи (${cancelledBookings.length})</h3>`;
+                html += `<div class="status-section status-cancelled"><h3>Отменённые записи (${cancelledBookings.length})</h3>`;
                 html += cancelledBookings.map(b => renderBookingCard(b, 'cancelled')).join('');
                 html += '</div>';
             }
@@ -442,14 +442,14 @@ function updateSlotsAndBookingsStatus() {
             
             let statusHTML = '';
             if (status === 'active') {
-                statusHTML = '<span class="badge-status" style="background:#e8f5e9;color:#0f6e3f;">✅ Активна</span>';
+                statusHTML = '<span class="badge-status" style="background:#e8f5e9;color:#0f6e3f;">Активна</span>';
             } else if (status === 'completed') {
-                statusHTML = '<span class="badge-status" style="background:#e3f2fd;color:#0056a7;">🔵 Завершена</span>';
+                statusHTML = '<span class="badge-status" style="background:#e3f2fd;color:#0056a7;">Завершена</span>';
             } else if (status === 'cancelled') {
-                if (booking.cancelledBy === 'admin') statusHTML = '<span class="badge-status" style="background:#ffebee;color:#c62828;">❌ Отменена администратором</span>';
-                else if (booking.cancelledBy === 'teacher') statusHTML = '<span class="badge-status" style="background:#ffebee;color:#c62828;">❌ Отменена преподавателем</span>';
-                else if (booking.cancelledBy === 'student') statusHTML = '<span class="badge-status" style="background:#fff3e0;color:#e65100;">⚠️ Отменена вами</span>';
-                else statusHTML = '<span class="badge-status" style="background:#ffebee;color:#c62828;">❌ Отменена</span>';
+                if (booking.cancelledBy === 'admin') statusHTML = '<span class="badge-status" style="background:#ffebee;color:#c62828;">Отменена администратором</span>';
+                else if (booking.cancelledBy === 'teacher') statusHTML = '<span class="badge-status" style="background:#ffebee;color:#c62828;">Отменена преподавателем</span>';
+                else if (booking.cancelledBy === 'student') statusHTML = '<span class="badge-status" style="background:#fff3e0;color:#e65100;">Отменена вами</span>';
+                else statusHTML = '<span class="badge-status" style="background:#ffebee;color:#c62828;">Отменена</span>';
             }
             
             return `
@@ -465,8 +465,8 @@ function updateSlotsAndBookingsStatus() {
                     <p><strong>Тема:</strong> ${booking.topic || 'Не указана'}</p>
                     ${slot.description ? `<p><strong>Описание:</strong> ${slot.description}</p>` : ''}
                     <div style="margin-top:15px;">
-                        ${canCancel ? `<button class="btn btn-danger btn-sm cancel-booking-btn" data-bid="${booking.id}">❌ Отменить запись</button>` : 
-                         booking.status === 'active' && !canCancel ? '<span style="color:#ffc107;font-size:0.9rem;">🔒 Отмена недоступна (менее 12 часов)</span>' : ''}
+                        ${canCancel ? `<button class="btn btn-danger btn-sm cancel-booking-btn" data-bid="${booking.id}">Отменить запись</button>` : 
+                         booking.status === 'active' && !canCancel ? '<span style="color:#ffc107;font-size:0.9rem;">Отмена недоступна (менее 12 часов)</span>' : ''}
                     </div>
                 </div>
             `;
@@ -484,7 +484,7 @@ function updateSlotsAndBookingsStatus() {
                         DB.notifications.push({
                             id: 'n' + Date.now(),
                             userId: slot.teacherId,
-                            message: `❌ Студент ${studentUser.surname} ${studentUser.name} отменил запись на "${slot.subject}" ${formatDate(slot.date)}`,
+                            message: `Студент ${studentUser.surname} ${studentUser.name} отменил запись на "${slot.subject}" ${formatDate(slot.date)}`,
                             type: 'cancellation', read: false, createdAt: new Date().toISOString()
                         });
                     }
@@ -507,7 +507,7 @@ function updateSlotsAndBookingsStatus() {
                 div.innerHTML = '<h4>Найдено:</h4>'+teachers.map(t => `<div class="teacher-result-item"><div><strong>${t.surname} ${t.name}</strong><br><small>${t.email}</small></div><button class="btn btn-primary btn-sm view-btn" data-tid="${t.id}">Смотреть</button></div>`).join('');
                 document.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', function() { filterByTeacher(this.dataset.tid); }));
             } else {
-                div.innerHTML = `<div class="no-teacher"><p><strong>😔 Не найден</strong></p><p style="margin-top:10px;">Отправьте запрос на добавление.</p><button class="btn btn-primary btn-sm" id="openReqBtn">📝 Отправить запрос</button></div>`;
+                div.innerHTML = `<div class="no-teacher"><p><strong>Не найден</strong></p><p style="margin-top:10px;">Отправьте запрос на добавление.</p><button class="btn btn-primary btn-sm" id="openReqBtn">Отправить запрос</button></div>`;
                 document.getElementById('openReqBtn').addEventListener('click', openRequestModal);
             }
         }
@@ -527,10 +527,10 @@ function updateSlotsAndBookingsStatus() {
             const nm = document.getElementById('requestName').value.trim();
             const sb = document.getElementById('requestSubject').value.trim();
             DB.users.filter(u => u.role==='admin'&&u.active).forEach(a => {
-                DB.notifications.push({ id: 'n'+Date.now()+Math.random(), userId: a.id, message: `📝 Запрос на добавление: ${sn} ${nm}${sb?' (предмет: '+sb+')':''}. От: ${studentUser.surname} ${studentUser.name}`, type: 'teacher_request', read: false, createdAt: new Date().toISOString() });
+                DB.notifications.push({ id: 'n'+Date.now()+Math.random(), userId: a.id, message: `Запрос на добавление: ${sn} ${nm}${sb?' (предмет: '+sb+')':''}. От: ${studentUser.surname} ${studentUser.name}`, type: 'teacher_request', read: false, createdAt: new Date().toISOString() });
             });
             saveDB();
-            alert('✅ Запрос отправлен!');
+            alert('Запрос отправлен!');
             closeRequestModal();
             document.getElementById('requestTeacherForm').reset();
         }
