@@ -61,7 +61,6 @@
     </div>
 
     <main class="container">
-        <!-- Пользователи -->
         <div id="users" class="tab-content active">
             <div class="card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -78,7 +77,6 @@
             </div>
         </div>
 
-        <!-- Предметы -->
         <div id="subjects" class="tab-content">
             <div class="card">
                 <h2>📚 Управление предметами</h2>
@@ -93,13 +91,11 @@
             </div>
         </div>
 
-        <!-- Слоты -->
         <div id="slots" class="tab-content">
             <h2>Все консультации в системе</h2>
             <div id="adminSlotsList"></div>
         </div>
 
-        <!-- Тикеты -->
         <div id="tickets" class="tab-content">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                 <h2>🎫 Обращения пользователей</h2>
@@ -111,13 +107,11 @@
             <div id="adminTicketsList"></div>
         </div>
 
-        <!-- Запросы -->
         <div id="requests" class="tab-content">
             <h2>📝 Запросы на добавление преподавателей</h2>
             <div id="adminRequestsList"></div>
         </div>
 
-        <!-- Статистика -->
         <div id="stats" class="tab-content">
             <div class="stats">
                 <div class="stat-card"><h3>Пользователей</h3><p id="totalUsers" class="stat-number">0</p></div>
@@ -132,7 +126,6 @@
         </div>
     </main>
 
-    <!-- Модальное окно пользователя -->
     <div id="userModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -149,7 +142,6 @@
         </div>
     </div>
 
-    <!-- Диалог подтверждения -->
     <div id="confirmDialog" class="confirm-dialog">
         <div class="confirm-content">
             <h3 id="confirmTitle">Подтверждение</h3>
@@ -167,7 +159,6 @@
         let adminUser = null;
         let confirmCallback = null;
 
-        // Инициализация списка предметов, если его нет
         if (!DB.subjects) {
             DB.subjects = ['Математический анализ', 'История России', 'Физика', 'Программирование', 'Английский язык'];
         }
@@ -178,8 +169,7 @@
             const user = checkAuth(['admin']);
             if (!user) return;
             adminUser = user;
-            
-            // Основные обработчики
+ 
             document.getElementById('logoutBtn').addEventListener('click', function(e) { e.preventDefault(); logout(); });
             
             document.querySelectorAll('#adminNavTabs .nav-tab').forEach(tab => {
@@ -187,31 +177,26 @@
                     switchTab(this.getAttribute('data-tab'), this);
                 });
             });
-            
-            // Пользователи
+
             document.getElementById('addUserBtn').addEventListener('click', openAddModal);
             document.querySelector('#userModal .close-modal').addEventListener('click', closeModal);
             document.getElementById('userForm').addEventListener('submit', function(e) { e.preventDefault(); saveUser(); });
             document.getElementById('userSearch').addEventListener('input', loadUsers);
-            
-            // Предметы
+
             document.getElementById('addSubjectBtn').addEventListener('click', addSubject);
             document.getElementById('newSubjectInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') addSubject();
             });
-            
-            // Тикеты
+
             document.getElementById('deleteAllClosedBtn').addEventListener('click', deleteAllClosedTickets);
             document.getElementById('deleteAllTicketsBtn').addEventListener('click', deleteAllTickets);
-            
-            // Диалог подтверждения
+
             document.getElementById('confirmYes').addEventListener('click', function() {
                 if (confirmCallback) confirmCallback();
                 closeConfirmDialog();
             });
             document.getElementById('confirmNo').addEventListener('click', closeConfirmDialog);
-            
-            // Загружаем данные
+
             loadUsers();
             loadSubjects();
             loadSlots();
@@ -247,7 +232,6 @@
             if (tabName === 'stats') loadStats();
         }
 
-        // ============ УПРАВЛЕНИЕ ПРЕДМЕТАМИ ============
         function loadSubjects() {
             if (!DB.subjects) DB.subjects = [];
             const container = document.getElementById('subjectsList');
@@ -269,8 +253,7 @@
                     </div>
                 </div>
             `).join('');
-            
-            // Обработчики для кнопок
+			
             document.querySelectorAll('.delete-subject-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     deleteSubject(parseInt(this.dataset.index));
@@ -318,14 +301,12 @@
             
             if (newName && newName.trim() && newName.trim() !== oldName) {
                 const trimmedName = newName.trim();
-                
-                // Проверяем на дубликат
+т
                 if (DB.subjects.some((s, i) => i !== index && s.toLowerCase() === trimmedName.toLowerCase())) {
                     alert('Такой предмет уже существует!');
                     return;
                 }
-                
-                // Обновляем название в слотах
+
                 DB.slots.forEach(slot => {
                     if (slot.subject === oldName) {
                         slot.subject = trimmedName;
@@ -343,8 +324,7 @@
             if (!DB.subjects || index >= DB.subjects.length) return;
             
             const subjectName = DB.subjects[index];
-            
-            // Проверяем, используется ли предмет в слотах
+
             const usedInSlots = DB.slots.filter(s => s.subject === subjectName);
             const warningMessage = usedInSlots.length > 0 
                 ? `Внимание! Предмет "${subjectName}" используется в ${usedInSlots.length} консультациях. При удалении предмета консультации останутся, но предмет будет удален из списка.`
@@ -359,7 +339,6 @@
             });
         }
 
-        // ============ ПОЛЬЗОВАТЕЛИ ============
         function loadUsers() {
             const search = document.getElementById('userSearch').value.toLowerCase();
             const users = DB.users.filter(u => !search || u.name.toLowerCase().includes(search) || u.surname.toLowerCase().includes(search) || u.email.toLowerCase().includes(search));
@@ -430,7 +409,6 @@
             });
         }
 
-        // ============ СЛОТЫ ============
         function loadSlots() {
             const slots = DB.slots;
             const container = document.getElementById('adminSlotsList');
@@ -465,7 +443,6 @@
             });
         }
 
-        // ============ ТИКЕТЫ ============
         function loadTickets() {
             if (!DB.tickets) DB.tickets = [];
             const tickets = DB.tickets;
@@ -584,7 +561,6 @@
             if (badge) { badge.textContent = openCount; badge.style.display = openCount > 0 ? 'inline' : 'none'; }
         }
 
-        // ============ ЗАПРОСЫ ============
         function loadRequests() {
             const requests = DB.notifications.filter(n => n.type === 'teacher_request');
             const container = document.getElementById('adminRequestsList');
@@ -640,7 +616,6 @@
             if (badge) { badge.textContent = count; badge.style.display = count>0?'inline':'none'; }
         }
 
-        // ============ СТАТИСТИКА ============
         function loadStats() {
             updateStats();
         }
@@ -656,20 +631,18 @@
             document.getElementById('roleDistribution').innerHTML = Object.entries(roles)
                 .map(([r,c]) => `<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee;"><span>${r}</span><strong>${c}</strong></div>`).join('');
         }
-	// В admin.html замените функцию cancelSlot:
+
 function cancelSlot(id) {
     showConfirmDialog('Отмена консультации', 'Отменить эту консультацию? Все записи студентов будут отменены.', function() {
         const slot = DB.getSlot(id);
         if (slot) {
             slot.status = 'cancelled';
-            
-            // Отменяем все записи и помечаем, что отменено администратором
+
             DB.bookings.forEach(b => {
                 if (b.slotId === id) {
                     b.status = 'cancelled';
                     b.cancelledBy = 'admin'; // Отменено администратором
-                    
-                    // Уведомление студенту
+
                     const student = DB.getUser(b.studentId);
                     if (student) {
                         DB.notifications.push({
@@ -684,7 +657,7 @@ function cancelSlot(id) {
                 }
             });
             
-            // Уведомление преподавателю
+
             const teacher = DB.getUser(slot.teacherId);
             if (teacher) {
                 DB.notifications.push({
@@ -704,7 +677,6 @@ function cancelSlot(id) {
     });
 }
 
-// Добавьте вспомогательную функцию в admin.html
 function formatDate(dateString) {
     if (!dateString) return '';
     try {
