@@ -243,7 +243,6 @@
     <script>
         let selectedRole = 'student';
 
-        // Проверяем, не авторизован ли уже пользователь
         (function() {
             try {
                 const saved = sessionStorage.getItem('currentUser');
@@ -258,26 +257,23 @@
             }
         })();
 
-        // Инициализация при загрузке DOM
+
         document.addEventListener('DOMContentLoaded', function() {
             console.log('=== Страница входа загружена ===');
-            
-            // Устанавливаем начальные значения для студента
+
             document.getElementById('loginEmail').value = 'student@novsu.ru';
             document.getElementById('loginPassword').value = '123';
-            
-            // Обработчики для кнопок выбора роли
+
             document.querySelectorAll('.role-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    // Убираем активный класс у всех
+
                     document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-                    // Добавляем текущей
+
                     this.classList.add('active');
                     
                     selectedRole = this.getAttribute('data-role');
                     console.log('Выбрана роль:', selectedRole);
-                    
-                    // Автозаполнение в зависимости от роли
+
                     const emailInput = document.getElementById('loginEmail');
                     const passInput = document.getElementById('loginPassword');
                     
@@ -295,14 +291,12 @@
                             passInput.value = 'admin';
                             break;
                     }
-                    
-                    // Очищаем ошибки
+
                     hideError();
                     clearInputErrors();
                 });
             });
-            
-            // Обработчики для демо-доступов
+
             document.querySelectorAll('.demo-item').forEach(item => {
                 item.addEventListener('click', function() {
                     const email = this.getAttribute('data-email');
@@ -310,12 +304,10 @@
                     const role = this.getAttribute('data-role');
                     
                     console.log('Демо-доступ:', email, role);
-                    
-                    // Заполняем поля
+
                     document.getElementById('loginEmail').value = email;
                     document.getElementById('loginPassword').value = password;
-                    
-                    // Активируем нужную роль
+
                     document.querySelectorAll('.role-btn').forEach(btn => {
                         btn.classList.remove('active');
                         if (btn.getAttribute('data-role') === role) {
@@ -323,26 +315,22 @@
                             selectedRole = role;
                         }
                     });
-                    
-                    // Очищаем ошибки
+
                     hideError();
                     clearInputErrors();
-                    
-                    // Визуальная обратная связь
+
                     this.style.backgroundColor = '#e8f0fe';
                     setTimeout(() => {
                         this.style.backgroundColor = '';
                     }, 300);
                 });
             });
-            
-            // Обработчик формы входа
+
             document.getElementById('loginForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 handleLogin();
             });
-            
-            // Очистка ошибок при вводе
+
             document.getElementById('loginEmail').addEventListener('input', function() {
                 this.classList.remove('error');
                 hideError();
@@ -365,12 +353,10 @@
             const password = passwordInput.value.trim();
             
             console.log('Попытка входа:', { email, role: selectedRole });
-            
-            // Сбрасываем ошибки
+
             hideError();
             clearInputErrors();
-            
-            // Валидация
+
             let hasError = false;
             
             if (!email) {
@@ -390,14 +376,12 @@
             }
             
             if (hasError) return;
-            
-            // Блокируем кнопку на время проверки
+
             loginBtn.disabled = true;
             loginBtn.textContent = 'Проверка...';
-            
-            // Имитация задержки для реалистичности
+
             setTimeout(() => {
-                // Поиск пользователя
+
                 const user = DB.users.find(u => 
                     u.email === email && 
                     u.password === password && 
@@ -406,12 +390,11 @@
                 );
                 
                 if (user) {
-                    // Успешный вход
+
                     console.log('Вход выполнен:', user);
                     
                     showSuccess('✅ Вход выполнен! Перенаправление...');
-                    
-                    // Сохраняем сессию
+
                     const sessionUser = {
                         id: user.id,
                         name: user.name,
@@ -420,17 +403,15 @@
                         role: user.role
                     };
                     sessionStorage.setItem('currentUser', JSON.stringify(sessionUser));
-                    
-                    // Перенаправление через небольшую задержку
+
                     setTimeout(() => {
                         redirectByRole(user.role);
                     }, 500);
                     
                 } else {
-                    // Ошибка входа
+
                     console.log('Ошибка входа');
-                    
-                    // Проверяем, существует ли email
+
                     const userByEmail = DB.users.find(u => u.email === email);
                     
                     if (!userByEmail) {
@@ -446,14 +427,12 @@
                     
                     emailInput.classList.add('error');
                     passwordInput.classList.add('error');
-                    
-                    // Анимация встряхивания
+
                     document.getElementById('loginForm').classList.add('shake');
                     setTimeout(() => {
                         document.getElementById('loginForm').classList.remove('shake');
                     }, 500);
-                    
-                    // Разблокируем кнопку
+
                     loginBtn.disabled = false;
                     loginBtn.textContent = 'Войти в систему';
                 }
