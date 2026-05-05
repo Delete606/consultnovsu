@@ -24,8 +24,7 @@
         
         .notification-item { padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin-bottom: 10px; border-radius: 4px; }
         .notification-item.read { opacity: 0.6; background: #f8f9fa; }
-        
-        /* Стили для разделения по статусам */
+
         .status-section { margin-bottom: 25px; }
         .status-section h3 { 
             display: inline-block;
@@ -61,8 +60,7 @@
         .booking-card.active { border-left: 4px solid #0f6e3f; }
         .booking-card.completed { border-left: 4px solid #0056a7; }
         .booking-card.cancelled { border-left: 4px solid #c62828; opacity: 0.85; }
-        
-        /* Консультации в стиле дашборда преподавателя */
+
         .consultation-card {
             background: white;
             border-radius: 12px;
@@ -147,8 +145,7 @@
 
         <div id="my-bookings" class="tab-content">
             <h2>📅 Мои записи на консультации</h2>
-            
-            <!-- Фильтры по статусу -->
+
             <div class="status-filters" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
                 <button class="status-filter-btn active" data-filter="all" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">📋 Все</button>
                 <button class="status-filter-btn" data-filter="active" style="padding:8px 16px;border:1px solid #dce3f0;background:white;border-radius:20px;cursor:pointer;font-weight:500;">🟢 Активные</button>
@@ -218,8 +215,7 @@
             document.getElementById('sendSupportBtn').addEventListener('click', sendSupportMessage);
             document.querySelector('#requestModal .close-modal').addEventListener('click', closeRequestModal);
             document.getElementById('requestTeacherForm').addEventListener('submit', function(e) { e.preventDefault(); submitTeacherRequest(); });
-            
-            // Обработчики фильтров статуса
+
             document.querySelectorAll('.status-filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.status-filter-btn').forEach(b => {
@@ -253,7 +249,6 @@
             if (tabName === 'support') loadSupportChat();
         }
 
-        // ============ КОНСУЛЬТАЦИИ ============
         function loadFilters() {
             const subjects = DB.subjects || [...new Set(DB.slots.map(s => s.subject))];
             document.getElementById('filterSubject').innerHTML = '<option value="">Все предметы</option>' + subjects.map(s => `<option>${s}</option>`).join('');
@@ -351,14 +346,11 @@
             updateNotifBadge();
         }
 
-        // ============ МОИ ЗАПИСИ ============
-	// Функция обновления статусов консультаций и записей
 function updateSlotsAndBookingsStatus() {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     const currentTime = now.getHours() * 60 + now.getMinutes();
-    
-    // Обновляем статусы слотов
+
     DB.slots.forEach(slot => {
         if (slot.status === 'active') {
             const [endHours, endMinutes] = (slot.timeEnd || '23:59').split(':').map(Number);
@@ -366,16 +358,14 @@ function updateSlotsAndBookingsStatus() {
             const slotDate = new Date(slot.date + 'T' + (slot.timeEnd || '23:59'));
             const slotDateOnly = new Date(slot.date);
             const todayDate = new Date(today);
-            
-            // Если дата слота прошла или сегодня и время окончания прошло
+
             if (slotDateOnly < todayDate || (slot.date === today && currentTime >= slotEndTime)) {
                 slot.status = 'completed';
                 console.log('Слот завершен:', slot.subject, slot.date);
             }
         }
     });
-    
-    // Обновляем статусы записей для завершенных слотов
+
     DB.bookings.forEach(booking => {
         if (booking.status === 'active') {
             const slot = DB.getSlot(booking.slotId);
@@ -389,11 +379,11 @@ function updateSlotsAndBookingsStatus() {
     saveDB();
 }
         function loadMyBookings() {
-	    updateSlotsAndBookingsStatus(); // Обновляем статусы перед загрузкой
+	    updateSlotsAndBookingsStatus(); 
     
             let bookings = DB.bookings.filter(b => b.studentId === studentUser?.id);
             
-            // Применяем фильтр
+
             if (currentBookingFilter !== 'all') {
                 bookings = bookings.filter(b => b.status === currentBookingFilter);
             }
@@ -405,28 +395,28 @@ function updateSlotsAndBookingsStatus() {
                 return;
             }
             
-            // Группируем по статусам
+
             const activeBookings = bookings.filter(b => b.status === 'active');
             const completedBookings = bookings.filter(b => b.status === 'completed');
             const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
             
             let html = '';
             
-            // Активные
+     
             if (activeBookings.length > 0) {
                 html += `<div class="status-section status-active"><h3>🟢 Активные записи (${activeBookings.length})</h3>`;
                 html += activeBookings.map(b => renderBookingCard(b, 'active')).join('');
                 html += '</div>';
             }
             
-            // Завершённые
+ 
             if (completedBookings.length > 0) {
                 html += `<div class="status-section status-completed"><h3>🔵 Завершённые записи (${completedBookings.length})</h3>`;
                 html += completedBookings.map(b => renderBookingCard(b, 'completed')).join('');
                 html += '</div>';
             }
             
-            // Отменённые
+  
             if (cancelledBookings.length > 0) {
                 html += `<div class="status-section status-cancelled"><h3>🔴 Отменённые записи (${cancelledBookings.length})</h3>`;
                 html += cancelledBookings.map(b => renderBookingCard(b, 'cancelled')).join('');
@@ -507,7 +497,7 @@ function updateSlotsAndBookingsStatus() {
             }
         }
 
-        // ============ ОСТАЛЬНЫЕ ФУНКЦИИ ============
+
         function searchTeacher() {
             const q = document.getElementById('teacherSearchInput').value.trim().toLowerCase();
             const div = document.getElementById('searchResults');
