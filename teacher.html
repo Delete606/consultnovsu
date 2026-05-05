@@ -13,7 +13,7 @@
         .msg-received { background: white; border: 1px solid #dce3f0; }
         .msg-meta { font-size: 0.8rem; opacity: 0.7; margin-top: 5px; }
         
-        /* Стили для дашборда как у студента */
+
         .consultation-card {
             background: white;
             border-radius: 12px;
@@ -44,7 +44,7 @@
             font-size: 0.95rem;
         }
         
-        /* Фильтры статусов */
+
         .status-filters {
             display: flex;
             gap: 10px;
@@ -71,7 +71,7 @@
             border-color: #0056a7;
         }
         
-        /* Секции статусов */
+
         .status-section {
             margin-bottom: 25px;
         }
@@ -140,7 +140,7 @@
     </div>
 
     <main class="container">
-        <!-- Дашборд -->
+
         <div id="dashboard" class="tab-content active">
             <div class="stats">
                 <div class="stat-card"><h3>Всего консультаций</h3><p id="totalSlots" class="stat-number">0</p></div>
@@ -151,7 +151,7 @@
             <div id="upcomingSlots"></div>
         </div>
 
-        <!-- Создать консультацию -->
+
         <div id="create-slot" class="tab-content">
             <div class="card">
                 <h2>➕ Создание новой консультации</h2>
@@ -186,7 +186,7 @@
             </div>
         </div>
 
-        <!-- Управление записями -->
+
         <div id="manage-bookings" class="tab-content">
             <h2>👥 Управление записями студентов</h2>
             
@@ -201,7 +201,7 @@
             <div id="teacherSlotsList"></div>
         </div>
 
-        <!-- Поддержка -->
+
         <div id="support" class="tab-content">
             <h2>💬 Связь с администрацией</h2>
             <div class="card">
@@ -213,13 +213,13 @@
             </div>
         </div>
 
-        <!-- Уведомления -->
+
         <div id="notifications" class="tab-content">
             <h2>🔔 Уведомления</h2>
             <div id="teacherNotificationsList"></div>
         </div>
 
-        <!-- Статистика -->
+
         <div id="statistics" class="tab-content">
             <h2>📈 Статистика</h2>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
@@ -233,7 +233,7 @@
     <script src="js/auth.js"></script>
     <script>
         let currentTeacher = null;
-        let currentStatusFilter = 'all'; // Текущий фильтр статуса
+        let currentStatusFilter = 'all'; 
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('=== Страница преподавателя загружена ===');
@@ -259,7 +259,7 @@
             
             document.getElementById('sendSupportBtn').addEventListener('click', sendTeacherSupport);
             
-            // Обработчики фильтров статуса
+
             document.querySelectorAll('.status-filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active'));
@@ -269,7 +269,7 @@
                 });
             });
             
-            // Проверяем и обновляем статусы консультаций
+
             updateSlotsStatus();
             
             loadDashboard();
@@ -291,7 +291,7 @@
             if (tabName === 'statistics') loadStatistics();
         }
 
-        // Проверка и обновление статусов консультаций
+  
         function updateSlotsStatus() {
             const now = new Date();
             const today = now.toISOString().split('T')[0];
@@ -303,7 +303,7 @@
                     const [endHours, endMinutes] = slot.timeEnd.split(':').map(Number);
                     const slotEndTime = endHours * 60 + endMinutes;
                     
-                    // Если дата прошла или сегодня и время закончилось
+
                     if (slotDate < new Date(today) || (slot.date === today && currentTime >= slotEndTime)) {
                         slot.status = 'completed';
                     }
@@ -315,7 +315,7 @@
         function loadDashboard() {
             if (!currentTeacher) return;
             
-            updateSlotsStatus(); // Проверяем статусы
+            updateSlotsStatus();
             
             const slots = DB.getTeacherSlots(currentTeacher.id);
             const activeSlots = slots.filter(s => s.status === 'active');
@@ -331,7 +331,7 @@
             const todaySlots = slots.filter(s => s.date === today && s.status === 'active');
             document.getElementById('todaySlots').textContent = todaySlots.length;
             
-            // Ближайшие консультации в стиле студента
+
             const upcoming = activeSlots
                 .sort((a, b) => {
                     if (a.date !== b.date) return a.date.localeCompare(b.date);
@@ -415,7 +415,7 @@
         function loadTeacherBookings() {
             if (!currentTeacher) return;
             
-            updateSlotsStatus(); // Проверяем статусы
+            updateSlotsStatus(); 
             
             const slots = DB.getTeacherSlots(currentTeacher.id);
             const container = document.getElementById('teacherSlotsList');
@@ -425,7 +425,7 @@
                 return;
             }
             
-            // Фильтруем слоты по статусу
+
             let filteredSlots = slots;
             if (currentStatusFilter !== 'all') {
                 filteredSlots = slots.filter(s => s.status === currentStatusFilter);
@@ -435,31 +435,27 @@
                 container.innerHTML = '<div class="card"><p style="color:#666;text-align:center;padding:20px;">Нет консультаций с выбранным статусом</p></div>';
                 return;
             }
-            
-            // Группируем по статусам
+
             const activeSlots = filteredSlots.filter(s => s.status === 'active');
             const completedSlots = filteredSlots.filter(s => s.status === 'completed');
             const cancelledSlots = filteredSlots.filter(s => s.status === 'cancelled');
             
             let html = '';
-            
-            // Активные
+
             if (activeSlots.length > 0) {
                 html += '<div class="status-section status-active">';
                 html += '<h3>🟢 Активные консультации</h3>';
                 html += activeSlots.map(slot => renderSlotCard(slot)).join('');
                 html += '</div>';
             }
-            
-            // Завершённые
+
             if (completedSlots.length > 0) {
                 html += '<div class="status-section status-completed">';
                 html += '<h3>🔵 Завершённые консультации</h3>';
                 html += completedSlots.map(slot => renderSlotCard(slot)).join('');
                 html += '</div>';
             }
-            
-            // Отменённые
+
             if (cancelledSlots.length > 0) {
                 html += '<div class="status-section status-cancelled">';
                 html += '<h3>🔴 Отменённые консультации</h3>';
@@ -468,8 +464,7 @@
             }
             
             container.innerHTML = html;
-            
-            // Обработчики для кнопок в карточках
+
             document.querySelectorAll('.mark-attendance-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     markAttendance(this.getAttribute('data-bid'));
