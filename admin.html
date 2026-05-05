@@ -41,7 +41,7 @@
                 </div>
             </div>
             <div class="user-info">
-                <span class="badge" style="background:#003d7c;color:white;">⚙️ Администратор</span>
+                <span class="badge" style="background:#003d7c;color:white;">Администратор</span>
                 <button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button>
             </div>
         </div>
@@ -50,12 +50,12 @@
     <div class="nav">
         <div class="container">
             <ul class="nav-tabs" id="adminNavTabs">
-                <li class="nav-tab active" data-tab="users">👥 Пользователи</li>
-                <li class="nav-tab" data-tab="subjects">📚 Предметы</li>
-                <li class="nav-tab" data-tab="slots">📅 Слоты</li>
-                <li class="nav-tab" data-tab="tickets">🎫 Тикеты <span id="ticketBadge" class="badge-notif">0</span></li>
-                <li class="nav-tab" data-tab="requests">📝 Запросы <span id="requestBadge" class="badge-notif">0</span></li>
-                <li class="nav-tab" data-tab="stats">📊 Статистика</li>
+                <li class="nav-tab active" data-tab="users">Пользователи</li>
+                <li class="nav-tab" data-tab="subjects">Предметы</li>
+                <li class="nav-tab" data-tab="slots">Слоты</li>
+                <li class="nav-tab" data-tab="tickets">Тикеты <span id="ticketBadge" class="badge-notif">0</span></li>
+                <li class="nav-tab" data-tab="requests">Запросы <span id="requestBadge" class="badge-notif">0</span></li>
+                <li class="nav-tab" data-tab="stats">Статистика</li>
             </ul>
         </div>
     </div>
@@ -65,9 +65,9 @@
             <div class="card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                     <h2>Управление пользователями</h2>
-                    <button id="addUserBtn" class="btn btn-primary">➕ Добавить пользователя</button>
+                    <button id="addUserBtn" class="btn btn-primary">Добавить пользователя</button>
                 </div>
-                <input type="text" id="userSearch" placeholder="🔍 Поиск по имени или email..." style="width:100%;padding:10px;border:1px solid #dce3f0;border-radius:6px;margin-bottom:20px;">
+                <input type="text" id="userSearch" placeholder="Поиск по имени или email..." style="width:100%;padding:10px;border:1px solid #dce3f0;border-radius:6px;margin-bottom:20px;">
                 <div style="overflow-x:auto;">
                     <table>
                         <thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th>Активен</th><th>Действия</th></tr></thead>
@@ -79,12 +79,12 @@
 
         <div id="subjects" class="tab-content">
             <div class="card">
-                <h2>📚 Управление предметами</h2>
+                <h2>Управление предметами</h2>
                 <p style="color:#666;margin-bottom:20px;">Добавляйте и удаляйте предметы для консультаций</p>
                 
                 <div class="add-subject-form">
                     <input type="text" id="newSubjectInput" placeholder="Название нового предмета...">
-                    <button id="addSubjectBtn" class="btn btn-primary">➕ Добавить</button>
+                    <button id="addSubjectBtn" class="btn btn-primary">Добавить</button>
                 </div>
                 
                 <div id="subjectsList" class="subject-list"></div>
@@ -98,10 +98,10 @@
 
         <div id="tickets" class="tab-content">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <h2>🎫 Обращения пользователей</h2>
+                <h2>Обращения пользователей</h2>
                 <div style="display:flex;gap:10px;">
-                    <button id="deleteAllClosedBtn" class="btn btn-danger btn-sm">🗑️ Удалить все закрытые</button>
-                    <button id="deleteAllTicketsBtn" class="btn btn-danger btn-sm">🗑️ Удалить все тикеты</button>
+                    <button id="deleteAllClosedBtn" class="btn btn-danger btn-sm">Удалить все закрытые</button>
+                    <button id="deleteAllTicketsBtn" class="btn btn-danger btn-sm">Удалить все тикеты</button>
                 </div>
             </div>
             <div id="adminTicketsList"></div>
@@ -244,12 +244,12 @@
             container.innerHTML = DB.subjects.map((subject, index) => `
                 <div class="subject-card">
                     <div>
-                        <strong>📖 ${subject}</strong>
+                        <strong>${subject}</strong>
                         <br><small>Используется в консультациях</small>
                     </div>
                     <div style="display:flex;gap:5px;">
-                        <button class="btn btn-primary btn-sm edit-subject-btn" data-index="${index}">✏️</button>
-                        <button class="btn btn-danger btn-sm delete-subject-btn" data-index="${index}">🗑️</button>
+                        <button class="btn btn-primary btn-sm edit-subject-btn" data-index="${index}"></button>
+                        <button class="btn btn-danger btn-sm delete-subject-btn" data-index="${index}"></button>
                     </div>
                 </div>
             `).join('');
@@ -290,7 +290,7 @@
             saveDB();
             input.value = '';
             loadSubjects();
-            alert(`✅ Предмет "${name}" добавлен!`);
+            alert(`Предмет "${name}" добавлен!`);
         }
 
         function editSubject(index) {
@@ -316,7 +316,7 @@
                 DB.subjects[index] = trimmedName;
                 saveDB();
                 loadSubjects();
-                alert(`✅ Предмет обновлен: "${oldName}" → "${trimmedName}"`);
+                alert(`Предмет обновлен: "${oldName}" → "${trimmedName}"`);
             }
         }
 
@@ -335,7 +335,7 @@
                 saveDB();
                 loadSubjects();
                 updateStats();
-                alert(`✅ Предмет "${subjectName}" удален`);
+                alert(`Предмет "${subjectName}" удален`);
             });
         }
 
@@ -344,10 +344,10 @@
             const users = DB.users.filter(u => !search || u.name.toLowerCase().includes(search) || u.surname.toLowerCase().includes(search) || u.email.toLowerCase().includes(search));
             document.getElementById('usersTableBody').innerHTML = users.map(u => `
                 <tr>
-                    <td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td><td>${u.role}</td><td>${u.active?'✅':'❌'}</td>
+                    <td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td><td>${u.role}</td><td>${u.active?'Да':'Нет'}</td>
                     <td>
-                        <button class="btn btn-primary btn-sm edit-user-btn" data-uid="${u.id}">✏️</button>
-                        <button class="btn btn-danger btn-sm delete-user-btn" data-uid="${u.id}">🗑️</button>
+                        <button class="btn btn-primary btn-sm edit-user-btn" data-uid="${u.id}">Изменить</button>
+                        <button class="btn btn-danger btn-sm delete-user-btn" data-uid="${u.id}">Удалить</button>
                     </td>
                 </tr>
             `).join('');
@@ -465,7 +465,7 @@
                                 <strong>${user ? user.surname+' '+user.name : 'Неизвестный'}</strong>
                                 <span style="margin-left:10px;color:#666;">(${user ? user.role : '?'})</span>
                                 <span style="margin-left:10px;color:${isOpen?'#0f6e3f':'#dc3545'};font-weight:600;">
-                                    ${isOpen ? '🟢 Открыт' : '🔴 Закрыт'}
+                                    ${isOpen ? 'Открыт' : 'Закрыт'}
                                 </span>
                             </div>
                             <small>${new Date(t.createdAt).toLocaleString('ru-RU')}</small>
@@ -487,9 +487,9 @@
                             ${isOpen ? `
                                 <input type="text" id="adminReply_${t.id}" placeholder="Введите ответ..." style="flex:1;min-width:200px;padding:10px;border:1px solid #dce3f0;border-radius:6px;">
                                 <button class="btn btn-primary btn-sm reply-ticket-btn" data-tid="${t.id}">✉️ Ответить</button>
-                                <button class="btn btn-sm close-ticket-btn" data-tid="${t.id}" style="background:#ffc107;color:#333;">🔒 Закрыть</button>
+                                <button class="btn btn-sm close-ticket-btn" data-tid="${t.id}" style="background:#ffc107;color:#333;">Закрыть</button>
                             ` : ''}
-                            <button class="btn btn-danger btn-sm delete-ticket-btn" data-tid="${t.id}">🗑️ Удалить</button>
+                            <button class="btn btn-danger btn-sm delete-ticket-btn" data-tid="${t.id}">Удалить</button>
                         </div>
                     </div>
                 `;
@@ -511,7 +511,7 @@
                 ticket.messages.push({ sender: 'admin', text: input.value.trim(), timestamp: new Date().toISOString() });
                 const user = DB.getUser(ticket.userId);
                 if (user) {
-                    DB.notifications.push({ id: 'n'+Date.now()+Math.random(), userId: user.id, message: '💬 Администратор ответил на ваше обращение', type: 'support', read: false, createdAt: new Date().toISOString() });
+                    DB.notifications.push({ id: 'n'+Date.now()+Math.random(), userId: user.id, message: 'Администратор ответил на ваше обращение', type: 'support', read: false, createdAt: new Date().toISOString() });
                 }
                 saveDB(); loadTickets();
             }
@@ -540,7 +540,7 @@
             showConfirmDialog('Удаление закрытых тикетов', `Удалить все закрытые тикеты (${closedCount} шт.)?`, function() {
                 DB.tickets = DB.tickets.filter(t => t.status !== 'closed');
                 saveDB(); loadTickets();
-                alert(`✅ Удалено ${closedCount} тикетов`);
+                alert(`Удалено ${closedCount} тикетов`);
             });
         }
 
@@ -550,7 +550,7 @@
             showConfirmDialog('Удаление всех тикетов', `Удалить ВСЕ тикеты (${DB.tickets.length} шт.)? Это действие нельзя отменить!`, function() {
                 DB.tickets = [];
                 saveDB(); loadTickets();
-                alert('✅ Все тикеты удалены');
+                alert('Все тикеты удалены');
             });
         }
 
@@ -576,7 +576,7 @@
                     <small>${new Date(r.createdAt).toLocaleString('ru-RU')}</small>
                     <div style="margin-top:10px;">
                         ${!r.read ? `<button class="btn btn-sm btn-outline mark-read-btn" data-nid="${r.id}">Прочитано</button>` : ''}
-                        <button class="btn btn-sm btn-primary add-teacher-btn" data-nid="${r.id}">➕ Добавить преподавателя</button>
+                        <button class="btn btn-sm btn-primary add-teacher-btn" data-nid="${r.id}">Добавить преподавателя</button>
                     </div>
                 </div>
             `).join('');
@@ -648,7 +648,7 @@ function cancelSlot(id) {
                         DB.notifications.push({
                             id: 'n' + Date.now() + Math.random(),
                             userId: student.id,
-                            message: `❌ Администратор отменил консультацию "${slot.subject}" ${formatDate(slot.date)}`,
+                            message: `Администратор отменил консультацию "${slot.subject}" ${formatDate(slot.date)}`,
                             type: 'cancellation',
                             read: false,
                             createdAt: new Date().toISOString()
@@ -663,7 +663,7 @@ function cancelSlot(id) {
                 DB.notifications.push({
                     id: 'n' + Date.now() + Math.random(),
                     userId: teacher.id,
-                    message: `❌ Администратор отменил вашу консультацию "${slot.subject}" ${formatDate(slot.date)}`,
+                    message: `Администратор отменил вашу консультацию "${slot.subject}" ${formatDate(slot.date)}`,
                     type: 'cancellation',
                     read: false,
                     createdAt: new Date().toISOString()
