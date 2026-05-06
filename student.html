@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кабинет студента - Консультации НовГУ</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4fc; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header { background: white; border-bottom: 3px solid #0056a7; padding: 15px 0; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo img { width: 48px; height: 48px; border-radius: 8px; }
+        .logo-text h2 { color: #003d7c; font-size: 1.3rem; margin: 0; }
+        .logo-text span { color: #666; font-size: 0.85rem; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .badge { background: #e8f0fe; color: #003d7c; padding: 8px 18px; border-radius: 30px; font-weight: 600; }
+        .nav { background: white; border-bottom: 1px solid #dce3f0; }
+        .nav-tabs { display: flex; list-style: none; padding: 0; margin: 0; }
+        .nav-tab { padding: 15px 20px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #666; }
+        .nav-tab.active { border-bottom-color: #0056a7; color: #0056a7; background: #e8f0fe; font-weight: 600; }
+        main { padding: 30px 0; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e8edf5; }
+        .consultation-card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e8edf5; transition: all 0.3s; }
+        .consultation-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .booking-card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e8edf5; }
+        .booking-card.active { border-left: 4px solid #0f6e3f; }
+        .booking-card.completed { border-left: 4px solid #0056a7; }
+        .booking-card.cancelled { border-left: 4px solid #c62828; opacity: 0.85; }
+        .status-filters { display: flex; gap: 10px; margin-bottom: 25px; }
+        .status-filter-btn { padding: 10px 20px; border: 2px solid #e0e6ed; background: white; border-radius: 25px; cursor: pointer; font-weight: 600; color: #666; }
+        .status-filter-btn.active { background: #0056a7; color: white; border-color: #0056a7; }
+        .status-section { margin-bottom: 30px; }
+        .status-section h3 { padding: 10px 20px; border-radius: 12px; display: inline-block; margin-bottom: 18px; font-size: 1rem; font-weight: 700; }
+        .status-active h3 { background: #e8f5e9; color: #0f6e3f; }
+        .status-completed h3 { background: #e3f2fd; color: #0056a7; }
+        .status-cancelled h3 { background: #ffebee; color: #c62828; }
+        .badge-status { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        .topic-chip { padding: 8px 16px; background: #f0f6ff; border: 1px solid #c5d9f2; border-radius: 20px; font-size: 0.9rem; color: #0056a7; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; margin: 4px; }
+        .topic-chip .duration-badge { background: #e0ecff; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; color: #003d7c; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .btn-primary { background: #0056a7; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-outline { background: white; border: 2px solid #0056a7; color: #0056a7; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
+        .chat-box { background: #f8f9fa; border-radius: 12px; padding: 20px; max-height: 400px; overflow-y: auto; margin-bottom: 15px; }
+        .msg { margin-bottom: 15px; padding: 12px; border-radius: 12px; max-width: 80%; }
+        .msg-sent { background: #0056a7; color: white; margin-left: auto; }
+        .msg-received { background: white; border: 1px solid #dce3f0; }
+    </style>
+</head>
+<body>
+    <div class="header"><div class="container header-content"><div class="logo"><img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect fill=%22%23003d7c%22 width=%2248%22 height=%2248%22 rx=%228%22/%3E%3Ctext fill=%22white%22 x=%2250%25%22 y=%2255%25%22 font-size=%2220%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'"><div class="logo-text"><h2>Консультации</h2><span>расписание - запись</span></div></div><div class="user-info"><span id="studentName" style="font-weight:600;"></span><span class="badge">Студент</span><button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button></div></div></div>
+    <div class="nav"><div class="container"><ul class="nav-tabs" id="studentNavTabs"><li class="nav-tab active" data-tab="consultations">Консультации</li><li class="nav-tab" data-tab="search-teacher">Поиск преподавателя</li><li class="nav-tab" data-tab="my-bookings">Мои записи</li><li class="nav-tab" data-tab="support">Поддержка</li><li class="nav-tab" data-tab="notifications">Уведомления <span id="notifCount" style="background:#dc3545;color:white;padding:2px 8px;border-radius:12px;font-size:12px;display:none;">0</span></li></ul></div></div>
+    <main class="container">
+        <!-- Замените блок фильтров в student.html -->
+<div id="consultations" class="tab-content active">
+    <div class="card">
+        <h3 style="margin-bottom:15px;">Фильтры</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <select id="filterSubject" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;font-size:14px;">
+                <option value="">Все предметы</option>
+            </select>
+            <select id="filterTeacher" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;font-size:14px;">
+                <option value="">Все преподаватели</option>
+            </select>
+            <input type="date" id="filterDate" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;font-size:14px;">
+            
+            <!-- Новый фильтр по статусу записи -->
+            <select id="filterBookingStatus" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;font-size:14px;">
+                <option value="all">Все консультации</option>
+                <option value="booked">Записан</option>
+                <option value="not-booked">Не записан</option>
+            </select>
+            
+            <button id="applyFiltersBtn" class="btn btn-primary btn-sm">Применить</button>
+            <button id="resetFiltersBtn" class="btn btn-outline btn-sm">Сбросить</button>
+        </div>
+    </div>
+    <div id="consultationsList"></div>
+</div>
+        <div id="search-teacher" class="tab-content"><div class="card"><h3>Поиск преподавателя</h3><div style="display:flex;gap:10px;"><input type="text" id="teacherSearchInput" placeholder="Фамилия" style="flex:1;padding:12px;border:2px solid #e0e6ed;border-radius:10px;"><button id="searchTeacherBtn" class="btn btn-primary">Найти</button></div><div id="searchResults" style="margin-top:15px;"></div></div></div>
+        <div id="my-bookings" class="tab-content"><h2>Мои записи</h2><div class="status-filters"><button class="status-filter-btn active" data-filter="all">Все</button><button class="status-filter-btn" data-filter="active">Активные</button><button class="status-filter-btn" data-filter="completed">Завершённые</button><button class="status-filter-btn" data-filter="cancelled">Отменённые</button></div><div id="myBookingsList"></div></div>
+        <div id="support" class="tab-content"><h2>Связь с администрацией</h2><div class="card"><div class="chat-box" id="supportChat"></div><div style="display:flex;gap:10px;"><input type="text" id="supportMessage" placeholder="Сообщение..." style="flex:1;padding:10px;border:1px solid #dce3f0;border-radius:6px;"><button id="sendSupportBtn" class="btn btn-primary">Отправить</button></div></div></div>
+        <div id="notifications" class="tab-content"><h2>Уведомления</h2><div id="notificationsList"></div></div>
+    </main>
+    <div id="requestModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;"><div class="modal-content" style="background:white;padding:30px;border-radius:20px;max-width:500px;width:90%;"><span class="close-modal" style="position:absolute;top:15px;right:20px;font-size:28px;cursor:pointer;">&times;</span><h3>Запрос на добавление преподавателя</h3><form id="requestTeacherForm"><div class="form-group"><label>Фамилия</label><input type="text" id="requestSurname" required></div><div class="form-group"><label>Имя</label><input type="text" id="requestName"></div><div class="form-group"><label>Предмет</label><input type="text" id="requestSubject"></div><button type="submit" class="btn btn-primary" style="width:100%;">Отправить</button></form></div></div>
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let studentUser = null, currentBookingFilter = 'all';
+        document.addEventListener('DOMContentLoaded', function() {
+	    updateNotifBadge();
+            const user = checkAuth(['student']); if (!user) return;
+            studentUser = user;
+            document.getElementById('studentName').textContent = studentUser.surname + ' ' + studentUser.name;
+            document.getElementById('logoutBtn').addEventListener('click', function(e) { e.preventDefault(); logout(); });
+            document.querySelectorAll('#studentNavTabs .nav-tab').forEach(tab => { tab.addEventListener('click', function() { switchTab(this.getAttribute('data-tab'), this); }); });
+            document.getElementById('applyFiltersBtn').addEventListener('click', loadConsultations);
+            document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+            document.getElementById('searchTeacherBtn').addEventListener('click', searchTeacher);
+            document.getElementById('sendSupportBtn').addEventListener('click', sendSupportMessage);
+            document.querySelector('#requestModal .close-modal').addEventListener('click', closeRequestModal);
+            document.getElementById('requestTeacherForm').addEventListener('submit', function(e) { e.preventDefault(); submitTeacherRequest(); });
+            document.querySelectorAll('.status-filter-btn').forEach(btn => { btn.addEventListener('click', function() { document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); currentBookingFilter = this.getAttribute('data-filter'); loadMyBookings(); }); });
+            loadFilters(); loadConsultations(); updateNotifBadge();
+        });
+        function switchTab(tabName, element) {
+    document.querySelectorAll('#studentNavTabs .nav-tab').forEach(t => t.classList.remove('active'));
+    if (element) element.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const tab = document.getElementById(tabName);
+    if (tab) tab.classList.add('active');
+    
+    if (tabName === 'my-bookings') loadMyBookings();
+    if (tabName === 'notifications') {
+        loadNotifications();  // Загружаем уведомления
+        updateNotifBadge();   // Обновляем счетчик
+    }
+    if (tabName === 'support') loadSupportChat();
+}
+        function loadFilters() { const subjects = DB.subjects || [...new Set(DB.slots.map(s => s.subject))]; document.getElementById('filterSubject').innerHTML = '<option value="">Все предметы</option>' + subjects.map(s => `<option>${s}</option>`).join(''); const teachers = DB.users.filter(u => u.role === 'teacher' && u.active); document.getElementById('filterTeacher').innerHTML = '<option value="">Все преподаватели</option>' + teachers.map(t => `<option value="${t.id}">${t.surname} ${t.name}</option>`).join(''); }
+        function resetFilters() {
+    document.getElementById('filterSubject').value = '';
+    document.getElementById('filterTeacher').value = '';
+    document.getElementById('filterDate').value = '';
+    document.getElementById('filterBookingStatus').value = 'all';
+    loadConsultations();
+}
+        function getUniqueSubjects(topics) { if (!topics || !topics.length) return ''; return [...new Set(topics.map(t => t.subject))].join(', '); }
+        function renderTopicsHTML(topics) { if (!topics || !topics.length) return ''; return `<div style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;">${topics.map(t => `<div class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration || '?'} мин.</span></div>`).join('')}</div>`; }
+        // Замените функцию loadConsultations в student.html
+function loadConsultations() {
+    let slots = DB.getActiveSlots();
+    const sf = document.getElementById('filterSubject')?.value;
+    const tf = document.getElementById('filterTeacher')?.value;
+    const df = document.getElementById('filterDate')?.value;
+    const bookingFilter = document.getElementById('filterBookingStatus')?.value || 'all';
+    
+    // Применяем фильтры
+    if (sf) slots = slots.filter(s => s.subject === sf);
+    if (tf) slots = slots.filter(s => s.teacherId === tf);
+    if (df) slots = slots.filter(s => s.date === df);
+    
+    // Фильтр по статусу записи
+    if (bookingFilter === 'booked') {
+        // Только те, на которые студент уже записан
+        slots = slots.filter(s => {
+            const bookings = DB.getSlotBookings(s.id);
+            return bookings.some(b => b.studentId === studentUser?.id);
+        });
+    } else if (bookingFilter === 'not-booked') {
+        // Только те, на которые студент НЕ записан
+        slots = slots.filter(s => {
+            const bookings = DB.getSlotBookings(s.id);
+            return !bookings.some(b => b.studentId === studentUser?.id);
+        });
+    }
+    
+    const container = document.getElementById('consultationsList');
+    
+    if (!slots.length) {
+        let emptyMessage = 'Нет доступных консультаций';
+        if (bookingFilter === 'booked') emptyMessage = 'Нет консультаций, на которые вы записаны';
+        if (bookingFilter === 'not-booked') emptyMessage = 'Нет консультаций, на которые вы не записаны';
+        
+        container.innerHTML = `<div class="consultation-card"><p style="color:#666;text-align:center;padding:20px;">${emptyMessage}</p></div>`;
+        return;
+    }
+    
+    const now = new Date();
+    
+    container.innerHTML = slots.map(slot => {
+        const t = DB.getUser(slot.teacherId);
+        const bookings = DB.getSlotBookings(slot.id);
+        const free = slot.limit - bookings.length;
+        const booked = bookings.some(b => b.studentId === studentUser?.id);
+        
+        const slotDateTime = new Date(slot.date + 'T' + slot.timeStart);
+        const hoursUntilSlot = (slotDateTime - now) / (1000 * 60 * 60);
+        
+        let statusText = 'Свободно';
+        let statusColor = '#0f6e3f';
+        let canBook = true;
+        
+        if (booked) {
+            statusText = 'Вы записаны';
+            statusColor = '#0056a7';
+            canBook = false;
+        } else if (hoursUntilSlot <= 0) {
+            statusText = 'Началась';
+            statusColor = '#dc3545';
+            canBook = false;
+        } else if (free <= 0) {
+            statusText = 'Нет мест';
+            statusColor = '#dc3545';
+            canBook = false;
+        } else if (free <= 2) {
+            statusText = 'Почти заполнено';
+            statusColor = '#ffc107';
+        }
+        
+        if (!booked && hoursUntilSlot > 0 && hoursUntilSlot < 12 && free > 0) {
+            canBook = false;
+            statusText = 'Запись закрыта';
+            statusColor = '#ffc107';
+        }
+        
+        return `
+            <div class="consultation-card" style="${booked ? 'border-left: 4px solid #0056a7;' : ''}">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+                    <h3 style="margin:0;">${getUniqueSubjects(slot.topics) || slot.subject}</h3>
+                    <span style="color:${statusColor};font-weight:600;font-size:0.9rem;">${statusText}</span>
+                </div>
+                <div style="display:flex;gap:20px;margin-bottom:10px;color:#666;font-size:0.9rem;">
+                    <span>${formatDate(slot.date)}</span>
+                    <span>${slot.timeStart} - ${slot.timeEnd}</span>
+                    <span>${slot.format === 'очно' ? 'Ауд. ' + slot.room : 'Онлайн'}</span>
+                    <span>Мест: ${free}/${slot.limit}</span>
+                </div>
+                <p style="margin:5px 0;"><strong>Преподаватель:</strong> ${t ? t.surname + ' ' + t.name : 'Неизвестный'}</p>
+                ${renderTopicsHTML(slot.topics)}
+                ${slot.description ? `<p style="margin-top:8px;color:#666;">${slot.description}</p>` : ''}
+                <div style="margin-top:15px;">
+                    ${!booked && canBook ? `<button class="btn btn-primary book-btn" data-sid="${slot.id}">Записаться</button>` : 
+                     booked ? '<span style="color:#0056a7;font-weight:600;font-size:1rem;">Вы записаны</span>' : 
+                     '<span style="color:#666;font-size:0.9rem;">Запись недоступна</span>'}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Навешиваем обработчики на кнопки записи
+    document.querySelectorAll('.book-btn').forEach(b => {
+        b.addEventListener('click', function() {
+            bookSlot(this.dataset.sid);
+        });
+    });
+}
+       function bookSlot(slotId) {
+    const slot = DB.getSlot(slotId);
+    if (!slot) { alert('Консультация не найдена!'); return; }
+    
+    const now = new Date();
+    const slotDateTime = new Date(slot.date + 'T' + slot.timeStart);
+    const hoursUntilSlot = (slotDateTime - now) / (1000 * 60 * 60);
+    
+    if (hoursUntilSlot < 12) {
+        alert('До начала консультации осталось менее 12 часов. Запись невозможна.');
+        return;
+    }
+    
+    const bookings = DB.getSlotBookings(slotId);
+    if (bookings.length >= slot.limit) { alert('Все места заняты.'); return; }
+    if (bookings.some(b => b.studentId === studentUser?.id)) { alert('Вы уже записаны.'); return; }
+    
+    // Если у консультации есть темы - предлагаем выбрать тему
+    let selectedTopic = '';
+    if (slot.topics && slot.topics.length > 0) {
+        const topicNames = slot.topics.map(t => `${t.name} (${t.duration} мин.)`);
+        topicNames.push('Другая тема');
+        
+        const choice = prompt(
+            'Выберите тему консультации:\n\n' + 
+            topicNames.map((name, i) => `${i + 1}. ${name}`).join('\n') +
+            '\n\nВведите номер темы:',
+            '1'
+        );
+        
+        if (!choice) return;
+        
+        const choiceNum = parseInt(choice);
+        if (isNaN(choiceNum) || choiceNum < 1 || choiceNum > topicNames.length) {
+            alert('Неверный выбор темы!');
+            return;
+        }
+        
+        if (choiceNum === topicNames.length) {
+            // Выбрана "Другая тема"
+            selectedTopic = prompt('Укажите вашу тему вопроса:', 'Нужна консультация');
+            if (!selectedTopic || !selectedTopic.trim()) return;
+            selectedTopic = selectedTopic.trim();
+        } else {
+            selectedTopic = slot.topics[choiceNum - 1].name;
+        }
+    } else {
+        selectedTopic = prompt('Укажите тему вопроса:', 'Нужна консультация');
+        if (!selectedTopic || !selectedTopic.trim()) return;
+        selectedTopic = selectedTopic.trim();
+    }
+    
+    // Создаем запись
+    const booking = {
+        id: 'b' + Date.now(),
+        slotId: slotId,
+        studentId: studentUser.id,
+        topic: selectedTopic,
+        status: 'active',
+        attended: false,
+        cancelledBy: null,
+        timestamp: new Date().toISOString()
+    };
+    
+    DB.bookings.push(booking);
+    
+    // Уведомление преподавателю с указанием выбранной темы
+    DB.notifications.push({
+        id: 'n' + Date.now(),
+        userId: slot.teacherId,
+        relatedSlotId: slotId,
+        message: `Студент ${studentUser.surname} ${studentUser.name} записался на "${slot.subject}" ${formatDate(slot.date)} в ${slot.timeStart}. Тема: "${selectedTopic}"`,
+        type: 'new_booking',
+        read: false,
+        createdAt: new Date().toISOString()
+    });
+    
+    // Уведомление студенту
+    DB.notifications.push({
+        id: 'n' + (Date.now() + 1),
+        userId: studentUser.id,
+        message: `Вы записаны на "${slot.subject}" на ${formatDate(slot.date)} в ${slot.timeStart}. Тема: "${selectedTopic}"`,
+        type: 'booking',
+        read: false,
+        createdAt: new Date().toISOString()
+    });
+    
+    saveDB();
+    alert(`Вы успешно записаны на тему: "${selectedTopic}"`);
+    loadConsultations();
+    updateNotifBadge();
+}        function loadMyBookings() { let bookings = DB.bookings.filter(b => b.studentId === studentUser?.id); if (currentBookingFilter !== 'all') bookings = bookings.filter(b => b.status === currentBookingFilter); const container = document.getElementById('myBookingsList'); if (!bookings.length) { container.innerHTML = '<div class="card"><p style="color:#666;">Нет записей</p></div>'; return; } const active = bookings.filter(b => b.status === 'active'), completed = bookings.filter(b => b.status === 'completed'), cancelled = bookings.filter(b => b.status === 'cancelled'); let html = ''; if (active.length) html += '<div class="status-section status-active"><h3>Активные ('+active.length+')</h3>'+active.map(b=>renderBookingCard(b,'active')).join('')+'</div>'; if (completed.length) html += '<div class="status-section status-completed"><h3>Завершённые ('+completed.length+')</h3>'+completed.map(b=>renderBookingCard(b,'completed')).join('')+'</div>'; if (cancelled.length) html += '<div class="status-section status-cancelled"><h3>Отменённые ('+cancelled.length+')</h3>'+cancelled.map(b=>renderBookingCard(b,'cancelled')).join('')+'</div>'; container.innerHTML = html; document.querySelectorAll('.cancel-booking-btn').forEach(b => b.addEventListener('click', function() { cancelBooking(this.dataset.bid); })); }
+        function renderBookingCard(booking, status) { const slot = DB.getSlot(booking.slotId); if (!slot) return ''; const teacher = DB.getUser(slot.teacherId); const now = new Date(); const slotDateTime = new Date(slot.date + 'T' + slot.timeStart); const canCancel = slot.status === 'active' && booking.status === 'active' && (slotDateTime - now) / (1000 * 60 * 60) >= 12; let statusHTML = ''; if (status === 'active') statusHTML = '<span class="badge-status" style="background:#e8f5e9;color:#0f6e3f;">Активна</span>'; else if (status === 'completed') statusHTML = '<span class="badge-status" style="background:#e3f2fd;color:#0056a7;">Завершена</span>'; else if (status === 'cancelled') { if (booking.cancelledBy === 'admin') statusHTML = '<span class="badge-status" style="background:#ffebee;color:#c62828;">Отменена админом</span>'; else if (booking.cancelledBy === 'teacher') statusHTML = '<span class="badge-status" style="background:#ffebee;color:#c62828;">Отменена преподавателем</span>'; else statusHTML = '<span class="badge-status" style="background:#fff3e0;color:#e65100;">Отменена вами</span>'; } return `<div class="booking-card ${status}"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;"><h3 style="margin:0;">${getUniqueSubjects(slot.topics)||slot.subject} - ${formatDate(slot.date)}</h3>${statusHTML}</div><div style="display:flex;gap:20px;margin-bottom:10px;color:#666;"><span>${slot.timeStart}-${slot.timeEnd}</span><span>${slot.format==='очно'?'Ауд. '+slot.room:'Онлайн'}</span></div><p><strong>Преподаватель:</strong> ${teacher?teacher.surname+' '+teacher.name:'Неизвестный'}</p><p><strong>Ваша тема:</strong> ${booking.topic||'Не указана'}</p>${renderTopicsHTML(slot.topics)}${slot.description?`<p style="color:#666;">${slot.description}</p>`:''}<div style="margin-top:15px;">${canCancel?`<button class="btn btn-danger btn-sm cancel-booking-btn" data-bid="${booking.id}">Отменить</button>`:booking.status==='active'?'<span style="color:#ffc107;">Отмена недоступна</span>':''}</div></div>`; }
+        function cancelBooking(bookingId) { if (confirm('Отменить запись?')) { const b = DB.bookings.find(b => b.id === bookingId); if (b) { b.status = 'cancelled'; b.cancelledBy = 'student'; const slot = DB.getSlot(b.slotId); if (slot) DB.notifications.push({ id: 'n'+Date.now(), userId: slot.teacherId, message: `Студент ${studentUser.surname} отменил запись на "${slot.subject}"`, type: 'cancellation', read: false, createdAt: new Date().toISOString() }); saveDB(); loadMyBookings(); } } }
+        function searchTeacher() { const q = document.getElementById('teacherSearchInput').value.trim().toLowerCase(); const div = document.getElementById('searchResults'); if (!q) { div.innerHTML = '<p style="color:#666;">Введите фамилию</p>'; return; } const teachers = DB.users.filter(u => u.role==='teacher'&&u.active&&(u.surname.toLowerCase().includes(q)||u.name.toLowerCase().includes(q))); if (teachers.length) { div.innerHTML = '<h4>Найдено:</h4>'+teachers.map(t => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:5px;"><div><strong>${t.surname} ${t.name}</strong><br><small>${t.email}</small></div><button class="btn btn-primary btn-sm view-btn" data-tid="${t.id}">Смотреть</button></div>`).join(''); document.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', function() { filterByTeacher(this.dataset.tid); })); } else { div.innerHTML = '<div style="padding:15px;background:#fff3cd;border-radius:8px;border-left:4px solid #ffc107;"><p><strong>Преподаватель не найден</strong></p><button class="btn btn-primary btn-sm" id="openReqBtn">Отправить запрос</button></div>'; document.getElementById('openReqBtn').addEventListener('click', openRequestModal); } }
+        function filterByTeacher(tid) { document.getElementById('filterTeacher').value = tid; switchTab('consultations', document.querySelector('[data-tab="consultations"]')); loadConsultations(); }
+        function openRequestModal() { document.getElementById('requestModal').style.display = 'flex'; }
+        function closeRequestModal() { document.getElementById('requestModal').style.display = 'none'; }
+        function submitTeacherRequest() { const sn = document.getElementById('requestSurname').value.trim(); if (!sn) return; DB.users.filter(u => u.role==='admin').forEach(a => DB.notifications.push({ id: 'n'+Date.now(), userId: a.id, message: `Запрос на добавление преподавателя: ${sn}`, type: 'teacher_request', read: false, createdAt: new Date().toISOString() })); saveDB(); alert('Запрос отправлен!'); closeRequestModal(); }
+        function sendSupportMessage() { const msg = document.getElementById('supportMessage')?.value.trim(); if (!msg) return; if (!DB.tickets) DB.tickets = []; let ticket = DB.tickets.find(t => t.userId === studentUser.id && t.status === 'open'); if (!ticket) { ticket = { id: 't'+Date.now(), userId: studentUser.id, messages: [], status: 'open', createdAt: new Date().toISOString() }; DB.tickets.push(ticket); } ticket.messages.push({ sender: 'user', text: msg, timestamp: new Date().toISOString() }); saveDB(); document.getElementById('supportMessage').value = ''; loadSupportChat(); }
+        function loadSupportChat() { if (!DB.tickets) DB.tickets = []; const tickets = DB.tickets.filter(t => t.userId === studentUser?.id); const c = document.getElementById('supportChat'); if (!tickets.length) { c.innerHTML = '<p style="color:#666;">Нет обращений</p>'; return; } c.innerHTML = tickets.map(t => `<div><strong>#${t.id}</strong>${t.messages.map(m=>`<div class="msg ${m.sender==='admin'?'msg-received':'msg-sent'}"><p>${m.text}</p></div>`).join('')}</div>`).join(''); }
+        function loadNotifications() {
+    console.log('Загрузка уведомлений студента...');
+    
+    if (!studentUser) {
+        console.log('Нет текущего студента');
+        return;
+    }
+    
+    const notifications = DB.notifications.filter(n => n.userId === studentUser.id);
+    
+    console.log('Найдено уведомлений:', notifications.length);
+    
+    const container = document.getElementById('notificationsList');
+    
+    if (!container) {
+        console.error('Контейнер notificationsList не найден');
+        return;
+    }
+    
+    if (!notifications.length) {
+        container.innerHTML = '<div class="card"><p style="color:#666;text-align:center;padding:20px;">Нет уведомлений</p></div>';
+        return;
+    }
+    
+    // Сортируем от новых к старым
+    notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    container.innerHTML = notifications.map(n => `
+        <div style="padding:14px;background:#fff3cd;border-left:4px solid #ffc107;margin-bottom:10px;border-radius:8px;${n.read ? 'opacity:0.6;background:#f8f9fa;' : ''}">
+            <p style="margin-bottom:8px;">${n.message}</p>
+            <small style="color:#666;">${new Date(n.createdAt).toLocaleString('ru-RU')}</small>
+            ${!n.read ? `<br><button class="btn btn-sm btn-outline" onclick="markNotifRead('${n.id}')" style="margin-top:8px;">Отметить прочитанным</button>` : ''}
+        </div>
+    `).join('');
+    
+    console.log('Уведомления студента отображены');
+}
+
+// Функция отметки прочитанным
+function markNotifRead(notifId) {
+    const n = DB.notifications.find(n => n.id === notifId);
+    if (n) {
+        n.read = true;
+        saveDB();
+        loadNotifications();
+        updateNotifBadge();
+    }
+}
+
+// Функция обновления счетчика
+function updateNotifBadge() {
+    if (!studentUser) return;
+    
+    const unreadCount = DB.notifications.filter(n => 
+        n.userId === studentUser.id && !n.read
+    ).length;
+    
+    const badge = document.getElementById('notifCount');
+    if (badge) {
+        badge.textContent = unreadCount;
+        badge.style.display = unreadCount > 0 ? 'inline' : 'none';
+    }
+    
+    console.log('Обновлен счетчик уведомлений студента:', unreadCount);
+}
+        function updateNotifBadge() { const count = DB.notifications.filter(n => n.userId === studentUser?.id && !n.read).length; const badge = document.getElementById('notifCount'); if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'inline' : 'none'; } }
+        function formatDate(d) { return d ? new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''; }
+    </script>
+</body>
+</html>
