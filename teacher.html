@@ -192,6 +192,30 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        // Универсальная функция отправки уведомления
+async function sendNotification(userId, message, type = 'info', relatedSlotId = null) {
+    try {
+        const { error } = await _supabase
+            .from('notifications')
+            .insert({
+                id: 'n' + Date.now() + Math.random(),
+                user_id: userId,
+                related_slot_id: relatedSlotId,
+                message: message,
+                type: type,
+                is_read: false,
+                created_at: new Date().toISOString()
+            });
+        
+        if (error) {
+            console.error('Ошибка отправки уведомления:', error);
+        } else {
+            console.log('Уведомление отправлено:', message);
+        }
+    } catch(e) {
+        console.error('Ошибка:', e);
+    }
+}
         // Переключение отображения опций повторения
 function toggleRepeatOptions() {
     const repeatType = document.getElementById('repeatType').value;
