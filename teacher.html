@@ -490,9 +490,9 @@ async function createSimpleRepeatingSlots(baseSlot, repeatType) {
             </div>
             
             <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;color:#666;font-size:0.9rem;">
-                <span>⏰ ${slot.time_start} - ${slot.time_end}</span>
-                <span>📍 ${slot.format} ${slot.room ? '| Ауд. ' + slot.room : ''}</span>
-                <span>👥 Записано: ${activeB.length}/${slot.max_students}</span>
+                <span> ${slot.time_start} - ${slot.time_end}</span>
+                <span> ${slot.format} ${slot.room ? '| Ауд. ' + slot.room : ''}</span>
+                <span> Записано: ${activeB.length}/${slot.max_students}</span>
             </div>
             
             ${topics.length > 0 ? `
@@ -518,7 +518,7 @@ async function createSimpleRepeatingSlots(baseSlot, repeatType) {
             
             ${slot.description ? `
                 <div style="margin:10px 0;padding:10px;background:#f8fafc;border-radius:8px;color:#666;font-size:0.9rem;">
-                    📝 ${slot.description}
+                     ${slot.description}
                 </div>
             ` : ''}
             
