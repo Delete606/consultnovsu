@@ -220,17 +220,59 @@
         }
 
         async function loadSubjects() {
-            const { data } = await _supabase.from('subjects').select('*').order('name');
-            document.getElementById('subjectsList').innerHTML = (data || []).map(s => `<div style="display:flex;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:5px;"><span>${s.name}</span><button class="btn btn-danger btn-sm" onclick="deleteSubject('${s.name}')">Удалить</button></div>`).join('') || '<p style="color:#666;">Нет предметов</p>';
-        }
+    console.log('Загружаю предметы...');
+    
+    const { data, error } = await _supabase
+        .from('subjects')
+        .select('*')
+        .order('name');
+    
+    console.log('Результат:', data, 'Ошибка:', error);
+    
+    const container = document.getElementById('subjectsList');
+    
+    if (error) {
+        container.innerHTML = `<p style="color:#dc3545;">Ошибка: ${error.message}</p>`;
+        console.error('Ошибка загрузки:', error);
+        return;
+    }
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p style="color:#666;">Нет предметов</p>';
+        return;
+    }
+    
+    container.innerHTML = data.map(s => `
+        <div style="display:flex;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:5px;">
+            <span>${s.name}</span>
+            <button class="btn btn-danger btn-sm" onclick="deleteSubject('${s.name}')">Удалить</button>
+        </div>
+    `).join('');
+    
+    console.log('Предметы отображены:', data.length);
+}
 
         async function addSubject() {
-            const name = document.getElementById('newSubject').value.trim();
-            if (!name) return;
-            await _supabase.from('subjects').insert({ name });
-            document.getElementById('newSubject').value = '';
-            loadSubjects();
-        }
+    const name = document.getElementById('newSubject').value.trim();
+    if (!name) { alert('Введи название!'); return; }
+    
+    console.log('Пытаюсь добавить:', name);
+    
+    const { data, error } = await _supabase
+        .from('subjects')
+        .insert({ name: name })
+        .select();
+    
+    console.log('Результат добавления:', data, 'Ошибка:', error);
+    
+    if (error) {
+        alert('Ошибка: ' + error.message);
+        return;
+    }
+    
+    document.getElementById('newSubject').value = '';
+    loadSubjects();
+}
 
         async function deleteSubject(name) {
             await _supabase.from('subjects').delete().eq('name', name);
