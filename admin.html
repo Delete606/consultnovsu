@@ -83,6 +83,7 @@
                 <li class="nav-tab" data-tab="subjects">Предметы</li>
                 <li class="nav-tab" data-tab="slots">Слоты</li>
                 <li class="nav-tab" data-tab="stats">Статистика</li>
+                <li class="nav-tab" data-tab="topics">Глобальные темы</li>
             </ul>
         </div>
     </div>
@@ -107,6 +108,27 @@
                 <div id="subjectsList"><p class="loading">Загрузка...</p></div>
             </div>
         </div>
+        <div id="topics" class="tab-content">
+    <div class="card">
+        <h2>Глобальные темы</h2>
+        <p style="color:#666;margin-bottom:15px;">Добавьте темы с длительностью для всех преподавателей</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
+            <input type="text" id="newTopicName" placeholder="Название темы" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
+            <input type="text" id="newTopicSubject" placeholder="Предмет" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
+            <select id="newTopicDuration" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
+                <option value="5">5 минут</option>
+                <option value="10">10 минут</option>
+                <option value="15">15 минут</option>
+                <option value="20">20 минут</option>
+                <option value="30">30 минут</option>
+                <option value="45">45 минут</option>
+                <option value="60">1 час</option>
+            </select>
+        </div>
+        <button id="addGlobalTopicBtn" class="btn btn-primary">+ Добавить тему</button>
+        <div id="globalTopicsList" style="margin-top:20px;"><p class="loading">Загрузка...</p></div>
+    </div>
+</div>
         <div id="slots" class="tab-content">
             <h2>Консультации</h2>
             <div class="status-filters">
@@ -332,8 +354,91 @@
             document.getElementById('totalBookings').textContent = bookings || 0;
         }
 
+        // Загрузка глобальных тем
+async function loadGlobalTopics() {
+    console.log('Загружаю глобальные темы...');
+    
+    const { data, error } = await _supabase
+        .from('global_topics')
+        .select('*')
+        .order('name');
+    
+    console.log('Темы:', data, 'Ошибка:', error);
+    
+    const container = document.getElementById('globalTopicsList');
+    
+    if (error) {
+        container.innerHTML = `<p style="color:#dc3545;">Ошибка: ${error.message}</p>`;
+        return;
+    }
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p style="color:#666;">Нет глобальных тем</p>';
+        return;
+    }
+    
+    container.innerHTML = data.map(t => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:5px;">
+            <div>
+                <strong>${t.name}</strong> (${t.duration} мин.)
+                <br><small style="color:#666;">Предмет: ${t.subject}</small>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteGlobalTopic(${t.id})">Удалить</button>
+        </div>
+    `).join('');
+}
+
+// Добавление глобальной темы
+async function addGlobalTopic() {
+    const name = document.getElementById('newTopicName').value.trim();
+    const subject = document.getElementById('newTopicSubject').value.trim();
+    const duration = parseInt(document.getElementById('newTopicDuration').value);
+    
+    if (!name || !subject) {
+        alert('Заполни название и предмет!');
+        return;
+    }
+    
+    console.log('Добавляю тему:', { name, subject, duration });
+    
+    const { data, error } = await _supabase
+        .from('global_topics')
+        .insert({ name, subject, duration })
+        .select();
+    
+    console.log('Результат:', data, 'Ошибка:', error);
+    
+    if (error) {
+        alert('Ошибка: ' + error.message);
+        return;
+    }
+    
+    document.getElementById('newTopicName').value = '';
+    document.getElementById('newTopicSubject').value = '';
+    loadGlobalTopics();
+    alert('Тема добавлена!');
+}
+
+// Удаление глобальной темы
+async function deleteGlobalTopic(id) {
+    if (!confirm('Удалить тему?')) return;
+    
+    const { error } = await _supabase
+        .from('global_topics')
+        .delete()
+        .eq('id', id);
+    
+    if (error) {
+        alert('Ошибка: ' + error.message);
+        return;
+    }
+    
+    loadGlobalTopics();
+}
+
         function switchTab(name, el) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            if (name === 'topics') loadGlobalTopics();
             if (el) el.classList.add('active');
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(name).classList.add('active');
@@ -347,6 +452,7 @@
             currentUser = checkAuth();
             if (!currentUser) return;
             document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('addGlobalTopicBtn').addEventListener('click', addGlobalTopic);
             document.querySelectorAll('.nav-tab').forEach(tab => tab.addEventListener('click', function() { switchTab(this.dataset.tab, this); }));
             document.querySelectorAll('.status-filter-btn').forEach(btn => btn.addEventListener('click', function() { document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); currentFilter = this.dataset.filter; loadSlots(); }));
             document.getElementById('addUserBtn').addEventListener('click', openAddModal);
