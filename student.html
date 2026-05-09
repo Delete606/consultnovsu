@@ -2,190 +2,67 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Кабинет студента - Консультации НовГУ</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="header">
-        <div class="container header-content">
-            <div class="logo">
-                <img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect fill=%22%23003d7c%22 width=%2248%22 height=%2248%22 rx=%228%22/%3E%3Ctext fill=%22white%22 x=%2250%25%22 y=%2255%25%22 font-size=%2220%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'">
-                <div class="logo-text"><h2>Консультации</h2><span>расписание - запись</span></div>
-            </div>
-            <div class="user-info">
-                <span id="studentName" style="font-weight:600;"></span>
-                <span class="badge">Студент</span>
-                <button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button>
-            </div>
-        </div>
-    </div>
-    <div class="nav">
-        <div class="container">
-            <ul class="nav-tabs" id="studentNavTabs">
-                <li class="nav-tab active" data-tab="consultations">Консультации</li>
-                <li class="nav-tab" data-tab="search-teacher">Поиск преподавателя</li>
-                <li class="nav-tab" data-tab="my-bookings">Мои записи</li>
-                <li class="nav-tab" data-tab="support">Поддержка</li>
-                <li class="nav-tab" data-tab="notifications">Уведомления <span id="notifCount" style="background:#dc3545;color:white;padding:2px 8px;border-radius:12px;font-size:12px;display:none;">0</span></li>
-            </ul>
-        </div>
-    </div>
+    <div class="header"><div class="container header-content"><div class="logo"><img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22%3E%3Crect fill=%22%23003d7c%22 width=%2236%22 height=%2236%22 rx=%228%22/%3E%3Ctext fill=%22white%22 x=%2250%25%22 y=%2255%25%22 font-size=%2216%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'"><div class="logo-text"><h2>Консультации</h2><span>расписание - запись</span></div></div><div class="user-info"><span id="studentName" style="font-weight:600;"></span><span class="badge">Студент</span><button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button></div></div></div>
+    <div class="nav"><div class="container"><ul class="nav-tabs" id="studentNavTabs"><li class="nav-tab active" data-tab="consultations">Консультации</li><li class="nav-tab" data-tab="search-teacher">Поиск</li><li class="nav-tab" data-tab="my-bookings">Записи</li><li class="nav-tab" data-tab="support">Поддержка</li><li class="nav-tab" data-tab="notifications">Уведомления <span id="notifCount" style="background:#dc3545;color:white;padding:2px 6px;border-radius:10px;font-size:10px;display:none;">0</span></li></ul></div></div>
     <main class="container">
-        <div id="consultations" class="tab-content active">
-            <div class="card"><h3 style="margin-bottom:15px;">Фильтры</h3><div style="display:flex;gap:10px;flex-wrap:wrap;"><select id="filterSubject" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;"><option value="">Все предметы</option></select><select id="filterTeacher" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;"><option value="">Все преподаватели</option></select><input type="date" id="filterDate" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;"><select id="filterBookingStatus" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;"><option value="all">Все</option><option value="booked">Записан</option><option value="not-booked">Не записан</option></select><button id="applyFilters" class="btn btn-primary btn-sm">Применить</button><button id="resetFilters" class="btn btn-outline btn-sm">Сбросить</button></div></div>
-            <div id="consultationsList"><p class="loading">Загрузка...</p></div>
-        </div>
-        <div id="search-teacher" class="tab-content"><div class="card"><h3 style="margin-bottom:15px;">Поиск преподавателя</h3><div style="display:flex;gap:10px;"><input type="text" id="teacherSearch" placeholder="Фамилия" style="flex:1;padding:12px;border:2px solid #e0e6ed;border-radius:10px;"><button id="searchTeacherBtn" class="btn btn-primary">Найти</button></div><div id="searchResults" style="margin-top:15px;"></div></div></div>
-        <div id="my-bookings" class="tab-content"><h2 style="margin-bottom:20px;">Мои записи</h2><div class="status-filters"><button class="status-filter-btn active" data-filter="all">Все</button><button class="status-filter-btn" data-filter="active">Активные</button><button class="status-filter-btn" data-filter="completed">Завершённые</button><button class="status-filter-btn" data-filter="cancelled">Отменённые</button></div><div id="myBookingsList"><p class="loading">Загрузка...</p></div></div>
-        <div id="support" class="tab-content"><h2 style="margin-bottom:20px;">Связь с администрацией</h2><div class="card"><div id="studentSupportChat" style="max-height:400px;overflow-y:auto;margin-bottom:15px;"><p style="color:#666;text-align:center;padding:20px;">Загрузка...</p></div><div style="display:flex;gap:10px;"><input type="text" id="studentSupportMsg" placeholder="Введите сообщение..." style="flex:1;padding:12px;border:2px solid #e0e6ed;border-radius:10px;"><button id="sendStudentSupportBtn" class="btn btn-primary">Отправить</button></div></div></div>
-        <div id="notifications" class="tab-content"><h2 style="margin-bottom:20px;">Уведомления</h2><div id="notificationsList"><p class="loading">Загрузка...</p></div></div>
+        <div id="consultations" class="tab-content active"><div class="card"><h3 style="margin-bottom:10px;">Фильтры</h3><div style="display:flex;gap:8px;flex-wrap:wrap;"><select id="filterSubject" style="padding:10px;border:2px solid #e0e6ed;border-radius:10px;"><option value="">Предметы</option></select><select id="filterTeacher" style="padding:10px;border:2px solid #e0e6ed;border-radius:10px;"><option value="">Преподаватели</option></select><input type="date" id="filterDate" style="padding:10px;border:2px solid #e0e6ed;border-radius:10px;"><select id="filterBookingStatus" style="padding:10px;border:2px solid #e0e6ed;border-radius:10px;"><option value="all">Все</option><option value="booked">Записан</option><option value="not-booked">Не записан</option></select><button id="applyFilters" class="btn btn-primary btn-sm">Применить</button><button id="resetFilters" class="btn btn-outline btn-sm">Сбросить</button></div></div><div id="consultationsList"><p class="loading">Загрузка...</p></div></div>
+        <div id="search-teacher" class="tab-content"><div class="card"><h3 style="margin-bottom:10px;">Поиск преподавателя</h3><div style="display:flex;gap:8px;"><input type="text" id="teacherSearch" placeholder="Фамилия" style="flex:1;padding:10px;border:2px solid #e0e6ed;border-radius:10px;"><button id="searchTeacherBtn" class="btn btn-primary">Найти</button></div><div id="searchResults" style="margin-top:12px;"></div></div></div>
+        <div id="my-bookings" class="tab-content"><h2>Мои записи</h2><div class="status-filters"><button class="status-filter-btn active" data-filter="all">Все</button><button class="status-filter-btn" data-filter="active">Активные</button><button class="status-filter-btn" data-filter="completed">Завершённые</button><button class="status-filter-btn" data-filter="cancelled">Отменённые</button></div><div id="myBookingsList"><p class="loading">Загрузка...</p></div></div>
+        <div id="support" class="tab-content"><h2>Поддержка</h2><div class="card"><div id="studentSupportChat" style="max-height:350px;overflow-y:auto;margin-bottom:12px;"></div><div style="display:flex;gap:8px;"><input type="text" id="studentSupportMsg" placeholder="Сообщение..." style="flex:1;padding:10px;border:2px solid #e0e6ed;border-radius:10px;"><button id="sendStudentSupportBtn" class="btn btn-primary">Отправить</button></div></div></div>
+        <div id="notifications" class="tab-content"><h2>Уведомления</h2><div id="notificationsList"></div></div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const _supabase = window.supabase.createClient('https://bimdjjmdxoygeucdzlmu.supabase.co','sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje');
-        let currentUser=null,currentBookingFilter='all',isSending=false;
+        const _s=window.supabase.createClient('https://bimdjjmdxoygeucdzlmu.supabase.co','sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje');
+        let U=null,BF='all',isBooking=false,isSearching=false,isSending=false;
+        let slotsCache=null,bookingsCache=null,myBookingsCache=null,filtersCache=null;
 
-        function checkAuth(){const s=sessionStorage.getItem('currentUser');if(!s){window.location.href='index.html';return null;}const u=JSON.parse(s);if(u.role!=='student'){window.location.href='index.html';return null;}return u;}
-        function logout(){sessionStorage.removeItem('currentUser');window.location.href='index.html';}
-        function formatDate(d){return d?new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}):'';}
-        function switchTab(n,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(n).classList.add('active');if(n==='my-bookings')loadMyBookings();if(n==='notifications')loadNotifications();if(n==='support')loadSupport();}
-        function resetFilters(){document.getElementById('filterSubject').value='';document.getElementById('filterTeacher').value='';document.getElementById('filterDate').value='';document.getElementById('filterBookingStatus').value='all';loadConsultations();}
+        function A(){const s=sessionStorage.getItem('currentUser');if(!s){location.href='index.html';return null;}const u=JSON.parse(s);if(u.role!=='student'){location.href='index.html';return null;}return u;}
+        function L(){sessionStorage.removeItem('currentUser');location.href='index.html';}
+        function FD(d){return d?new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}):'';}
+        function ST(n,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(n).classList.add('active');if(n==='my-bookings')LMB();if(n==='notifications'){LN();MR();}if(n==='support')LSP();}
 
-        async function loadFilters(){
-            const[{data:subjects},{data:teachers}]=await Promise.all([_supabase.from('subjects').select('name').order('name'),_supabase.from('users').select('*').eq('role','teacher').eq('active',true)]);
-            document.getElementById('filterSubject').innerHTML='<option value="">Все предметы</option>'+(subjects||[]).map(s=>`<option>${s.name}</option>`).join('');
-            document.getElementById('filterTeacher').innerHTML='<option value="">Все преподаватели</option>'+(teachers||[]).map(t=>`<option value="${t.id}">${t.surname} ${t.name}</option>`).join('');
-        }
+        // ФИЛЬТРЫ (кешируются)
+        async function LF(){if(filtersCache){renderFilters();return;}const[{data:subjects},{data:teachers}]=await Promise.all([_s.from('subjects').select('name').order('name'),_s.from('users').select('id,surname,name').eq('role','teacher').eq('active',true)]);filtersCache={subjects:subjects||[],teachers:teachers||[]};renderFilters();}
+        function renderFilters(){document.getElementById('filterSubject').innerHTML='<option value="">Предметы</option>'+filtersCache.subjects.map(s=>`<option>${s.name}</option>`).join('');document.getElementById('filterTeacher').innerHTML='<option value="">Преподаватели</option>'+filtersCache.teachers.map(t=>`<option value="${t.id}">${t.surname} ${t.name}</option>`).join('');}
+        function RF(){document.getElementById('filterSubject').value='';document.getElementById('filterTeacher').value='';document.getElementById('filterDate').value='';document.getElementById('filterBookingStatus').value='all';LC();}
 
-        async function loadConsultations(){
-            const c=document.getElementById('consultationsList');c.innerHTML='<p class="loading">Загрузка...</p>';
-            const today=new Date().toISOString().split('T')[0];
-            const[sf,tf,df,bf]=[document.getElementById('filterSubject').value,document.getElementById('filterTeacher').value,document.getElementById('filterDate').value,document.getElementById('filterBookingStatus').value];
-            let q=_supabase.from('slots').select('id,subject,date,time_start,time_end,format,room,max_students,topics,description,teacher_id,users!slots_teacher_id_fkey(name,surname)').eq('status','active').gte('date',today).order('date').order('time_start').limit(50);
-            if(sf)q=q.eq('subject',sf);if(tf)q=q.eq('teacher_id',tf);if(df)q=q.eq('date',df);
-            const{data:slots}=await q;
-            if(!slots?.length){c.innerHTML='<div class="consultation-card"><p style="color:#666;text-align:center;">Нет консультаций</p></div>';return;}
-            const slotIds=slots.map(s=>s.id);
-            const[{data:myBookings},{data:counts}]=await Promise.all([_supabase.from('bookings').select('slot_id').eq('student_id',currentUser.id).eq('status','active'),_supabase.from('bookings').select('slot_id').eq('status','active').in('slot_id',slotIds)]);
-            const bookedIds=(myBookings||[]).map(b=>b.slot_id),countMap={};(counts||[]).forEach(b=>{countMap[b.slot_id]=(countMap[b.slot_id]||0)+1;});
-            let fs=slots;if(bf==='booked')fs=slots.filter(s=>bookedIds.includes(s.id));else if(bf==='not-booked')fs=slots.filter(s=>!bookedIds.includes(s.id));
-            if(!fs.length){c.innerHTML='<div class="consultation-card"><p style="color:#666;text-align:center;">Нет консультаций</p></div>';return;}
-            const now=new Date();
-            c.innerHTML=fs.map(s=>{
-                const free=s.max_students-(countMap[s.id]||0),booked=bookedIds.includes(s.id),st=new Date(s.date+'T'+s.time_start),h=(st-now)/3600000;
-                let txt='Свободно',cl='#0f6e3f',ok=true;
-                if(booked){txt='Вы записаны';cl='#0056a7';ok=false;}else if(h<=0){txt='Началась';cl='#dc3545';ok=false;}else if(free<=0){txt='Нет мест';cl='#dc3545';ok=false;}else if(free<=2){txt='Почти заполнено';cl='#ffc107';}
-                if(!booked&&h>0&&h<12&&free>0){ok=false;txt='Запись закрыта';cl='#ffc107';}
-                const topics=s.topics||[];
-                return`<div class="consultation-card" style="${booked?'border-left:4px solid #0056a7;':''}"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;"><h3 style="margin:0;">${s.subject}</h3><span style="color:${cl};font-weight:600;">${txt}</span></div><div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:10px;color:#666;font-size:0.9rem;"><span>${formatDate(s.date)}</span><span>${s.time_start}-${s.time_end}</span><span>${s.format==='очно'?'Ауд. '+s.room:'Онлайн'}</span><span>Мест: ${free}/${s.max_students}</span></div><p style="margin:5px 0;"><strong>Преподаватель:</strong> ${s.users?.surname||''} ${s.users?.name||''}</p>${topics.length?`<div style="margin:10px 0;display:flex;flex-wrap:wrap;gap:8px;">${topics.map(t=>`<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration||'?'} мин.</span></span>`).join('')}</div>`:''}${s.description?`<div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px;color:#666;font-size:0.9rem;">${s.description}</div>`:''}<div style="margin-top:15px;">${!booked&&ok?`<button class="btn btn-primary book-btn" data-sid="${s.id}">Записаться</button>`:booked?'<span style="color:#0056a7;font-weight:600;">Вы записаны</span>':'<span style="color:#666;">Запись недоступна</span>'}</div></div>`;
-            }).join('');
-            document.querySelectorAll('.book-btn').forEach(b=>b.addEventListener('click',()=>bookSlot(b.dataset.sid)));
-        }
+        // КОНСУЛЬТАЦИИ
+        async function LC(){const c=document.getElementById('consultationsList');c.innerHTML='<p class="loading">Загрузка...</p>';const today=new Date().toISOString().split('T')[0];if(!slotsCache){const{data:slots}=await _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').eq('status','active').gte('date',today).order('date').order('time_start').limit(50);slotsCache=slots||[];}if(!myBookingsCache){const{data:my}=await _s.from('bookings').select('slot_id').eq('student_id',U.id).eq('status','active');myBookingsCache=(my||[]).map(b=>b.slot_id);}let slots=slotsCache;const sf=document.getElementById('filterSubject').value;const tf=document.getElementById('filterTeacher').value;const df=document.getElementById('filterDate').value;const bf=document.getElementById('filterBookingStatus').value;if(sf)slots=slots.filter(s=>s.subject===sf);if(tf)slots=slots.filter(s=>s.teacher_id===tf);if(df)slots=slots.filter(s=>s.date===df);if(bf==='booked')slots=slots.filter(s=>myBookingsCache.includes(s.id));if(bf==='not-booked')slots=slots.filter(s=>!myBookingsCache.includes(s.id));if(!slots.length){c.innerHTML='<div class="consultation-card"><p style="color:#666;text-align:center;">Нет консультаций</p></div>';return;}const sids=slots.map(s=>s.id);const{data:counts}=await _s.from('bookings').select('slot_id').eq('status','active').in('slot_id',sids);const cm={};(counts||[]).forEach(b=>{cm[b.slot_id]=(cm[b.slot_id]||0)+1;});const now=new Date();c.innerHTML=slots.map(s=>{const free=s.max_students-(cm[s.id]||0);const booked=myBookingsCache.includes(s.id);const st=new Date(s.date+'T'+s.time_start);const h=(st-now)/3600000;let txt='Свободно',cl='#0f6e3f',ok=true;if(booked){txt='Вы записаны';cl='#0056a7';ok=false;}else if(h<=0){txt='Началась';cl='#dc3545';ok=false;}else if(free<=0){txt='Нет мест';cl='#dc3545';ok=false;}else if(free<=2){txt='Почти заполнено';cl='#ffc107';}if(!booked&&h>0&&h<12&&free>0){ok=false;txt='Запись закрыта';cl='#ffc107';}const tp=s.topics||[];return`<div class="consultation-card" style="${booked?'border-left:4px solid #0056a7;':''}"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;"><h3 style="margin:0;font-size:1rem;">${s.subject}</h3><span style="color:${cl};font-weight:600;font-size:0.88rem;">${txt}</span></div><div style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 12px;background:#f8fafc;border-radius:8px;color:#666;font-size:0.85rem;margin-bottom:8px;"><span><strong>${FD(s.date)}</strong></span><span>${s.time_start}-${s.time_end}</span><span>${s.format==='очно'?'Ауд. '+s.room:'Онлайн'}</span><span>Мест: ${free}/${s.max_students}</span></div><p style="margin:4px 0;"><strong>Преподаватель:</strong> ${s.users?.surname||''} ${s.users?.name||''}</p>${tp.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;">${tp.map(t=>`<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration||'?'} мин</span></span>`).join('')}</div>`:''}${s.description?`<div style="padding:8px 12px;background:#fefbf0;border-left:3px solid #ffc107;border-radius:6px;color:#666;font-size:0.85rem;">${s.description}</div>`:''}<div style="margin-top:10px;">${!booked&&ok?`<button class="btn btn-primary book-btn" data-sid="${s.id}">Записаться</button>`:booked?'<span style="color:#0056a7;font-weight:600;">Вы записаны</span>':'<span style="color:#666;">Запись недоступна</span>'}</div></div>`;}).join('');c.onclick=function(e){const t=e.target;if(t.classList.contains('book-btn'))BS(t.dataset.sid);};}
 
-        async function bookSlot(sid){
-            const{data:s}=await _supabase.from('slots').select('*').eq('id',sid).single();if(!s)return;
-            if((new Date(s.date+'T'+s.time_start)-new Date())/3600000<12){alert('Менее 12 часов!');return;}
-            const{count}=await _supabase.from('bookings').select('*',{count:'exact'}).eq('slot_id',sid).eq('status','active');
-            if(count>=s.max_students){alert('Нет мест!');return;}
-            const{data:ex}=await _supabase.from('bookings').select('id').eq('slot_id',sid).eq('student_id',currentUser.id).eq('status','active');
-            if(ex.length){alert('Уже записаны!');return;}
-            let topic='';if(s.topics?.length){const ns=s.topics.map((t,i)=>`${i+1}. ${t.name}`);const ch=prompt('Выберите тему:\n\n'+ns.join('\n'));if(!ch)return;const idx=parseInt(ch)-1;topic=idx>=0&&idx<s.topics.length?s.topics[idx].name:prompt('Тема:');}else{topic=prompt('Тема:');}
-            if(!topic)return;
-            await _supabase.from('bookings').insert({id:'b'+Date.now(),slot_id:sid,student_id:currentUser.id,topic,status:'active'});
-            await _supabase.from('notifications').insert({id:'n'+Date.now(),user_id:s.teacher_id,related_slot_id:sid,message:`Студент ${currentUser.surname} ${currentUser.name} записался на "${s.subject}". Тема: "${topic}"`,type:'new_booking',is_read:false});
-            alert('Записаны!');loadConsultations();loadNotifications();
-        }
+        // ЗАПИСЬ НА КОНСУЛЬТАЦИЮ
+        async function BS(sid){if(isBooking)return;const slot=slotsCache.find(s=>s.id===sid);if(!slot)return;const h=(new Date(slot.date+'T'+slot.time_start)-new Date())/3600000;if(h<12){alert('Менее 12 часов!');return;}const free=slot.max_students-(cm[sid]||0);if(free<=0){alert('Нет мест!');return;}if(myBookingsCache.includes(sid)){alert('Уже записаны!');return;}let topic='';if(slot.topics&&slot.topics.length){const ns=slot.topics.map((t,i)=>`${i+1}. ${t.name}`);const ch=prompt('Выберите тему:\n\n'+ns.join('\n'));if(!ch)return;const idx=parseInt(ch)-1;topic=idx>=0&&idx<slot.topics.length?slot.topics[idx].name:prompt('Тема:');}else{topic=prompt('Тема:');}if(!topic)return;isBooking=true;const{error}=await _s.from('bookings').insert({id:'b'+Date.now(),slot_id:sid,student_id:U.id,topic,status:'active'});if(error){alert('Ошибка');isBooking=false;return;}await _s.from('notifications').insert({id:'n'+Date.now(),user_id:slot.teacher_id,related_slot_id:sid,message:`Студент ${U.surname} ${U.name} записался на "${slot.subject}". Тема: "${topic}"`,type:'new_booking',is_read:false});myBookingsCache.push(sid);alert('Записаны!');LC();LN();isBooking=false;}
 
-        async function loadMyBookings(){
-            const c=document.getElementById('myBookingsList');c.innerHTML='<p class="loading">Загрузка...</p>';
-            let q=_supabase.from('bookings').select('*,slots(*,users!slots_teacher_id_fkey(name,surname))').eq('student_id',currentUser.id).order('created_at',{ascending:false});
-            if(currentBookingFilter!=='all')q=q.eq('status',currentBookingFilter);
-            const{data}=await q;
-            if(!data?.length){c.innerHTML='<div class="card"><p style="color:#666;text-align:center;">Нет записей</p></div>';return;}
-            const a=data.filter(b=>b.status==='active'),cm=data.filter(b=>b.status==='completed'),cn=data.filter(b=>b.status==='cancelled');
-            let h='';
-            if(a.length)h+=`<div class="status-section status-active"><h3>Активные (${a.length})</h3>${a.map(renderBooking).join('')}</div>`;
-            if(cm.length)h+=`<div class="status-section status-completed"><h3>Завершённые (${cm.length})</h3>${cm.map(renderBooking).join('')}</div>`;
-            if(cn.length)h+=`<div class="status-section status-cancelled"><h3>Отменённые (${cn.length})</h3>${cn.map(renderBooking).join('')}</div>`;
-            c.innerHTML=h;
-            document.querySelectorAll('.cancel-booking-btn').forEach(b=>b.addEventListener('click',()=>cancelBooking(b.dataset.bid)));
-        }
+        // МОИ ЗАПИСИ
+        async function LMB(){const c=document.getElementById('myBookingsList');c.innerHTML='<p class="loading">Загрузка...</p>';let q=_s.from('bookings').select('*,slots(*,users!slots_teacher_id_fkey(name,surname))').eq('student_id',U.id).order('created_at',{ascending:false});if(BF!=='all')q=q.eq('status',BF);const{data}=await q;if(!data||!data.length){c.innerHTML='<div class="card"><p style="color:#666;text-align:center;">Нет записей</p></div>';return;}const a=data.filter(b=>b.status==='active'),cm=data.filter(b=>b.status==='completed'),cn=data.filter(b=>b.status==='cancelled');let h='';if(a.length)h+=`<div class="status-section status-active"><h3>Активные (${a.length})</h3>${a.map(RB).join('')}</div>`;if(cm.length)h+=`<div class="status-section status-completed"><h3>Завершённые</h3>${cm.map(RB).join('')}</div>`;if(cn.length)h+=`<div class="status-section status-cancelled"><h3>Отменённые</h3>${cn.map(RB).join('')}</div>`;c.innerHTML=h;c.onclick=function(e){const t=e.target;if(t.classList.contains('cancel-booking-btn'))CB(t.dataset.bid);};}
+        function RB(b){const s=b.slots;if(!s)return'';let sh='';if(b.status==='active')sh='<span class="badge-status" style="background:#e8f5e9;color:#0f6e3f;">Активна</span>';else if(b.status==='completed')sh='<span class="badge-status" style="background:#e3f2fd;color:#0056a7;">Завершена</span>';else{const by=b.cancelled_by==='admin'?'администратором':b.cancelled_by==='teacher'?'преподавателем':'вами';sh=`<span class="badge-status" style="background:#ffebee;color:#c62828;">Отменена ${by}</span>`;}const tp=s.topics||[];return`<div class="booking-card ${b.status}"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;"><h3 style="margin:0;font-size:1rem;">${s.subject} - ${FD(s.date)}</h3>${sh}</div><div style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 12px;background:#f8fafc;border-radius:8px;color:#666;font-size:0.85rem;margin-bottom:8px;"><span>${s.time_start}-${s.time_end}</span><span>${s.format==='очно'?'Ауд. '+s.room:'Онлайн'}</span></div><p><strong>Преподаватель:</strong> ${s.users?.surname||''} ${s.users?.name||''}</p><p><strong>Тема:</strong> ${b.topic||'Не указана'}</p>${tp.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;">${tp.map(t=>`<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration||'?'} мин</span></span>`).join('')}</div>`:''}${b.status==='active'?`<button class="btn btn-danger btn-sm cancel-booking-btn" data-bid="${b.id}" style="margin-top:8px;">Отменить запись</button>`:''}</div>`;}
+        async function CB(bid){if(!confirm('Отменить?'))return;const{data:b}=await _s.from('bookings').select('slot_id').eq('id',bid).single();await _s.from('bookings').update({status:'cancelled',cancelled_by:'student'}).eq('id',bid);if(b){const{data:s}=await _s.from('slots').select('teacher_id,subject,date').eq('id',b.slot_id).single();if(s)await _s.from('notifications').insert({id:'n'+Date.now(),user_id:s.teacher_id,message:`Студент ${U.surname} ${U.name} отменил запись на "${s.subject}"`,type:'cancellation',is_read:false});const idx=myBookingsCache.indexOf(b.slot_id);if(idx>-1)myBookingsCache.splice(idx,1);}LMB();}
 
-        function renderBooking(b){
-            const s=b.slots;if(!s)return'';
-            let sh='';if(b.status==='active')sh='<span class="badge-status" style="background:#e8f5e9;color:#0f6e3f;">Активна</span>';else if(b.status==='completed')sh='<span class="badge-status" style="background:#e3f2fd;color:#0056a7;">Завершена</span>';else{const by=b.cancelled_by==='admin'?'администратором':b.cancelled_by==='teacher'?'преподавателем':'вами';sh=`<span class="badge-status" style="background:#ffebee;color:#c62828;">Отменена ${by}</span>`;}
-            const topics=s.topics||[];
-            return`<div class="booking-card ${b.status}"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;"><h3 style="margin:0;">${s.subject} - ${formatDate(s.date)}</h3>${sh}</div><div style="display:flex;gap:15px;color:#666;font-size:0.9rem;margin-bottom:10px;"><span>${s.time_start}-${s.time_end}</span><span>${s.format==='очно'?'Ауд. '+s.room:'Онлайн'}</span></div><p><strong>Преподаватель:</strong> ${s.users?.surname||''} ${s.users?.name||''}</p><p><strong>Тема:</strong> ${b.topic||'Не указана'}</p>${topics.length?`<div style="margin:10px 0;display:flex;flex-wrap:wrap;gap:8px;">${topics.map(t=>`<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration||'?'} мин.</span></span>`).join('')}</div>`:''}${b.status==='active'?`<button class="btn btn-danger btn-sm cancel-booking-btn" data-bid="${b.id}" style="margin-top:10px;">Отменить запись</button>`:''}</div>`;
-        }
+        // ПОИСК ПРЕПОДАВАТЕЛЯ
+        async function STe(){if(isSearching)return;const q=document.getElementById('teacherSearch').value.trim().toLowerCase();const c=document.getElementById('searchResults');if(!q){c.innerHTML='<p style="color:#666;">Введите фамилию</p>';return;}isSearching=true;const btn=document.getElementById('searchTeacherBtn');btn.disabled=true;btn.textContent='...';const{data}=await _s.from('users').select('*').eq('role','teacher').ilike('surname',`%${q}%`);c.innerHTML=data&&data.length?data.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:4px;"><div><strong>${t.surname} ${t.name}</strong><br><small>${t.email}</small></div><button class="btn btn-primary btn-sm" onclick="FBT('${t.id}')">Смотреть</button></div>`).join(''):'<p style="color:#666;">Не найден</p>';isSearching=false;btn.disabled=false;btn.textContent='Найти';}
+        function FBT(id){document.getElementById('filterTeacher').value=id;ST('consultations',document.querySelector('[data-tab="consultations"]'));LC();}
 
-        async function cancelBooking(bid){
-            if(!confirm('Отменить?'))return;
-            const{data:b}=await _supabase.from('bookings').select('slot_id').eq('id',bid).single();
-            await _supabase.from('bookings').update({status:'cancelled',cancelled_by:'student'}).eq('id',bid);
-            if(b){const{data:s}=await _supabase.from('slots').select('teacher_id,subject,date').eq('id',b.slot_id).single();if(s)await _supabase.from('notifications').insert({id:'n'+Date.now(),user_id:s.teacher_id,message:`Студент ${currentUser.surname} ${currentUser.name} отменил запись на "${s.subject}" ${formatDate(s.date)}`,type:'cancellation',is_read:false});}
-            loadMyBookings();
-        }
+        // УВЕДОМЛЕНИЯ
+        async function MR(){const{data}=await _s.from('notifications').select('id').eq('user_id',U.id).eq('is_read',false);if(data&&data.length)for(const n of data)await _s.from('notifications').update({is_read:true}).eq('id',n.id);}
+        async function LN(){const{data}=await _s.from('notifications').select('*').eq('user_id',U.id).order('created_at',{ascending:false}).limit(30);const c=document.getElementById('notificationsList');if(!data||!data.length){c.innerHTML='<p style="color:#666;">Нет уведомлений</p>';return;}c.innerHTML=data.map(n=>`<div class="notification-item ${n.is_read?'read':''}"><p>${n.message}</p><small>${new Date(n.created_at).toLocaleString('ru-RU')}</small></div>`).join('');document.getElementById('notifCount').textContent='0';document.getElementById('notifCount').style.display='none';}
+        async function UNB(){const{count}=await _s.from('notifications').select('*',{count:'exact',head:true}).eq('user_id',U.id).eq('is_read',false);const b=document.getElementById('notifCount');if(b){b.textContent=count||0;b.style.display=count>0?'inline':'none';}}
 
-        async function searchTeacher(){
-            const q=document.getElementById('teacherSearch').value.trim().toLowerCase(),c=document.getElementById('searchResults');
-            if(!q){c.innerHTML='<p style="color:#666;">Введите фамилию</p>';return;}
-            const{data}=await _supabase.from('users').select('*').eq('role','teacher').ilike('surname',`%${q}%`);
-            c.innerHTML=data?.length?data.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:5px;"><div><strong>${t.surname} ${t.name}</strong><br><small>${t.email}</small></div><button class="btn btn-primary btn-sm" onclick="filterByTeacher('${t.id}')">Смотреть</button></div>`).join(''):'<p style="color:#666;">Не найден</p>';
-        }
+        // ПОДДЕРЖКА
+        async function LSP(){const c=document.getElementById('studentSupportChat');const{data:tickets}=await _s.from('tickets').select('id,status,messages,created_at').eq('user_id',U.id).order('created_at',{ascending:false}).limit(10);if(!tickets||!tickets.length){c.innerHTML='<p style="color:#666;">Нет обращений</p>';return;}c.innerHTML=tickets.map(t=>{const ms=t.messages||[],open=t.status==='open';const last=ms.length?ms[ms.length-1]:null;const preview=last?last.text.substring(0,80)+(last.text.length>80?'...':''):'Нет сообщений';return`<div class="ticket-card" style="border-left:4px solid ${open?'#0f6e3f':'#c62828'};"><div class="ticket-header-row" onclick="toggleStudentTicket('${t.id}')"><div class="ticket-avatar">${(U.name||'?')[0]}${(U.surname||'?')[0]}</div><div class="ticket-info"><strong>#${t.id.slice(-6)}</strong> <span style="color:${open?'#0f6e3f':'#c62828'};">${open?'Открыто':'Закрыто'}</span><p style="color:#666;font-size:0.82rem;">${preview}</p></div><div class="ticket-meta"><small>${new Date(t.created_at).toLocaleDateString('ru-RU')}</small><div class="ticket-arrow">▼</div></div></div><div class="ticket-body" id="sbody_${t.id}">${ms.map(m=>`<div class="chat-message ${m.sender}"><div class="chat-bubble ${m.sender}">${m.text}</div></div>`).join('')}${open?`<div style="display:flex;gap:6px;margin-top:8px;"><input type="text" id="SR_${t.id}" placeholder="Ответ..."><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();SRT('${t.id}')">Отпр.</button></div>`:''}</div></div>`;}).join('');}
+        window.toggleStudentTicket=function(id){const body=document.getElementById('sbody_'+id);if(!body.style.display||body.style.display==='none'){body.style.display='block';}else{body.style.display='none';}};
+        window.SRT=async function(tid){const input=document.getElementById('SR_'+tid),msg=input?.value.trim();if(!msg)return;const{data:t}=await _s.from('tickets').select('messages').eq('id',tid).single();if(!t)return;const ms=[...(t.messages||[]),{sender:'user',text:msg,timestamp:new Date().toISOString()}];await _s.from('tickets').update({messages:ms}).eq('id',tid);await LSP();};
+        async function SSP(){if(isSending)return;const btn=document.getElementById('sendStudentSupportBtn'),input=document.getElementById('studentSupportMsg'),msg=input.value.trim();if(!msg)return;isSending=true;btn.disabled=true;btn.textContent='...';try{const{data:ex}=await _s.from('tickets').select('id,messages').eq('user_id',U.id).eq('status','open').limit(1);if(ex&&ex.length){const ms=[...(ex[0].messages||[]),{sender:'user',text:msg,timestamp:new Date().toISOString()}];await _s.from('tickets').update({messages:ms}).eq('id',ex[0].id);}else{await _s.from('tickets').insert({id:'t'+Date.now(),user_id:U.id,status:'open',messages:[{sender:'user',text:msg,timestamp:new Date().toISOString()}]});}input.value='';await LSP();}catch(e){}isSending=false;btn.disabled=false;btn.textContent='Отправить';}
 
-        function filterByTeacher(id){document.getElementById('filterTeacher').value=id;switchTab('consultations',document.querySelector('[data-tab="consultations"]'));loadConsultations();}
-
-        async function loadNotifications(){
-            const{data}=await _supabase.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(30);
-            const c=document.getElementById('notificationsList');
-            if(!data?.length){c.innerHTML='<div class="card"><p style="color:#666;text-align:center;">Нет уведомлений</p></div>';return;}
-            c.innerHTML=data.map(n=>`<div class="notification-item ${n.is_read?'read':''}"><p>${n.message}</p><small>${new Date(n.created_at).toLocaleString('ru-RU')}</small>${!n.is_read?`<br><button class="btn btn-sm btn-outline" onclick="markNotifRead('${n.id}')" style="margin-top:5px;">Прочитано</button>`:''}</div>`).join('');
-            const ur=data.filter(n=>!n.is_read).length,badge=document.getElementById('notifCount');badge.textContent=ur;badge.style.display=ur>0?'inline':'none';
-        }
-
-        async function markNotifRead(id) {
-    await _supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    loadNotifications();
-}
-
-        // Поддержка
-        async function loadSupport(){
-            const c=document.getElementById('studentSupportChat');
-            const{data:tickets}=await _supabase.from('tickets').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(10);
-            if(!tickets?.length){c.innerHTML='<p style="color:#666;text-align:center;padding:20px;">Нет обращений</p>';return;}
-            c.innerHTML=tickets.map(t=>{const ms=t.messages||[],open=t.status==='open';return`<div style="margin-bottom:20px;border:1px solid #e8edf5;border-radius:12px;padding:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e8edf5;"><strong>Обращение #${t.id.slice(-6)}</strong><span style="color:${open?'#0f6e3f':'#666'};">${open?'Открыто':'Закрыто'}</span></div><div style="margin-bottom:10px;">${ms.map(m=>`<div class="chat-message ${m.sender}"><div class="chat-bubble ${m.sender}"><p style="margin:0;">${m.text}</p></div><div class="chat-meta">${m.sender==='admin'?'Администратор':'Вы'} &middot; ${new Date(m.timestamp).toLocaleString('ru-RU')}</div></div>`).join('')}</div>${open?`<div style="display:flex;gap:10px;"><input type="text" id="studentReply_${t.id}" placeholder="Ответ..." style="flex:1;padding:10px;border:2px solid #e0e6ed;border-radius:10px;"><button class="btn btn-primary btn-sm" onclick="replyStudentTicket('${t.id}')">Отправить</button></div>`:''}</div>`;}).join('');
-        }
-
-        async function sendStudentSupport(){
-            if(isSending)return;
-            const btn=document.getElementById('sendStudentSupportBtn'),input=document.getElementById('studentSupportMsg'),msg=input.value.trim();
-            if(!msg){alert('Введите сообщение!');return;}
-            isSending=true;btn.disabled=true;btn.textContent='Отправка...';
-            try{
-                const{data:existing}=await _supabase.from('tickets').select('*').eq('user_id',currentUser.id).eq('status','open').limit(1);
-                if(existing?.length){const ms=[...(existing[0].messages||[]),{sender:'user',text:msg,timestamp:new Date().toISOString()}];await _supabase.from('tickets').update({messages:ms}).eq('id',existing[0].id);}else{const{data:t}=await _supabase.from('tickets').insert({id:'t'+Date.now(),user_id:currentUser.id,status:'open',messages:[{sender:'user',text:msg,timestamp:new Date().toISOString()}]}).select();if(t?.length){const{data:admins}=await _supabase.from('users').select('id').eq('role','admin');if(admins)for(const a of admins)await _supabase.from('notifications').insert({id:'n'+Date.now()+Math.random(),user_id:a.id,message:`Обращение от студента ${currentUser.surname} ${currentUser.name}`,type:'support',is_read:false});}}
-                input.value='';await loadSupport();
-            }catch(e){console.error(e);alert('Ошибка отправки');}
-            isSending=false;btn.disabled=false;btn.textContent='Отправить';
-        }
-
-        async function replyStudentTicket(tid){const input=document.getElementById('studentReply_'+tid),msg=input?.value.trim();if(!msg)return;const{data:t}=await _supabase.from('tickets').select('*').eq('id',tid).single();if(!t)return;const ms=[...(t.messages||[]),{sender:'user',text:msg,timestamp:new Date().toISOString()}];await _supabase.from('tickets').update({messages:ms}).eq('id',tid);await loadSupport();}
-
-        document.addEventListener('DOMContentLoaded',async()=>{
-            currentUser=checkAuth();if(!currentUser)return;
-            document.getElementById('studentName').textContent=currentUser.surname+' '+currentUser.name;
-            document.getElementById('logoutBtn').addEventListener('click',logout);
-            document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',function(){switchTab(this.dataset.tab,this);}));
-            document.querySelectorAll('.status-filter-btn').forEach(btn=>btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');currentBookingFilter=this.dataset.filter;loadMyBookings();}));
-            document.getElementById('applyFilters').addEventListener('click',loadConsultations);
-            document.getElementById('resetFilters').addEventListener('click',resetFilters);
-            document.getElementById('searchTeacherBtn').addEventListener('click',searchTeacher);
-            document.getElementById('sendStudentSupportBtn').addEventListener('click',sendStudentSupport);
-            await Promise.all([loadFilters(),loadConsultations(),loadNotifications()]);
-        });
+        // ИНИЦИАЛИЗАЦИЯ
+        document.addEventListener('DOMContentLoaded',async()=>{U=A();if(!U)return;document.getElementById('studentName').textContent=U.surname+' '+U.name;document.getElementById('logoutBtn').addEventListener('click',L);document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',function(){ST(this.dataset.tab,this);}));document.querySelectorAll('.status-filter-btn').forEach(btn=>btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');BF=this.dataset.filter;LMB();}));document.getElementById('applyFilters').addEventListener('click',LC);document.getElementById('resetFilters').addEventListener('click',RF);document.getElementById('searchTeacherBtn').addEventListener('click',STe);document.getElementById('sendStudentSupportBtn').addEventListener('click',SSP);await Promise.all([LF(),LC()]);UNB();});
+        window.FBT=FBT;window.SRT=SRT;window.toggleStudentTicket=toggleStudentTicket;
     </script>
 </body>
 </html>
