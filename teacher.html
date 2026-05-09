@@ -152,8 +152,120 @@
             document.querySelectorAll('.close-reg-btn').forEach(b=>b.addEventListener('click',()=>closeRegistration(b.dataset.sid)));
         }
 
-        function renderSlot(s,allB){const sb=(allB||[]).filter(b=>b.slot_id===s.id),ab=sb.filter(b=>b.status==='active');return`<div class="consultation-card"><div style="display:flex;justify-content:space-between;"><h3>${s.subject} - ${formatDate(s.date)}</h3><div style="display:flex;gap:6px;"><span class="badge-status badge-${s.status}">${s.status}</span>${s.status==='active'?`<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${s.id}">Закрыть</button>`:''}</div></div><p style="color:#666;">${s.time_start}-${s.time_end} | ${s.format} | Записано: ${ab.length}/${s.max_students}</p>${sb.length?`<div style="margin-top:8px;">${sb.map(b=>{let sb2=b.status==='active'?'<span style="color:#0f6e3f;">Активна</span>':b.cancelled_by==='admin'?'<span style="color:#c62828;">Отменена админом</span>':b.cancelled_by==='teacher'?'<span style="color:#e65100;">Отменена вами</span>':'<span style="color:#c62828;">Отменена студентом</span>';return`<div class="student-item"><div><strong>${b.users?.surname||''} ${b.users?.name||''}</strong><br><small>${b.topic||'Нет'} | ${sb2}</small></div>${b.status==='active'?`<button class="btn btn-sm mark-btn" data-bid="${b.id}" style="background:${b.attended?'#0f6e3f':'#0056a7'};color:white;">${b.attended?'Явка':'Отметить'}</button>`:''}</div>`;}).join('')}</div>`:'<p style="color:#666;">Нет записей</p>'}${s.status==='active'?`<button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${s.id}" style="margin-top:8px;">Отменить</button>`:''}</div>`;}
-
+        function renderSlot(s, allB) {
+    const sb = (allB || []).filter(b => b.slot_id === s.id);
+    const ab = sb.filter(b => b.status === 'active');
+    const tp = s.topics || [];
+    const tc = {};
+    tp.forEach(t => { tc[t.name] = sb.filter(b => b.topic === t.name && b.status === 'active').length; });
+    
+    return `
+    <div class="consultation-card" style="border-left: 4px solid ${s.status === 'active' ? '#0f6e3f' : s.status === 'completed' ? '#0056a7' : '#c62828'};">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+            <div>
+                <h3 style="margin:0;font-size:1.1rem;color:#1a2b3c;">${s.subject}</h3>
+                <p style="margin:4px 0 0;color:#666;font-size:0.85rem;">${formatDate(s.date)}</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <span class="badge-status badge-${s.status}" style="font-size:0.75rem;">
+                    ${s.status === 'active' ? 'Активна' : s.status === 'completed' ? 'Завершена' : 'Отменена'}
+                </span>
+                ${s.status === 'active' ? `<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${s.id}" style="font-weight:600;">Закрыть запись</button>` : ''}
+            </div>
+        </div>
+        
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;padding:10px 14px;background:#f8fafc;border-radius:10px;">
+            <span style="color:#666;font-size:0.88rem;"><strong>Время:</strong> ${s.time_start} - ${s.time_end}</span>
+            <span style="color:#666;font-size:0.88rem;"><strong>Формат:</strong> ${s.format === 'очно' ? 'Очно' : 'Онлайн'}${s.room ? ' | Ауд. ' + s.room : ''}</span>
+            <span style="color:#666;font-size:0.88rem;"><strong>Записано:</strong> <span style="color:#0056a7;font-weight:700;">${ab.length}</span>/${s.max_students}</span>
+        </div>
+        
+        ${tp.length ? `
+        <div style="margin:12px 0;">
+            <div style="font-size:0.85rem;color:#666;margin-bottom:8px;font-weight:600;">Темы и записавшиеся:</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                ${tp.map(t => {
+                    const cnt = tc[t.name] || 0;
+                    return `
+                    <div class="topic-chip" style="position:relative;">
+                        <div style="width:6px;height:6px;background:#0056a7;border-radius:50%;"></div>
+                        <span style="font-weight:500;">${t.name}</span>
+                        <span class="duration-badge">${t.duration || '?'} мин</span>
+                        <span class="count-badge" style="background:${cnt > 0 ? '#e8f5e9' : '#f5f5f5'};color:${cnt > 0 ? '#0f6e3f' : '#999'};padding:2px 8px;border-radius:8px;font-size:0.72rem;font-weight:600;">
+                            ${cnt} зап.
+                        </span>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>` : ''}
+        
+        ${s.description ? `
+        <div style="margin:10px 0;padding:10px 14px;background:#fefbf0;border-left:3px solid #ffc107;border-radius:8px;color:#666;font-size:0.88rem;font-style:italic;">
+            ${s.description}
+        </div>` : ''}
+        
+        ${sb.length ? `
+        <div style="margin-top:16px;">
+            <div style="font-size:0.85rem;color:#666;margin-bottom:10px;font-weight:600;display:flex;align-items:center;gap:8px;">
+                Список записавшихся студентов
+                <span style="background:#e8f0fe;color:#0056a7;padding:2px 10px;border-radius:10px;font-size:0.75rem;">${ab.length} активных</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                ${sb.map(b => {
+                    const isActive = b.status === 'active';
+                    let statusBadge = '';
+                    let rowStyle = '';
+                    
+                    if (isActive) {
+                        statusBadge = '<span style="background:#e8f5e9;color:#0f6e3f;padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:600;">Активна</span>';
+                        rowStyle = 'background:#fafff9;';
+                    } else if (b.cancelledBy === 'admin') {
+                        statusBadge = '<span style="background:#ffebee;color:#c62828;padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:600;">Отменена админ.</span>';
+                        rowStyle = 'background:#fffbfb;opacity:0.85;';
+                    } else if (b.cancelledBy === 'teacher') {
+                        statusBadge = '<span style="background:#fff3e0;color:#e65100;padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:600;">Отменена вами</span>';
+                        rowStyle = 'background:#fffbfb;opacity:0.85;';
+                    } else {
+                        statusBadge = '<span style="background:#ffebee;color:#c62828;padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:600;">Отменена студентом</span>';
+                        rowStyle = 'background:#fffbfb;opacity:0.85;';
+                    }
+                    
+                    return `
+                    <div class="student-item" style="${rowStyle}padding:14px 16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+                        <div style="flex:1;">
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                                <div style="width:36px;height:36px;background:linear-gradient(135deg,#0056a7,#003d7c);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.85rem;">
+                                    ${(b.users?.name || '?')[0]}${(b.users?.surname || '?')[0]}
+                                </div>
+                                <div>
+                                    <strong style="color:#1a2b3c;">${b.users?.surname || ''} ${b.users?.name || ''}</strong>
+                                    <div style="font-size:0.82rem;color:#0056a7;margin-top:2px;">Тема: ${b.topic || 'Не указана'}</div>
+                                </div>
+                            </div>
+                            <div style="margin-top:4px;margin-left:46px;">${statusBadge}</div>
+                        </div>
+                        ${isActive ? `
+                        <button class="btn btn-sm mark-btn" data-bid="${b.id}" 
+                                style="background:${b.attended ? '#0f6e3f' : '#0056a7'};color:white;border:none;padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;">
+                            ${b.attended ? '✓ Присутствовал' : 'Отметить явку'}
+                        </button>` : ''}
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>` : `
+        <div style="margin-top:16px;padding:20px;text-align:center;background:#f8fafc;border-radius:12px;border:2px dashed #e0e6ed;">
+            <p style="color:#999;font-size:0.9rem;">Нет записавшихся студентов</p>
+            <p style="color:#bbb;font-size:0.8rem;margin-top:4px;">Студенты увидят эту консультацию в списке доступных</p>
+        </div>`}
+        
+        ${s.status === 'active' ? `
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e8edf5;display:flex;gap:10px;">
+            <button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${s.id}" style="font-weight:600;">
+                Отменить консультацию
+            </button>
+        </div>` : ''}
+    </div>`;
+}
         async function markAttendance(bid){const{data:b}=await _supabase.from('bookings').select('attended').eq('id',bid).single();await _supabase.from('bookings').update({attended:!b?.attended}).eq('id',bid);loadTeacherSlots();}
         async function cancelSlot(sid){if(!confirm('Отменить?'))return;await _supabase.from('slots').update({status:'cancelled'}).eq('id',sid);await _supabase.from('bookings').update({status:'cancelled',cancelled_by:'teacher'}).eq('slot_id',sid).eq('status','active');loadDashboard();loadTeacherSlots();}
         async function closeRegistration(sid){const{data:s}=await _supabase.from('slots').select('*').eq('id',sid).single();const{count}=await _supabase.from('bookings').select('*',{count:'exact'}).eq('slot_id',sid).eq('status','active');if(!confirm(`Закрыть? Записано: ${count}/${s.max_students}`))return;await _supabase.from('slots').update({max_students:count>0?count:1}).eq('id',sid);loadDashboard();loadTeacherSlots();}
