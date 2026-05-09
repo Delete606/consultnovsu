@@ -20,10 +20,10 @@
     </main>
 
     <!-- Модалка пользователя -->
-    <div id="userModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="CM()">&times;</span><h3 id="modalTitle">Добавить</h3><form id="userForm"><input type="hidden" id="editUserId"><div class="form-group"><label>Имя</label><input type="text" id="editName" required></div><div class="form-group"><label>Фамилия</label><input type="text" id="editSurname" required></div><div class="form-group"><label>Email</label><input type="email" id="editEmail" required></div><div class="form-group"><label>Роль</label><select id="editRole"><option value="student">Студент</option><option value="teacher">Преподаватель</option><option value="admin">Админ</option></select></div><div class="form-group"><label>Пароль</label><input type="password" id="editPassword" placeholder="Оставьте пустым"></div><button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button></form></div></div>
+    <div id="userModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal()">&times;</span><h3 id="modalTitle">Добавить</h3><form id="userForm"><input type="hidden" id="editUserId"><div class="form-group"><label>Имя</label><input type="text" id="editName" required></div><div class="form-group"><label>Фамилия</label><input type="text" id="editSurname" required></div><div class="form-group"><label>Email</label><input type="email" id="editEmail" required></div><div class="form-group"><label>Роль</label><select id="editRole"><option value="student">Студент</option><option value="teacher">Преподаватель</option><option value="admin">Админ</option></select></div><div class="form-group"><label>Пароль</label><input type="password" id="editPassword" placeholder="Оставьте пустым"></div><button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button></form></div></div>
 
     <!-- Модалка информации о слоте -->
-    <div id="infoModal" class="modal"><div class="modal-content" style="max-width:550px;"><span class="close-modal" onclick="CIM()">&times;</span><h3 style="margin-bottom:16px;">Информация о консультации</h3><div id="infoContent"></div></div></div>
+    <div id="infoModal" class="modal"><div class="modal-content" style="max-width:550px;"><span class="close-modal" onclick="closeInfoModal()">&times;</span><h3 style="margin-bottom:16px;">Информация о консультации</h3><div id="infoContent"></div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -35,97 +35,16 @@
         function A(){const s=sessionStorage.getItem('currentUser');if(!s){location.href='index.html';return null;}const u=JSON.parse(s);if(u.role!=='admin'){location.href='index.html';return null;}return u;}
         function L(){sessionStorage.removeItem('currentUser');location.href='index.html';}
         function ST(n,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(n).classList.add('active');if(n==='users')LU();if(n==='subjects')LSB();if(n==='slots')LSL();if(n==='tickets')LT();if(n==='requests')LR();if(n==='stats')LST();}
-        function renderPagination(container, page, total, callbackName) {
-    if (total <= PER) {
-        container.innerHTML = '';
-        return;
-    }
-    
-    const pages = Math.ceil(total / PER);
-    let html = '';
-    
-    // Кнопка "Назад"
-    html += `<button class="page-btn" onclick="${callbackName}(${page - 1})" ${page <= 1 ? 'disabled' : ''}>&lt;</button>`;
-    
-    // Номера страниц
-    for (let i = 1; i <= pages; i++) {
-        if (i === 1 || i === pages || (i >= page - 1 && i <= page + 1)) {
-            html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="${callbackName}(${i})">${i}</button>`;
-        } else if (i === page - 2 || i === page + 2) {
-            html += '<span class="page-btn" style="border:none;cursor:default;">...</span>';
-        }
-    }
-    
-    // Кнопка "Вперед"
-    html += `<button class="page-btn" onclick="${callbackName}(${page + 1})" ${page >= pages ? 'disabled' : ''}>&gt;</button>`;
-    
-    // Информация о количестве
-    html += `<span style="margin-left:10px;color:#666;font-size:0.8rem;align-self:center;">${(page-1)*PER+1}-${Math.min(page*PER,total)} из ${total}</span>`;
-    
-    container.innerHTML = html;
-}
+        
+        // Пагинация
+        function renderPagination(c,page,total,fn){if(total<=PER){c.innerHTML='';return;}const pages=Math.ceil(total/PER);let h='';h+=`<button class="page-btn" onclick="${fn}(${page-1})" ${page<=1?'disabled':''}>&lt;</button>`;for(let i=1;i<=pages;i++){if(i===1||i===pages||(i>=page-1&&i<=page+1)){h+=`<button class="page-btn ${i===page?'active':''}" onclick="${fn}(${i})">${i}</button>`;}else if(i===page-2||i===page+2){h+='<span class="page-btn" style="border:none;cursor:default;">...</span>';}}h+=`<button class="page-btn" onclick="${fn}(${page+1})" ${page>=pages?'disabled':''}>&gt;</button>`;h+=`<span style="margin-left:10px;color:#666;font-size:0.8rem;">${(page-1)*PER+1}-${Math.min(page*PER,total)} из ${total}</span>`;c.innerHTML=h;}
+
         // ПОЛЬЗОВАТЕЛИ
-        async function LU(p=1) {
-    up = p;
-    const c = document.getElementById('usersTable');
-    c.innerHTML = '<p class="loading">Загрузка...</p>';
-    
-    const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
-    
-    // Получаем ВСЕХ пользователей (или фильтруем по поиску)
-    let query = _s.from('users').select('*').order('surname');
-    
-    const { data: allUsers } = await query;
-    
-    if (!allUsers) {
-        c.innerHTML = '<p style="color:#dc3545;">Ошибка загрузки</p>';
-        return;
-    }
-    
-    // Фильтруем по поиску если нужно
-    let filteredUsers = allUsers;
-    if (search) {
-        filteredUsers = allUsers.filter(u => 
-            (u.name && u.name.toLowerCase().includes(search)) || 
-            (u.surname && u.surname.toLowerCase().includes(search)) ||
-            (u.email && u.email.toLowerCase().includes(search))
-        );
-    }
-    
-    const total = filteredUsers.length;
-    const from = (p - 1) * PER;
-    const pageUsers = filteredUsers.slice(from, from + PER);
-    
-    if (!pageUsers.length) {
-        c.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Нет пользователей</p>';
-        document.getElementById('usersPagination').innerHTML = '';
-        return;
-    }
-    
-    // Рендерим таблицу
-    let html = '<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>';
-    
-    pageUsers.forEach(u => {
-        html += `<tr>
-            <td>${u.id}</td>
-            <td>${u.surname} ${u.name}</td>
-            <td>${u.email}</td>
-            <td>${u.role === 'student' ? 'Студент' : u.role === 'teacher' ? 'Преподаватель' : 'Админ'}</td>
-            <td style="white-space:nowrap;">
-                <button class="btn btn-primary btn-sm" onclick="EU('${u.id}')">Ред.</button>
-                <button class="btn btn-danger btn-sm" onclick="DU('${u.id}')">Уд.</button>
-            </td>
-        </tr>`;
-    });
-    
-    html += '</tbody></table>';
-    c.innerHTML = html;
-    renderPagination(document.getElementById('usersPagination'), p, total, 'LU');
-}
+        async function LU(p=1){up=p;const c=document.getElementById('usersTable');c.innerHTML='<p class="loading">Загрузка...</p>';const search=(document.getElementById('userSearch')?.value||'').toLowerCase();const{data:all}=await _s.from('users').select('*').order('surname');if(!all){c.innerHTML='<p style="color:#dc3545;">Ошибка</p>';return;}let f=all;if(search)f=all.filter(u=>(u.name&&u.name.toLowerCase().includes(search))||(u.surname&&u.surname.toLowerCase().includes(search))||(u.email&&u.email.toLowerCase().includes(search)));const total=f.length;const from=(p-1)*PER;const pu=f.slice(from,from+PER);if(!pu.length){c.innerHTML='<p style="color:#666;">Нет пользователей</p>';renderPagination(document.getElementById('usersPagination'),p,total,'LU');return;}c.innerHTML=`<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>${pu.map(u=>`<tr><td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td><td>${u.role==='student'?'Студент':u.role==='teacher'?'Преподаватель':'Админ'}</td><td style="white-space:nowrap;"><button class="btn btn-primary btn-sm" onclick="EU('${u.id}')">Ред.</button> <button class="btn btn-danger btn-sm" onclick="DU('${u.id}')">Уд.</button></td></tr>`).join('')}</tbody></table>`;renderPagination(document.getElementById('usersPagination'),p,total,'LU');}
         async function EU(id){const{data}=await _s.from('users').select('*').eq('id',id).single();if(!data)return;document.getElementById('modalTitle').textContent='Редактировать';document.getElementById('editUserId').value=data.id;document.getElementById('editName').value=data.name;document.getElementById('editSurname').value=data.surname;document.getElementById('editEmail').value=data.email;document.getElementById('editRole').value=data.role;document.getElementById('editPassword').value='';document.getElementById('userModal').classList.add('show');}
-        function OA(){document.getElementById('modalTitle').textContent='Добавить';document.getElementById('userForm').reset();document.getElementById('editUserId').value='';document.getElementById('userModal').classList.add('show');}
-        function CM(){document.getElementById('userModal').classList.remove('show');}
-        async function SU(e){e.preventDefault();const id=document.getElementById('editUserId').value,d={name:document.getElementById('editName').value,surname:document.getElementById('editSurname').value,email:document.getElementById('editEmail').value,role:document.getElementById('editRole').value,active:true};if(id){const p=document.getElementById('editPassword').value;if(p)d.password=p;await _s.from('users').update(d).eq('id',id);}else{d.id='u'+Date.now();d.password=document.getElementById('editPassword').value||'123';await _s.from('users').insert(d);}CM();LU(up);LST();}
+        function openAddModal(){document.getElementById('modalTitle').textContent='Добавить';document.getElementById('userForm').reset();document.getElementById('editUserId').value='';document.getElementById('userModal').classList.add('show');}
+        function closeModal(){document.getElementById('userModal').classList.remove('show');}
+        async function SU(e){e.preventDefault();const id=document.getElementById('editUserId').value,d={name:document.getElementById('editName').value,surname:document.getElementById('editSurname').value,email:document.getElementById('editEmail').value,role:document.getElementById('editRole').value,active:true};if(id){const p=document.getElementById('editPassword').value;if(p)d.password=p;await _s.from('users').update(d).eq('id',id);}else{d.id='u'+Date.now();d.password=document.getElementById('editPassword').value||'123';await _s.from('users').insert(d);}closeModal();LU(up);LST();}
         async function DU(id){if(!confirm('Удалить?'))return;await _s.from('users').delete().eq('id',id);LU(up);LST();}
 
         // ПРЕДМЕТЫ
@@ -133,210 +52,19 @@
         async function AS(){const n=document.getElementById('newSubject').value.trim();if(!n)return;await _s.from('subjects').insert({name:n});document.getElementById('newSubject').value='';LSB();}
         async function DS(n){await _s.from('subjects').delete().eq('name',n);LSB();}
 
-        // СЛОТЫ (оптимизировано с кешированием)
-        // СЛОТЫ (оптимизировано с кешированием)
-// СЛОТЫ (исправлено)
-async function LSL(p=1, force=false) {
-    sp = p;
-    const c = document.getElementById('slotsList');
-    c.innerHTML = '<p class="loading">Загрузка...</p>';
-    
-    // Загружаем данные
-    if (!slotsCache || force) {
-        const slotsRes = await _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date', { ascending: false });
-        const bookingsRes = await _s.from('bookings').select('*,users!bookings_student_id_fkey(name,surname)');
-        
-        // Убеждаемся что это массивы
-        slotsCache = Array.isArray(slotsRes.data) ? slotsRes.data : [];
-        bookingsCache = Array.isArray(bookingsRes.data) ? bookingsRes.data : [];
-        
-        console.log('Кеш обновлен: слотов', slotsCache.length, 'записей', bookingsCache.length);
-    }
-    
-    // Фильтруем
-    let filteredSlots = slotsCache;
-    if (FF !== 'all') {
-        filteredSlots = slotsCache.filter(function(s) { return s.status === FF; });
-    }
-    
-    // Проверяем что это массив перед slice
-    if (!Array.isArray(filteredSlots)) {
-        console.error('filteredSlots не массив!', filteredSlots);
-        c.innerHTML = '<p style="color:#dc3545;">Ошибка данных</p>';
-        return;
-    }
-    
-    const total = filteredSlots.length;
-    const from = (p - 1) * PER;
-    const pageSlots = filteredSlots.slice(from, from + PER);
-    
-    if (!pageSlots.length) {
-        c.innerHTML = '<p style="color:#666;">Нет консультаций</p>';
-        renderPagination(document.getElementById('slotsPagination'), p, total, 'LSL');
-        return;
-    }
-    
-    // Группируем по статусам
-    const activeSlots = pageSlots.filter(function(s) { return s.status === 'active'; });
-    const completedSlots = pageSlots.filter(function(s) { return s.status === 'completed'; });
-    const cancelledSlots = pageSlots.filter(function(s) { return s.status === 'cancelled'; });
-    
-    let h = '';
-    if (activeSlots.length) {
-        const totalActive = slotsCache.filter(function(s) { return s.status === 'active'; }).length;
-        h += '<div class="status-section status-active"><h3>Активные (' + totalActive + ')</h3>';
-        h += activeSlots.map(function(s) { return RS(s, bookingsCache); }).join('');
-        h += '</div>';
-    }
-    if (completedSlots.length) {
-        h += '<div class="status-section status-completed"><h3>Завершённые</h3>';
-        h += completedSlots.map(function(s) { return RS(s, bookingsCache); }).join('');
-        h += '</div>';
-    }
-    if (cancelledSlots.length) {
-        h += '<div class="status-section status-cancelled"><h3>Отменённые</h3>';
-        h += cancelledSlots.map(function(s) { return RS(s, bookingsCache); }).join('');
-        h += '</div>';
-    }
-    
-    c.innerHTML = h;
-    RP(document.getElementById('slotsPagination'), p, total, 'LSL');
-    
-    // Удаляем старый обработчик если есть
-    c.removeEventListener('click', slotClickHandler);
-    // Добавляем новый
-    c.addEventListener('click', slotClickHandler);
-}
-
-// Обработчик кликов по слотам (выносим отдельно)
-function slotClickHandler(e) {
-    const t = e.target;
-    if (t.classList.contains('cancel-slot-btn')) CSL(t.dataset.sid);
-    if (t.classList.contains('delete-slot-btn')) DSL(t.dataset.sid);
-    if (t.classList.contains('close-reg-btn')) CR(t.dataset.sid);
-    if (t.classList.contains('info-btn')) SI(t.dataset.sid);
-}
-
-// Функция RS (рендер слота)
-function RS(s, allB) {
-    const sb = (allB || []).filter(function(b) { return b.slot_id === s.id; });
-    const ab = sb.filter(function(b) { return b.status === 'active'; });
-    
-    return '<div class="slot-card">' +
-        '<div class="slot-header">' +
-            '<div>' +
-                '<strong style="font-size:1.05rem;">' + s.subject + '</strong>' +
-                '<p style="color:#666;font-size:0.85rem;margin-top:2px;">' + s.date + ' | ' + s.time_start + '-' + s.time_end + '</p>' +
-            '</div>' +
-            '<span class="badge-status badge-' + s.status + '">' + 
-                (s.status === 'active' ? 'Активна' : s.status === 'completed' ? 'Завершена' : 'Отменена') + 
-            '</span>' +
-        '</div>' +
-        '<div class="slot-info">' +
-            '<span><strong>Преподаватель:</strong> ' + (s.users?.surname || '') + ' ' + (s.users?.name || '') + '</span>' +
-            '<span><strong>Формат:</strong> ' + s.format + (s.room ? ' | Ауд. ' + s.room : '') + '</span>' +
-            '<span><strong>Записано:</strong> <span style="color:#0056a7;font-weight:700;">' + ab.length + '</span>/' + s.max_students + '</span>' +
-        '</div>' +
-        '<div class="slot-actions">' +
-            '<button class="btn btn-outline btn-sm info-btn" data-sid="' + s.id + '">Инфо</button>' +
-            (s.status === 'active' ? 
-                '<button class="btn btn-warning btn-sm close-reg-btn" data-sid="' + s.id + '">Закрыть</button>' +
-                '<button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="' + s.id + '">Отменить</button>' : '') +
-            '<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="' + s.id + '">Удалить</button>' +
-        '</div>' +
-    '</div>';
-}        
-        // ИНФО-ОКНО
-        async function SI(sid){const slot=slotsCache.find(s=>s.id===sid);if(!slot)return;const sb=(bookingsCache||[]).filter(b=>b.slot_id===sid);const ab=sb.filter(b=>b.status==='active');const tp=slot.topics||[];
-            let h=`<div class="info-row"><span class="info-label">Предмет</span><span class="info-value">${slot.subject}</span></div>`;
-            h+=`<div class="info-row"><span class="info-label">Преподаватель</span><span class="info-value">${slot.users?.surname||''} ${slot.users?.name||''}</span></div>`;
-            h+=`<div class="info-row"><span class="info-label">Дата</span><span class="info-value">${slot.date}</span></div>`;
-            h+=`<div class="info-row"><span class="info-label">Время</span><span class="info-value">${slot.time_start} - ${slot.time_end}</span></div>`;
-            h+=`<div class="info-row"><span class="info-label">Формат</span><span class="info-value">${slot.format} ${slot.room?'| Ауд. '+slot.room:''}</span></div>`;
-            h+=`<div class="info-row"><span class="info-label">Мест</span><span class="info-value">${ab.length}/${slot.max_students}</span></div>`;
-            h+=`<div class="info-row"><span class="info-label">Статус</span><span class="info-value">${slot.status==='active'?'Активна':slot.status==='completed'?'Завершена':'Отменена'}</span></div>`;
-            if(slot.description)h+=`<div class="info-row"><span class="info-label">Описание</span><span class="info-value">${slot.description}</span></div>`;
-            if(tp.length){h+=`<div style="margin-top:12px;"><strong style="color:#1a2b3c;">Темы:</strong><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">${tp.map(t=>`<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration||'?'} мин</span></span>`).join('')}</div></div>`;}
-            if(sb.length){h+=`<div style="margin-top:12px;"><strong style="color:#1a2b3c;">Записанные студенты (${ab.length} активных):</strong>${sb.map(b=>`<div class="student-list-item"><div class="student-avatar">${(b.users?.name||'?')[0]}${(b.users?.surname||'?')[0]}</div><div><strong>${b.users?.surname||''} ${b.users?.name||''}</strong><br><small style="color:#0056a7;">Тема: ${b.topic||'Не указана'}</small><br><small style="color:${b.status==='active'?'#0f6e3f':'#c62828'};">${b.status==='active'?'Активна':b.cancelled_by==='admin'?'Отменена админом':b.cancelled_by==='teacher'?'Отменена преподавателем':'Отменена студентом'}</small></div></div>`).join('')}</div>`;}
-            document.getElementById('infoContent').innerHTML=h;document.getElementById('infoModal').classList.add('show');}
-        function CIM(){document.getElementById('infoModal').classList.remove('show');}
-
+        // СЛОТЫ
+        async function LSL(p=1,force=false){sp=p;const c=document.getElementById('slotsList');c.innerHTML='<p class="loading">Загрузка...</p>';if(!slotsCache||force){const{data:sd}=await _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date',{ascending:false});const{data:bd}=await _s.from('bookings').select('*,users!bookings_student_id_fkey(name,surname)');slotsCache=sd||[];bookingsCache=bd||[];}let slots=slotsCache;if(FF!=='all')slots=slotsCache.filter(s=>s.status===FF);if(!Array.isArray(slots)){c.innerHTML='<p style="color:#dc3545;">Ошибка данных</p>';return;}const total=slots.length;const from=(p-1)*PER;const ps=slots.slice(from,from+PER);if(!ps.length){c.innerHTML='<p style="color:#666;">Нет консультаций</p>';renderPagination(document.getElementById('slotsPagination'),p,total,'LSL');return;}const a=ps.filter(s=>s.status==='active'),cm=ps.filter(s=>s.status==='completed'),cn=ps.filter(s=>s.status==='cancelled');let h='';if(a.length)h+=`<div class="status-section status-active"><h3>Активные (${slots.filter(s=>s.status==='active').length})</h3>${a.map(s=>RS(s)).join('')}</div>`;if(cm.length)h+=`<div class="status-section status-completed"><h3>Завершённые</h3>${cm.map(s=>RS(s)).join('')}</div>`;if(cn.length)h+=`<div class="status-section status-cancelled"><h3>Отменённые</h3>${cn.map(s=>RS(s)).join('')}</div>`;c.innerHTML=h;renderPagination(document.getElementById('slotsPagination'),p,total,'LSL');c.onclick=function(e){const t=e.target;if(t.classList.contains('cancel-slot-btn'))CSL(t.dataset.sid);if(t.classList.contains('delete-slot-btn'))DSL(t.dataset.sid);if(t.classList.contains('close-reg-btn'))CR(t.dataset.sid);if(t.classList.contains('info-btn'))SI(t.dataset.sid);};}
+        function RS(s){const sb=(bookingsCache||[]).filter(b=>b.slot_id===s.id),ab=sb.filter(b=>b.status==='active');return`<div class="slot-card"><div class="slot-header"><div><strong style="font-size:1.05rem;">${s.subject}</strong><p style="color:#666;font-size:0.85rem;margin-top:2px;">${s.date} | ${s.time_start}-${s.time_end}</p></div><span class="badge-status badge-${s.status}">${s.status==='active'?'Активна':s.status==='completed'?'Завершена':'Отменена'}</span></div><div class="slot-info"><span><strong>Преподаватель:</strong> ${s.users?.surname||''} ${s.users?.name||''}</span><span><strong>Формат:</strong> ${s.format} ${s.room?'| Ауд. '+s.room:''}</span><span><strong>Записано:</strong> <span style="color:#0056a7;font-weight:700;">${ab.length}</span>/${s.max_students}</span></div><div class="slot-actions"><button class="btn btn-outline btn-sm info-btn" data-sid="${s.id}">Инфо</button>${s.status==='active'?`<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${s.id}">Закрыть</button><button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${s.id}">Отменить</button>`:''}<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="${s.id}">Удалить</button></div></div>`;}
+        async function SI(sid){const slot=slotsCache.find(s=>s.id===sid);if(!slot)return;const sb=(bookingsCache||[]).filter(b=>b.slot_id===sid);const ab=sb.filter(b=>b.status==='active');const tp=slot.topics||[];let h=`<div class="info-row"><span class="info-label">Предмет</span><span class="info-value">${slot.subject}</span></div>`;h+=`<div class="info-row"><span class="info-label">Преподаватель</span><span class="info-value">${slot.users?.surname||''} ${slot.users?.name||''}</span></div>`;h+=`<div class="info-row"><span class="info-label">Дата и время</span><span class="info-value">${slot.date} ${slot.time_start}-${slot.time_end}</span></div>`;h+=`<div class="info-row"><span class="info-label">Формат</span><span class="info-value">${slot.format} ${slot.room?'| Ауд. '+slot.room:''}</span></div>`;h+=`<div class="info-row"><span class="info-label">Записано</span><span class="info-value">${ab.length}/${slot.max_students}</span></div>`;h+=`<div class="info-row"><span class="info-label">Статус</span><span class="info-value">${slot.status==='active'?'Активна':slot.status==='completed'?'Завершена':'Отменена'}</span></div>`;if(slot.description)h+=`<div class="info-row"><span class="info-label">Описание</span><span class="info-value">${slot.description}</span></div>`;if(tp.length){h+=`<div style="margin-top:12px;"><strong>Темы:</strong><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">${tp.map(t=>`<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration||'?'} мин</span></span>`).join('')}</div></div>`;}if(sb.length){h+=`<div style="margin-top:12px;"><strong>Студенты (${ab.length} активных):</strong>${sb.map(b=>`<div class="student-list-item"><div class="student-avatar">${(b.users?.name||'?')[0]}${(b.users?.surname||'?')[0]}</div><div><strong>${b.users?.surname||''} ${b.users?.name||''}</strong><br><small style="color:#0056a7;">Тема: ${b.topic||'Не указана'}</small><br><small style="color:${b.status==='active'?'#0f6e3f':'#c62828'};">${b.status==='active'?'Активна':b.cancelled_by==='admin'?'Отменена админом':b.cancelled_by==='teacher'?'Отменена преподавателем':'Отменена студентом'}</small></div></div>`).join('')}</div>`;}document.getElementById('infoContent').innerHTML=h;document.getElementById('infoModal').classList.add('show');}
+        function closeInfoModal(){document.getElementById('infoModal').classList.remove('show');}
         async function CSL(id){if(!confirm('Отменить?'))return;await _s.from('slots').update({status:'cancelled'}).eq('id',id);await _s.from('bookings').update({status:'cancelled',cancelled_by:'admin'}).eq('slot_id',id).eq('status','active');slotsCache=null;LSL(sp,true);}
         async function DSL(id){if(!confirm('Удалить?'))return;await _s.from('slots').delete().eq('id',id);slotsCache=null;LSL(sp,true);}
         async function CR(id){const{data:s}=await _s.from('slots').select('*').eq('id',id).single();const{count}=await _s.from('bookings').select('*',{count:'exact'}).eq('slot_id',id).eq('status','active');if(!confirm(`Закрыть? Записано: ${count}/${s.max_students}`))return;await _s.from('slots').update({max_students:count>0?count:1}).eq('id',id);slotsCache=null;LSL(sp,true);}
 
         // ТИКЕТЫ
-        async function LT(p=1){
-    tp=p;
-    const c=document.getElementById('ticketsList');
-    c.innerHTML='<p class="loading">Загрузка...</p>';
-    const from=(p-1)*PER,to=from+PER-1;
-    const{data,count}=await _s.from('tickets').select('*',{count:'exact'}).order('created_at',{ascending:false}).range(from,to);
-    if(!data?.length){c.innerHTML='<p style="color:#666;text-align:center;padding:20px;">Нет тикетов</p>';RP(document.getElementById('ticketsPagination'),p,count||0,'LT');UTB();return;}
-    
-    const uids=[...new Set(data.map(t=>t.user_id))];
-    const{data:users}=await _s.from('users').select('id,name,surname,role').in('id',uids);
-    const um={};(users||[]).forEach(u=>{um[u.id]=u;});
-    
-    c.innerHTML=data.map(t=>{
-        const u=um[t.user_id],ms=t.messages||[],open=t.status==='open';
-        return `<div class="ticket-card" style="border-left:4px solid ${open?'#0f6e3f':'#c62828'};">
-            <div class="ticket-header">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:40px;height:40px;background:linear-gradient(135deg,#0056a7,#003d7c);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.9rem;">
-                        ${(u?.name||'?')[0]}${(u?.surname||'?')[0]}
-                    </div>
-                    <div>
-                        <strong style="font-size:1rem;">${u?u.surname+' '+u.name:'Неизвестный'}</strong>
-                        <div style="display:flex;gap:8px;align-items:center;margin-top:2px;">
-                            <span style="color:#666;font-size:0.8rem;">${u?.role==='student'?'Студент':u?.role==='teacher'?'Преподаватель':'Админ'}</span>
-                            <span style="padding:2px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;color:${open?'#0f6e3f':'#c62828'};background:${open?'#e8f5e9':'#ffebee'};">${open?'Открыт':'Закрыт'}</span>
-                        </div>
-                    </div>
-                </div>
-                <small style="color:#999;">${new Date(t.created_at).toLocaleString('ru-RU')}</small>
-            </div>
-            
-            <div class="ticket-body" style="margin:15px 0;padding:10px;background:#f8fafc;border-radius:12px;">
-                ${ms.map((m,i)=>
-                    `<div class="chat-message ${m.sender}" style="margin-bottom:${i<ms.length-1?'12px':'0'};">
-                        <div style="display:flex;align-items:flex-end;gap:8px;flex-direction:${m.sender==='admin'?'row-reverse':'row'};">
-                            <div style="width:28px;height:28px;background:${m.sender==='admin'?'linear-gradient(135deg,#0056a7,#003d7c)':'#e0e6ed'};border-radius:50%;display:flex;align-items:center;justify-content:center;color:${m.sender==='admin'?'white':'#666'};font-weight:700;font-size:0.7rem;flex-shrink:0;">
-                                ${m.sender==='admin'?'A':(u?.name||'?')[0]}
-                            </div>
-                            <div class="chat-bubble ${m.sender}" style="max-width:75%;">
-                                <p style="margin:0;font-size:0.88rem;">${m.text}</p>
-                            </div>
-                        </div>
-                        <div class="chat-meta" style="text-align:${m.sender==='admin'?'right':'left'};margin-top:3px;font-size:0.7rem;color:#999;">
-                            ${m.sender==='admin'?'Администратор':u?.name||'Пользователь'} &middot; ${new Date(m.timestamp).toLocaleString('ru-RU')}
-                        </div>
-                    </div>`
-                ).join('')}
-            </div>
-            
-            ${open?`<div class="ticket-actions" style="display:flex;gap:8px;align-items:center;padding:12px;background:#fafbfc;border-radius:12px;border:2px solid #e0e6ed;">
-                <input type="text" id="AR_${t.id}" placeholder="Введите ответ..." style="flex:1;padding:10px 14px;border:2px solid #e0e6ed;border-radius:10px;font-size:0.9rem;transition:all 0.3s;" onfocus="this.style.borderColor='#0056a7';this.style.boxShadow='0 0 0 3px rgba(0,86,167,0.1)';" onblur="this.style.borderColor='#e0e6ed';this.style.boxShadow='none';">
-                <button class="btn btn-primary btn-sm" onclick="RT('${t.id}')" style="padding:10px 16px;font-weight:600;white-space:nowrap;">Ответить</button>
-                <button class="btn btn-sm" onclick="CT('${t.id}')" style="background:#ffc107;color:#333;font-weight:600;white-space:nowrap;">Закрыть</button>
-                <button class="btn btn-danger btn-sm" onclick="DT('${t.id}')" style="white-space:nowrap;">Удалить</button>
-            </div>`:`<button class="btn btn-danger btn-sm" onclick="DT('${t.id}')" style="margin-top:8px;">Удалить</button>`}
-        </div>`;
-    }).join('');
-    
-    renderPagination(document.getElementById('ticketsPagination'), p, count || 0, 'LT');
-    UTB();
-}
-       async function RT(id){
-    const i=document.getElementById('AR_'+id),msg=i?.value.trim();
-    if(!msg) return;
-    const{data:t}=await _s.from('tickets').select('messages,user_id').eq('id',id).single();
-    if(!t) return;
-    const ms=[...(t.messages||[]),{sender:'admin',text:msg,timestamp:new Date().toISOString()}];
-    await _s.from('tickets').update({messages:ms}).eq('id',id);
-    await _s.from('notifications').insert({id:'n'+Date.now(),user_id:t.user_id,message:'Администратор ответил на ваше обращение',type:'support',is_read:false});
-    LT(tp);
-}
+        async function LT(p=1){tp=p;const c=document.getElementById('ticketsList');c.innerHTML='<p class="loading">Загрузка...</p>';const from=(p-1)*PER,to=from+PER-1;const{data,count}=await _s.from('tickets').select('*',{count:'exact'}).order('created_at',{ascending:false}).range(from,to);if(!data?.length){c.innerHTML='<p style="color:#666;">Нет тикетов</p>';renderPagination(document.getElementById('ticketsPagination'),p,count||0,'LT');UTB();return;}const uids=[...new Set(data.map(t=>t.user_id))];const{data:users}=await _s.from('users').select('id,name,surname,role').in('id',uids);const um={};(users||[]).forEach(u=>{um[u.id]=u;});c.innerHTML=data.map(t=>{const u=um[t.user_id],ms=t.messages||[],open=t.status==='open';const last=ms.length?ms[ms.length-1]:null;const preview=last?last.text.substring(0,80)+(last.text.length>80?'...':''):'Нет сообщений';return`<div class="ticket-card" style="border-left:4px solid ${open?'#0f6e3f':'#c62828'};overflow:hidden;" id="ticket_${t.id}"><div class="ticket-header-row" onclick="toggleTicket('${t.id}')"><div class="ticket-avatar">${(u?.name||'?')[0]}${(u?.surname||'?')[0]}</div><div class="ticket-info"><div style="display:flex;align-items:center;gap:8px;"><strong>${u?u.surname+' '+u.name:'Неизвестный'}</strong><span style="padding:2px 10px;border-radius:10px;font-size:0.7rem;font-weight:600;color:${open?'#0f6e3f':'#c62828'};background:${open?'#e8f5e9':'#ffebee'};">${open?'Открыт':'Закрыт'}</span></div><p style="color:#666;font-size:0.82rem;margin:3px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${preview}</p></div><div class="ticket-meta"><small style="color:#999;font-size:0.75rem;display:block;">${new Date(t.created_at).toLocaleDateString('ru-RU')}</small><div class="ticket-arrow">▼</div></div></div><div class="ticket-body" id="body_${t.id}"><div style="padding:10px;background:#f8fafc;border-radius:12px;margin-bottom:12px;max-height:300px;overflow-y:auto;">${ms.map((m,j)=>`<div class="chat-message ${m.sender}" style="margin-bottom:${j<ms.length-1?'12px':'0'};"><div style="display:flex;align-items:flex-end;gap:8px;flex-direction:${m.sender==='admin'?'row-reverse':'row'};"><div style="width:26px;height:26px;background:${m.sender==='admin'?'linear-gradient(135deg,#0056a7,#003d7c)':'#e0e6ed'};border-radius:50%;display:flex;align-items:center;justify-content:center;color:${m.sender==='admin'?'white':'#666'};font-weight:700;font-size:0.65rem;">${m.sender==='admin'?'A':(u?.name||'?')[0]}</div><div class="chat-bubble ${m.sender}" style="max-width:75%;"><p style="margin:0;font-size:0.85rem;">${m.text}</p></div></div><div class="chat-meta" style="text-align:${m.sender==='admin'?'right':'left'};margin-top:3px;">${m.sender==='admin'?'Администратор':u?.name||'Пользователь'}</div></div>`).join('')}</div>${open?`<div style="display:flex;gap:8px;align-items:center;padding:10px;background:#fafbfc;border-radius:10px;border:2px solid #e0e6ed;"><input type="text" id="AR_${t.id}" placeholder="Ответ..." style="flex:1;padding:9px 12px;border:2px solid #e0e6ed;border-radius:8px;font-size:0.85rem;"><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();RT('${t.id}')">Отв.</button><button class="btn btn-sm" onclick="event.stopPropagation();CT('${t.id}')" style="background:#ffc107;color:#333;">Закр.</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();DT('${t.id}')">Уд.</button></div>`:`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();DT('${t.id}')">Удалить</button>`}</div></div>`;}).join('');renderPagination(document.getElementById('ticketsPagination'),p,count||0,'LT');UTB();}
+        function toggleTicket(id){const body=document.getElementById('body_'+id);const arrow=document.querySelector('#ticket_'+id+' .ticket-arrow');if(body.style.display==='none'||!body.style.display){body.style.display='block';if(arrow){arrow.style.transform='rotate(180deg)';arrow.style.color='#0056a7';}}else{body.style.display='none';if(arrow){arrow.style.transform='rotate(0deg)';arrow.style.color='#999';}}}
+        async function RT(id){const i=document.getElementById('AR_'+id),msg=i?.value.trim();if(!msg)return;const{data:t}=await _s.from('tickets').select('messages,user_id').eq('id',id).single();if(!t)return;const ms=[...(t.messages||[]),{sender:'admin',text:msg,timestamp:new Date().toISOString()}];await _s.from('tickets').update({messages:ms}).eq('id',id);await _s.from('notifications').insert({id:'n'+Date.now(),user_id:t.user_id,message:'Администратор ответил на обращение',type:'support',is_read:false});LT(tp);}
         async function CT(id){await _s.from('tickets').update({status:'closed'}).eq('id',id);LT(tp);}
         async function DT(id){if(!confirm('Удалить?'))return;await _s.from('tickets').delete().eq('id',id);LT(tp);}
         async function UTB(){const{count}=await _s.from('tickets').select('*',{count:'exact',head:true}).eq('status','open');const b=document.getElementById('ticketBadge');if(b){b.textContent=count||0;b.style.display=count>0?'inline':'none';}}
@@ -347,8 +75,9 @@ function RS(s, allB) {
         // СТАТИСТИКА
         async function LST(){const[{count:u},{count:s},{count:b}]=await Promise.all([_s.from('users').select('*',{count:'exact',head:true}),_s.from('slots').select('*',{count:'exact',head:true}),_s.from('bookings').select('*',{count:'exact',head:true})]);document.getElementById('totalUsers').textContent=u||0;document.getElementById('totalSlots').textContent=s||0;document.getElementById('totalBookings').textContent=b||0;}
 
-        document.addEventListener('DOMContentLoaded',async()=>{U=A();if(!U)return;document.getElementById('logoutBtn').addEventListener('click',L);document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',function(){ST(this.dataset.tab,this);}));document.querySelectorAll('.status-filter-btn').forEach(btn=>btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');FF=this.dataset.filter;sp=1;LSL(1,false);}));document.getElementById('addUserBtn').addEventListener('click',OA);document.getElementById('userForm').addEventListener('submit',SU);document.getElementById('addSubjectBtn').addEventListener('click',AS);document.getElementById('userSearch').addEventListener('input',()=>{up=1;LU();});await Promise.all([LU(),LSB(),LSL(1,true),LT(),LST()]);UTB();});
-        window.EU=EU;window.DU=DU;window.DS=DS;window.RT=RT;window.CT=CT;window.DT=DT;window.SI=SI;window.CIM=CIM;
+        // ИНИЦИАЛИЗАЦИЯ
+        document.addEventListener('DOMContentLoaded',async()=>{U=A();if(!U)return;document.getElementById('logoutBtn').addEventListener('click',L);document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',function(){ST(this.dataset.tab,this);}));document.querySelectorAll('.status-filter-btn').forEach(btn=>btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');FF=this.dataset.filter;sp=1;LSL(1,false);}));document.getElementById('addUserBtn').addEventListener('click',openAddModal);document.getElementById('userForm').addEventListener('submit',SU);document.getElementById('addSubjectBtn').addEventListener('click',AS);document.getElementById('userSearch').addEventListener('input',()=>{up=1;LU();});await Promise.all([LU(),LSB(),LSL(1,true),LT(),LST()]);UTB();});
+        window.EU=EU;window.DU=DU;window.DS=DS;window.RT=RT;window.CT=CT;window.DT=DT;window.SI=SI;window.toggleTicket=toggleTicket;window.closeInfoModal=closeInfoModal;
     </script>
 </body>
 </html>
