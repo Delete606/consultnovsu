@@ -52,28 +52,40 @@
 
         // СЛОТЫ (оптимизировано с кешированием)
         // СЛОТЫ (оптимизировано с кешированием)
+// СЛОТЫ (исправлено)
 async function LSL(p=1, force=false) {
     sp = p;
     const c = document.getElementById('slotsList');
     c.innerHTML = '<p class="loading">Загрузка...</p>';
     
-    // Кешируем слоты и записи
+    // Загружаем данные
     if (!slotsCache || force) {
-        const { data: slotsData } = await _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date', { ascending: false });
-        const { data: bookingsData } = await _s.from('bookings').select('*,users!bookings_student_id_fkey(name,surname)');
-        slotsCache = slotsData || [];
-        bookingsCache = bookingsData || [];
+        const slotsRes = await _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date', { ascending: false });
+        const bookingsRes = await _s.from('bookings').select('*,users!bookings_student_id_fkey(name,surname)');
+        
+        // Убеждаемся что это массивы
+        slotsCache = Array.isArray(slotsRes.data) ? slotsRes.data : [];
+        bookingsCache = Array.isArray(bookingsRes.data) ? bookingsRes.data : [];
+        
+        console.log('Кеш обновлен: слотов', slotsCache.length, 'записей', bookingsCache.length);
     }
     
-    // Применяем фильтр
-    let slots = slotsCache;
+    // Фильтруем
+    let filteredSlots = slotsCache;
     if (FF !== 'all') {
-        slots = slotsCache.filter(s => s.status === FF);
+        filteredSlots = slotsCache.filter(function(s) { return s.status === FF; });
     }
     
-    const total = slots.length;
+    // Проверяем что это массив перед slice
+    if (!Array.isArray(filteredSlots)) {
+        console.error('filteredSlots не массив!', filteredSlots);
+        c.innerHTML = '<p style="color:#dc3545;">Ошибка данных</p>';
+        return;
+    }
+    
+    const total = filteredSlots.length;
     const from = (p - 1) * PER;
-    const pageSlots = slots.slice(from, from + PER);
+    const pageSlots = filteredSlots.slice(from, from + PER);
     
     if (!pageSlots.length) {
         c.innerHTML = '<p style="color:#666;">Нет консультаций</p>';
@@ -81,29 +93,76 @@ async function LSL(p=1, force=false) {
         return;
     }
     
-    const a = pageSlots.filter(s => s.status === 'active');
-    const cm = pageSlots.filter(s => s.status === 'completed');
-    const cn = pageSlots.filter(s => s.status === 'cancelled');
+    // Группируем по статусам
+    const activeSlots = pageSlots.filter(function(s) { return s.status === 'active'; });
+    const completedSlots = pageSlots.filter(function(s) { return s.status === 'completed'; });
+    const cancelledSlots = pageSlots.filter(function(s) { return s.status === 'cancelled'; });
     
     let h = '';
-    if (a.length) h += `<div class="status-section status-active"><h3>Активные (${slots.filter(s => s.status === 'active').length})</h3>${a.map(s => RS(s, bookingsCache)).join('')}</div>`;
-    if (cm.length) h += `<div class="status-section status-completed"><h3>Завершённые</h3>${cm.map(s => RS(s, bookingsCache)).join('')}</div>`;
-    if (cn.length) h += `<div class="status-section status-cancelled"><h3>Отменённые</h3>${cn.map(s => RS(s, bookingsCache)).join('')}</div>`;
+    if (activeSlots.length) {
+        const totalActive = slotsCache.filter(function(s) { return s.status === 'active'; }).length;
+        h += '<div class="status-section status-active"><h3>Активные (' + totalActive + ')</h3>';
+        h += activeSlots.map(function(s) { return RS(s, bookingsCache); }).join('');
+        h += '</div>';
+    }
+    if (completedSlots.length) {
+        h += '<div class="status-section status-completed"><h3>Завершённые</h3>';
+        h += completedSlots.map(function(s) { return RS(s, bookingsCache); }).join('');
+        h += '</div>';
+    }
+    if (cancelledSlots.length) {
+        h += '<div class="status-section status-cancelled"><h3>Отменённые</h3>';
+        h += cancelledSlots.map(function(s) { return RS(s, bookingsCache); }).join('');
+        h += '</div>';
+    }
     
     c.innerHTML = h;
     RP(document.getElementById('slotsPagination'), p, total, 'LSL');
     
-    // Делегирование событий
-    c.addEventListener('click', function(e) {
-        const t = e.target;
-        if (t.classList.contains('cancel-slot-btn')) CSL(t.dataset.sid);
-        if (t.classList.contains('delete-slot-btn')) DSL(t.dataset.sid);
-        if (t.classList.contains('close-reg-btn')) CR(t.dataset.sid);
-        if (t.classList.contains('info-btn')) SI(t.dataset.sid);
-    });
+    // Удаляем старый обработчик если есть
+    c.removeEventListener('click', slotClickHandler);
+    // Добавляем новый
+    c.addEventListener('click', slotClickHandler);
 }
-        function RS(s,allB){const sb=(allB||[]).filter(b=>b.slot_id===s.id),ab=sb.filter(b=>b.status==='active');return`<div class="slot-card"><div class="slot-header"><div><strong style="font-size:1.05rem;">${s.subject}</strong><p style="color:#666;font-size:0.85rem;margin-top:2px;">${s.date} | ${s.time_start}-${s.time_end}</p></div><span class="badge-status badge-${s.status}">${s.status==='active'?'Активна':s.status==='completed'?'Завершена':'Отменена'}</span></div><div class="slot-info"><span><strong>Преподаватель:</strong> ${s.users?.surname||''} ${s.users?.name||''}</span><span><strong>Формат:</strong> ${s.format} ${s.room?'| Ауд. '+s.room:''}</span><span><strong>Записано:</strong> <span style="color:#0056a7;font-weight:700;">${ab.length}</span>/${s.max_students}</span></div><div class="slot-actions"><button class="btn btn-outline btn-sm info-btn" data-sid="${s.id}">Инфо</button>${s.status==='active'?`<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${s.id}">Закрыть</button><button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${s.id}">Отменить</button>`:''}<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="${s.id}">Удалить</button></div></div>`;}
-        
+
+// Обработчик кликов по слотам (выносим отдельно)
+function slotClickHandler(e) {
+    const t = e.target;
+    if (t.classList.contains('cancel-slot-btn')) CSL(t.dataset.sid);
+    if (t.classList.contains('delete-slot-btn')) DSL(t.dataset.sid);
+    if (t.classList.contains('close-reg-btn')) CR(t.dataset.sid);
+    if (t.classList.contains('info-btn')) SI(t.dataset.sid);
+}
+
+// Функция RS (рендер слота)
+function RS(s, allB) {
+    const sb = (allB || []).filter(function(b) { return b.slot_id === s.id; });
+    const ab = sb.filter(function(b) { return b.status === 'active'; });
+    
+    return '<div class="slot-card">' +
+        '<div class="slot-header">' +
+            '<div>' +
+                '<strong style="font-size:1.05rem;">' + s.subject + '</strong>' +
+                '<p style="color:#666;font-size:0.85rem;margin-top:2px;">' + s.date + ' | ' + s.time_start + '-' + s.time_end + '</p>' +
+            '</div>' +
+            '<span class="badge-status badge-' + s.status + '">' + 
+                (s.status === 'active' ? 'Активна' : s.status === 'completed' ? 'Завершена' : 'Отменена') + 
+            '</span>' +
+        '</div>' +
+        '<div class="slot-info">' +
+            '<span><strong>Преподаватель:</strong> ' + (s.users?.surname || '') + ' ' + (s.users?.name || '') + '</span>' +
+            '<span><strong>Формат:</strong> ' + s.format + (s.room ? ' | Ауд. ' + s.room : '') + '</span>' +
+            '<span><strong>Записано:</strong> <span style="color:#0056a7;font-weight:700;">' + ab.length + '</span>/' + s.max_students + '</span>' +
+        '</div>' +
+        '<div class="slot-actions">' +
+            '<button class="btn btn-outline btn-sm info-btn" data-sid="' + s.id + '">Инфо</button>' +
+            (s.status === 'active' ? 
+                '<button class="btn btn-warning btn-sm close-reg-btn" data-sid="' + s.id + '">Закрыть</button>' +
+                '<button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="' + s.id + '">Отменить</button>' : '') +
+            '<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="' + s.id + '">Удалить</button>' +
+        '</div>' +
+    '</div>';
+}        
         // ИНФО-ОКНО
         async function SI(sid){const slot=slotsCache.find(s=>s.id===sid);if(!slot)return;const sb=(bookingsCache||[]).filter(b=>b.slot_id===sid);const ab=sb.filter(b=>b.status==='active');const tp=slot.topics||[];
             let h=`<div class="info-row"><span class="info-label">Предмет</span><span class="info-value">${slot.subject}</span></div>`;
