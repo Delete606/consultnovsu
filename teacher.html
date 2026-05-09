@@ -589,10 +589,93 @@ async function createSimpleRepeatingSlots(baseSlot, repeatType) {
     `;
 }
 
-        async function markAttendance(bid) { const { data: b } = await _supabase.from('bookings').select('attended').eq('id', bid).single(); await _supabase.from('bookings').update({ attended: !b?.attended }).eq('id', bid); loadTeacherSlots(); }
-        async function cancelSlot(sid) { if(!confirm('Отменить?'))return; await _supabase.from('slots').update({status:'cancelled'}).eq('id',sid); await _supabase.from('bookings').update({status:'cancelled',cancelled_by:'teacher'}).eq('slot_id',sid).eq('status','active'); loadDashboard(); loadTeacherSlots(); }
-        async function closeRegistration(sid) { const {data:slot}=await _supabase.from('slots').select('*').eq('id',sid).single(); const {count}=await _supabase.from('bookings').select('*',{count:'exact'}).eq('slot_id',sid).eq('status','active'); if(!confirm(`Закрыть запись? Записано: ${count}/${slot.max_students}`))return; await _supabase.from('slots').update({max_students:count>0?count:1}).eq('id',sid); loadDashboard(); loadTeacherSlots(); }
-
+        async function markAttendance(bid) {
+    const { data: booking } = await _supabase
+        .from('bookings')
+        .select('*, slots(*)')
+        .eq('id', bid)
+        .single();
+    
+    const newStatus = !booking?.attended;
+    
+    await _supabase.from('bookings').update({ attended: newStatus }).eq('id', bid);
+    
+    // Уведомление студенту
+    if (booking) {
+        await sendNotification(
+            booking.student_id,
+            `Преподаватель отметил вашу явку на "${booking.slots?.subject}" ${formatDate(booking.slots?.date)}`,
+            'attendance',
+            booking.slot_id
+        );
+    }
+    
+    loadTeacherSlots();
+}        async function cancelSlot(sid) {
+    if (!confirm('Отменить консультацию? Все записи будут отменены.')) return;
+    
+    const { data: slot } = await _supabase.from('slots').select('*').eq('id', sid).single();
+    
+    await _supabase.from('slots').update({ status: 'cancelled' }).eq('id', sid);
+    
+    // Получаем всех записавшихся студентов
+    const { data: bookings } = await _supabase
+        .from('bookings')
+        .select('student_id')
+        .eq('slot_id', sid)
+        .eq('status', 'active');
+    
+    // Отменяем записи
+    await _supabase
+        .from('bookings')
+        .update({ status: 'cancelled', cancelled_by: 'teacher' })
+        .eq('slot_id', sid)
+        .eq('status', 'active');
+    
+    // Отправляем уведомления всем студентам
+    if (bookings && slot) {
+        for (const booking of bookings) {
+            await sendNotification(
+                booking.student_id,
+                `Преподаватель ${currentUser.surname} ${currentUser.name} отменил консультацию "${slot.subject}" ${formatDate(slot.date)}`,
+                'cancellation',
+                sid
+            );
+        }
+    }
+    
+    loadDashboard();
+    loadTeacherSlots();
+}        
+        async function closeRegistration(sid) {
+    const { data: slot } = await _supabase.from('slots').select('*').eq('id', sid).single();
+    const { count } = await _supabase.from('bookings').select('*', { count: 'exact' }).eq('slot_id', sid).eq('status', 'active');
+    
+    if (!confirm(`Закрыть запись? Записано: ${count}/${slot.max_students}`)) return;
+    
+    await _supabase.from('slots').update({ max_students: count > 0 ? count : 1 }).eq('id', sid);
+    
+    // Уведомляем записавшихся
+    const { data: bookings } = await _supabase
+        .from('bookings')
+        .select('student_id')
+        .eq('slot_id', sid)
+        .eq('status', 'active');
+    
+    if (bookings) {
+        for (const b of bookings) {
+            await sendNotification(
+                b.student_id,
+                `Запись на "${slot.subject}" ${formatDate(slot.date)} закрыта. Ваша запись сохранена.`,
+                'registration_closed',
+                sid
+            );
+        }
+    }
+    
+    loadDashboard();
+    loadTeacherSlots();
+}
         async function loadTopics() {
     console.log('Загружаю темы...');
     
@@ -727,6 +810,13 @@ async function deleteTeacherTopic(id) {
         function updateTotalTime() { if(selectedTopics.length){document.getElementById('slotTimeStart').value=selectedTopics[0].timeStart;document.getElementById('slotTimeEnd').value=selectedTopics[selectedTopics.length-1].timeEnd;} }
 
         async function createSlot(e) {
+            // Уведомление самому себе (для проверки)
+await sendNotification(
+    currentUser.id,
+    `Вы создали консультацию "${baseSlot.subject}" на ${formatDate(date)}`,
+    'info',
+    baseSlot.id
+);
     e.preventDefault();
     
     if (!selectedTopics.length) {
