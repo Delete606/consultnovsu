@@ -199,11 +199,14 @@
             const{data}=await _supabase.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(30);
             const c=document.getElementById('notificationsList');
             if(!data?.length){c.innerHTML='<div class="card"><p style="color:#666;text-align:center;">Нет уведомлений</p></div>';return;}
-            c.innerHTML=data.map(n=>`<div class="notification-item ${n.is_read?'read':''}"><p>${n.message}</p><small>${new Date(n.created_at).toLocaleString('ru-RU')}</small>${!n.is_read?`<br><button class="btn btn-sm btn-outline" onclick="markRead('${n.id}')" style="margin-top:5px;">Прочитано</button>`:''}</div>`).join('');
+            c.innerHTML=data.map(n=>`<div class="notification-item ${n.is_read?'read':''}"><p>${n.message}</p><small>${new Date(n.created_at).toLocaleString('ru-RU')}</small>${!n.is_read?`<br><button class="btn btn-sm btn-outline" onclick="markNotifRead('${n.id}')" style="margin-top:5px;">Прочитано</button>`:''}</div>`).join('');
             const ur=data.filter(n=>!n.is_read).length,badge=document.getElementById('notifCount');badge.textContent=ur;badge.style.display=ur>0?'inline':'none';
         }
 
-        async function markRead(id){await _supabase.from('notifications').update({is_read:true}).eq('id',id);loadNotifications();}
+        async function markNotifRead(id) {
+    await _supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    loadNotifications();
+}
 
         // Поддержка
         async function loadSupport(){
