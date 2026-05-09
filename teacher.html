@@ -64,13 +64,182 @@
         async function LST(){const{data:slots}=await _s.from('slots').select('date').eq('teacher_id',U.id);const c=document.getElementById('statsContainer');if(!slots?.length){c.innerHTML='<p style="color:#666;">Нет данных</p>';return;}const days={},dn=['вс','пн','вт','ср','чт','пт','сб'];slots.forEach(s=>{const d=dn[new Date(s.date).getDay()];days[d]=(days[d]||0)+1;});c.innerHTML=`<div class="card"><h4>По дням</h4>${Object.entries(days).map(([d,c2])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;">${d}<strong>${c2}</strong></div>`).join('')}</div>`;}
 
         // ПОДДЕРЖКА
-        async function LSP(){const c=document.getElementById('teacherSupportChat');const{data:tickets}=await _s.from('tickets').select('id,status,messages,created_at').eq('user_id',U.id).order('created_at',{ascending:false}).limit(10);if(!tickets?.length){c.innerHTML='<p style="color:#666;">Нет обращений</p>';return;}c.innerHTML=tickets.map(t=>{const ms=t.messages||[],open=t.status==='open';return`<div style="margin-bottom:12px;border:1px solid #e8edf5;border-radius:10px;padding:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><strong>#${t.id.slice(-6)}</strong><span style="color:${open?'#0f6e3f':'#666'};">${open?'Открыто':'Закрыто'}</span></div><div style="margin-bottom:6px;">${ms.map(m=>`<div class="chat-message ${m.sender}"><div class="chat-bubble ${m.sender}">${m.text}</div></div>`).join('')}</div>${open?`<div style="display:flex;gap:6px;"><input type="text" id="TR_${t.id}" placeholder="Ответ..." style="flex:1;padding:8px;border:2px solid #e0e6ed;border-radius:8px;"><button class="btn btn-primary btn-sm" onclick="RT('${t.id}')">Отпр.</button></div>`:''}</div>`;}).join('');}
-        async function SSP(){if(S)return;const btn=document.getElementById('sendTeacherSupportBtn'),input=document.getElementById('teacherSupportMsg'),msg=input.value.trim();if(!msg)return;S=true;btn.disabled=true;btn.textContent='...';try{const{data:ex}=await _s.from('tickets').select('id,messages').eq('user_id',U.id).eq('status','open').limit(1);if(ex?.length){const ms=[...(ex[0].messages||[]),{sender:'user',text:msg,timestamp:new Date().toISOString()}];await _s.from('tickets').update({messages:ms}).eq('id',ex[0].id);}else{await _s.from('tickets').insert({id:'t'+Date.now(),user_id:U.id,status:'open',messages:[{sender:'user',text:msg,timestamp:new Date().toISOString()}]});}input.value='';await LSP();}catch(e){}S=false;btn.disabled=false;btn.textContent='Отправить';}
-        async function RT(tid){const input=document.getElementById('TR_'+tid),msg=input?.value.trim();if(!msg)return;const{data:t}=await _s.from('tickets').select('id,messages').eq('id',tid).single();if(!t)return;const ms=[...(t.messages||[]),{sender:'user',text:msg,timestamp:new Date().toISOString()}];await _s.from('tickets').update({messages:ms}).eq('id',tid);await LSP();}
+       // ПОДДЕРЖКА (как в админке)
+async function LSP() {
+    const c = document.getElementById('teacherSupportChat');
+    const { data: tickets } = await _s.from('tickets')
+        .select('id,status,messages,created_at')
+        .eq('user_id', U.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+    
+    if (!tickets || !tickets.length) {
+        c.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Нет обращений. Напишите нам!</p>';
+        return;
+    }
+    
+    c.innerHTML = tickets.map(function(t) {
+        var ms = t.messages || [];
+        var open = t.status === 'open';
+        var last = ms.length ? ms[ms.length - 1] : null;
+        var preview = last ? last.text.substring(0, 80) + (last.text.length > 80 ? '...' : '') : 'Нет сообщений';
+        
+        return '<div class="ticket-card" style="border-left:4px solid ' + (open ? '#0f6e3f' : '#c62828') + ';overflow:hidden;" id="ticket_' + t.id + '">' +
+            // Шапка (всегда видна)
+            '<div class="ticket-header-row" onclick="toggleTeacherTicket(\'' + t.id + '\')" style="display:flex;align-items:center;gap:12px;cursor:pointer;">' +
+                '<div class="ticket-avatar" style="width:40px;height:40px;background:linear-gradient(135deg,#0056a7,#003d7c);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.9rem;flex-shrink:0;">' + 
+                    (U.name || '?')[0] + (U.surname || '?')[0] +
+                '</div>' +
+                '<div style="flex:1;min-width:0;">' +
+                    '<div style="display:flex;align-items:center;gap:8px;">' +
+                        '<strong style="font-size:0.95rem;">Обращение #' + t.id.slice(-6) + '</strong>' +
+                        '<span style="padding:2px 10px;border-radius:10px;font-size:0.7rem;font-weight:600;color:' + (open ? '#0f6e3f' : '#c62828') + ';background:' + (open ? '#e8f5e9' : '#ffebee') + ';">' + (open ? 'Открыто' : 'Закрыто') + '</span>' +
+                    '</div>' +
+                    '<p style="color:#666;font-size:0.82rem;margin:3px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + preview + '</p>' +
+                '</div>' +
+                '<div style="text-align:right;flex-shrink:0;">' +
+                    '<small style="color:#999;font-size:0.75rem;display:block;">' + new Date(t.created_at).toLocaleDateString('ru-RU') + '</small>' +
+                    '<div class="ticket-arrow" style="display:inline-block;transition:transform 0.3s;font-size:1.2rem;color:#999;">▼</div>' +
+                '</div>' +
+            '</div>' +
+            // Тело (скрыто)
+            '<div class="ticket-body" id="body_' + t.id + '" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid #e8edf5;">' +
+                '<div style="padding:10px;background:#f8fafc;border-radius:12px;margin-bottom:12px;max-height:300px;overflow-y:auto;">' +
+                    (ms.length ? ms.map(function(m, j) {
+                        return '<div class="chat-message ' + m.sender + '" style="margin-bottom:' + (j < ms.length - 1 ? '12px' : '0') + ';">' +
+                            '<div style="display:flex;align-items:flex-end;gap:8px;flex-direction:' + (m.sender === 'admin' ? 'row-reverse' : 'row') + ';">' +
+                                '<div style="width:26px;height:26px;background:' + (m.sender === 'admin' ? 'linear-gradient(135deg,#0056a7,#003d7c)' : '#e0e6ed') + ';border-radius:50%;display:flex;align-items:center;justify-content:center;color:' + (m.sender === 'admin' ? 'white' : '#666') + ';font-weight:700;font-size:0.65rem;">' +
+                                    (m.sender === 'admin' ? 'A' : (U.name || '?')[0]) +
+                                '</div>' +
+                                '<div class="chat-bubble ' + m.sender + '" style="max-width:75%;">' +
+                                    '<p style="margin:0;font-size:0.85rem;">' + m.text + '</p>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="chat-meta" style="text-align:' + (m.sender === 'admin' ? 'right' : 'left') + ';margin-top:3px;font-size:0.7rem;color:#999;">' +
+                                (m.sender === 'admin' ? 'Администратор' : 'Вы') + ' &middot; ' + new Date(m.timestamp).toLocaleString('ru-RU') +
+                            '</div>' +
+                        '</div>';
+                    }).join('') : '<p style="color:#999;text-align:center;">Нет сообщений</p>') +
+                '</div>' +
+                (open ? '<div style="display:flex;gap:8px;align-items:center;padding:10px;background:#fafbfc;border-radius:10px;border:2px solid #e0e6ed;">' +
+                    '<input type="text" id="TR_' + t.id + '" placeholder="Введите ответ..." style="flex:1;padding:9px 12px;border:2px solid #e0e6ed;border-radius:8px;font-size:0.85rem;">' +
+                    '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();RT(\'' + t.id + '\')">Отправить</button>' +
+                '</div>' : '') +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+// Переключение тикета
+window.toggleTeacherTicket = function(id) {
+    var body = document.getElementById('body_' + id);
+    var ticket = document.getElementById('ticket_' + id);
+    var arrow = ticket ? ticket.querySelector('.ticket-arrow') : null;
+    
+    if (!body.style.display || body.style.display === 'none') {
+        body.style.display = 'block';
+        if (arrow) {
+            arrow.style.transform = 'rotate(180deg)';
+            arrow.style.color = '#0056a7';
+        }
+    } else {
+        body.style.display = 'none';
+        if (arrow) {
+            arrow.style.transform = 'rotate(0deg)';
+            arrow.style.color = '#999';
+        }
+    }
+};
+
+// Отправка сообщения в поддержку
+async function SSP() {
+    if (S) return;
+    var btn = document.getElementById('sendTeacherSupportBtn');
+    var input = document.getElementById('teacherSupportMsg');
+    var msg = input.value.trim();
+    
+    if (!msg) return;
+    
+    S = true;
+    btn.disabled = true;
+    btn.textContent = 'Отправка...';
+    
+    try {
+        var { data: ex } = await _s.from('tickets')
+            .select('id,messages')
+            .eq('user_id', U.id)
+            .eq('status', 'open')
+            .limit(1);
+        
+        if (ex && ex.length) {
+            var ms = [...(ex[0].messages || []), {
+                sender: 'user',
+                text: msg,
+                timestamp: new Date().toISOString()
+            }];
+            await _s.from('tickets').update({ messages: ms }).eq('id', ex[0].id);
+        } else {
+            await _s.from('tickets').insert({
+                id: 't' + Date.now(),
+                user_id: U.id,
+                status: 'open',
+                messages: [{
+                    sender: 'user',
+                    text: msg,
+                    timestamp: new Date().toISOString()
+                }]
+            });
+            
+            // Уведомление админам
+            var { data: admins } = await _s.from('users').select('id').eq('role', 'admin');
+            if (admins) {
+                for (var i = 0; i < admins.length; i++) {
+                    await _s.from('notifications').insert({
+                        id: 'n' + Date.now() + Math.random(),
+                        user_id: admins[i].id,
+                        message: 'Новое обращение от преподавателя ' + U.surname + ' ' + U.name,
+                        type: 'support',
+                        is_read: false
+                    });
+                }
+            }
+        }
+        
+        input.value = '';
+        await LSP();
+    } catch(e) {
+        console.error(e);
+    }
+    
+    S = false;
+    btn.disabled = false;
+    btn.textContent = 'Отправить';
+}
+
+// Ответ в тикете
+window.RT = async function(tid) {
+    var input = document.getElementById('TR_' + tid);
+    var msg = input ? input.value.trim() : '';
+    
+    if (!msg) return;
+    
+    var { data: t } = await _s.from('tickets').select('id,messages').eq('id', tid).single();
+    if (!t) return;
+    
+    var ms = [...(t.messages || []), {
+        sender: 'user',
+        text: msg,
+        timestamp: new Date().toISOString()
+    }];
+    
+    await _s.from('tickets').update({ messages: ms }).eq('id', tid);
+    await LSP();
+};        async function RT(tid){const input=document.getElementById('TR_'+tid),msg=input?.value.trim();if(!msg)return;const{data:t}=await _s.from('tickets').select('id,messages').eq('id',tid).single();if(!t)return;const ms=[...(t.messages||[]),{sender:'user',text:msg,timestamp:new Date().toISOString()}];await _s.from('tickets').update({messages:ms}).eq('id',tid);await LSP();}
 
         // ИНИЦИАЛИЗАЦИЯ
         document.addEventListener('DOMContentLoaded',async()=>{U=A();if(!U)return;document.getElementById('teacherName').textContent=U.surname+' '+U.name;document.getElementById('logoutBtn').addEventListener('click',L);document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',function(){ST(this.dataset.tab,this);}));document.querySelectorAll('.status-filter-btn').forEach(btn=>btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');F=this.dataset.filter;LS();}));document.getElementById('createSlotForm').addEventListener('submit',CSL);document.getElementById('addTopicToSlotBtn').addEventListener('click',AT);document.getElementById('sendTeacherSupportBtn').addEventListener('click',SSP);await Promise.all([LT(),LD()]);UNB();});
         window.UT=UT;window.RM=RM;window.DT=DT;window.RT=RT;
+        window.toggleTeacherTicket = toggleTeacherTicket;
     </script>
 </body>
 </html>
