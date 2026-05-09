@@ -214,24 +214,105 @@
         async function closeRegistration(sid) { const {data:slot}=await _supabase.from('slots').select('*').eq('id',sid).single(); const {count}=await _supabase.from('bookings').select('*',{count:'exact'}).eq('slot_id',sid).eq('status','active'); if(!confirm(`Закрыть запись? Записано: ${count}/${slot.max_students}`))return; await _supabase.from('slots').update({max_students:count>0?count:1}).eq('id',sid); loadDashboard(); loadTeacherSlots(); }
 
         async function loadTopics() {
-            const { data: global } = await _supabase.from('global_topics').select('*');
-            teacherTopics = (global || []).map(t => ({ name: t.name, subject: t.subject, duration: t.duration }));
-            const { data: subjects } = await _supabase.from('subjects').select('name').order('name');
-            document.getElementById('newTopicSubject').innerHTML = '<option value="">Выберите предмет</option>' + (subjects || []).map(s => `<option>${s.name}</option>`).join('');
-            document.getElementById('savedTopicsList').innerHTML = teacherTopics.length ? teacherTopics.map(t => `<span class="saved-topic-item" onclick="useTopic('${t.name}','${t.subject}',${t.duration})">${t.name} (${t.duration} мин.)</span>`).join('') : '<p style="color:#666;">Нет сохраненных тем</p>';
-        }
+    console.log('Загружаю темы...');
+    
+    // Загружаем глобальные темы
+    const { data: global } = await _supabase
+        .from('global_topics')
+        .select('*');
+    
+    // Загружаем темы преподавателя
+    const { data: myTopics } = await _supabase
+        .from('teacher_topics')
+        .select('*')
+        .eq('teacher_id', currentUser.id);
+    
+    console.log('Глобальные:', global, 'Мои:', myTopics);
+    
+    // Объединяем темы
+    teacherTopics = [
+        ...(global || []).map(t => ({ name: t.name, subject: t.subject, duration: t.duration, isGlobal: true })),
+        ...(myTopics || []).map(t => ({ id: t.id, name: t.name, subject: t.subject, duration: t.duration, isGlobal: false }))
+    ];
+    
+    // Отображаем
+    const container = document.getElementById('savedTopicsList');
+    container.innerHTML = teacherTopics.length 
+        ? teacherTopics.map(t => `
+            <span class="saved-topic-item" onclick="useTopic('${t.name}','${t.subject}',${t.duration})">
+                ${t.name} (${t.duration} мин.) ${t.isGlobal ? '[Общая]' : ''}
+            </span>
+        `).join('')
+        : '<p style="color:#666;">Нет сохраненных тем</p>';
+    
+    // Загружаем предметы для выпадающего списка
+    const { data: subjects } = await _supabase
+        .from('subjects')
+        .select('name')
+        .order('name');
+    
+    document.getElementById('newTopicSubject').innerHTML = 
+        '<option value="">Выберите предмет</option>' + 
+        (subjects || []).map(s => `<option>${s.name}</option>`).join('');
+}
 
         function useTopic(name, subject, duration) { document.getElementById('newTopicName').value = name; document.getElementById('newTopicSubject').value = subject; document.getElementById('newTopicDuration').value = duration; }
 
         function addTopicToSlot() {
-            const name = document.getElementById('newTopicName').value.trim(), subject = document.getElementById('newTopicSubject').value, duration = parseInt(document.getElementById('newTopicDuration').value);
-            if (!name || !subject || !duration) { alert('Заполните все поля!'); return; }
-            let timeStart = '10:00';
-            if (selectedTopics.length) { const last = selectedTopics[selectedTopics.length-1]; const [h,m] = last.timeEnd.split(':').map(Number); timeStart = String(Math.floor((h*60+m)/60)%24).padStart(2,'0')+':'+String((h*60+m)%60).padStart(2,'0'); }
-            const [h,m] = timeStart.split(':').map(Number), total = h*60+m+duration, timeEnd = String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0');
-            selectedTopics.push({ name, subject, timeStart, timeEnd, duration });
-            document.getElementById('newTopicName').value = ''; document.getElementById('newTopicDuration').value = ''; renderSelectedTopics(); updateTotalTime();
+    const name = document.getElementById('newTopicName').value.trim();
+    const subject = document.getElementById('newTopicSubject').value;
+    const duration = parseInt(document.getElementById('newTopicDuration').value);
+    
+    if (!name || !subject || !duration) { 
+        alert('Заполни все поля!'); 
+        return; 
+    }
+    
+    // Генерируем время
+    let timeStart = '10:00';
+    if (selectedTopics.length) {
+        const last = selectedTopics[selectedTopics.length - 1];
+        const [h, m] = last.timeEnd.split(':').map(Number);
+        timeStart = String(Math.floor((h*60+m)/60)%24).padStart(2,'0') + ':' + 
+                   String((h*60+m)%60).padStart(2,'0');
+    }
+    
+    const [h, m] = timeStart.split(':').map(Number);
+    const total = h*60 + m + duration;
+    const timeEnd = String(Math.floor(total/60)%24).padStart(2,'0') + ':' + 
+                   String(total%60).padStart(2,'0');
+    
+    // Добавляем в текущие темы
+    selectedTopics.push({ name, subject, timeStart, timeEnd, duration });
+    
+    // Сохраняем тему преподавателя в БД (если это не глобальная тема)
+    const isGlobal = teacherTopics.some(t => t.name === name && t.subject === subject && t.isGlobal);
+    
+    if (!isGlobal) {
+        const exists = teacherTopics.some(t => t.name === name && t.subject === subject && !t.isGlobal);
+        
+        if (!exists) {
+            // Сохраняем в Supabase
+            _supabase.from('teacher_topics').insert({
+                teacher_id: currentUser.id,
+                name: name,
+                subject: subject,
+                duration: duration
+            }).then(({ error }) => {
+                if (error) console.error('Ошибка сохранения темы:', error);
+                else console.log('Тема сохранена:', name);
+            });
         }
+    }
+    
+    // Очищаем поля
+    document.getElementById('newTopicName').value = '';
+    document.getElementById('newTopicDuration').value = '';
+    
+    renderSelectedTopics();
+    updateTotalTime();
+    loadTopics(); // Обновляем список тем
+}
 
         function removeTopic(i) { selectedTopics.splice(i,1); renderSelectedTopics(); updateTotalTime(); }
         function renderSelectedTopics() { const c = document.getElementById('selectedTopicsList'); if(!selectedTopics.length){c.innerHTML='<p style="color:#666;">Нет тем</p>';return;} c.innerHTML = selectedTopics.map((t,i) => `<div style="display:flex;justify-content:space-between;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:5px;"><span><strong>${t.name}</strong> - ${t.subject} (${t.duration} мин.)</span><button class="btn btn-danger btn-sm" onclick="removeTopic(${i})">X</button></div>`).join(''); }
