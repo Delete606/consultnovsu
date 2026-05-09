@@ -122,6 +122,55 @@
                     <div class="form-row"><div class="form-group"><label>Формат</label><select id="slotFormat"><option value="очно">Очно</option><option value="онлайн">Онлайн</option></select></div><div class="form-group"><label>Дата</label><input type="date" id="slotDate" required></div></div>
                     <div class="form-row"><div class="form-group"><label>Аудитория</label><input type="text" id="slotRoom"></div><div class="form-group"><label>Макс. студентов</label><input type="number" id="slotLimit" min="1" max="20" value="5"></div></div>
                     <div class="form-group"><label>Описание</label><textarea id="slotDescription" rows="3"></textarea></div>
+                    <div class="form-group">
+    <label>Повторять консультацию</label>
+    <select id="repeatType" onchange="toggleRepeatOptions()">
+        <option value="none">Не повторять</option>
+        <option value="daily">Ежедневно</option>
+        <option value="weekly">Еженедельно (по дням)</option>
+        <option value="biweekly">Раз в 2 недели</option>
+        <option value="monthly">Ежемесячно</option>
+    </select>
+</div>
+
+<div id="repeatOptions" style="display:none;padding:15px;background:#f8fafc;border-radius:12px;border:2px solid #e0e6ed;margin-bottom:15px;">
+    <!-- Выбор дней недели -->
+    <div id="weekdaySelector" style="display:none;margin-bottom:15px;">
+        <label style="font-weight:600;display:block;margin-bottom:10px;">Выберите дни недели:</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <label style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#f0f6ff;border:2px solid #c5d9f2;border-radius:8px;cursor:pointer;">
+                <input type="checkbox" value="1" class="weekday-check"> ПН
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#f0f6ff;border:2px solid #c5d9f2;border-radius:8px;cursor:pointer;">
+                <input type="checkbox" value="2" class="weekday-check"> ВТ
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#f0f6ff;border:2px solid #c5d9f2;border-radius:8px;cursor:pointer;">
+                <input type="checkbox" value="3" class="weekday-check"> СР
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#f0f6ff;border:2px solid #c5d9f2;border-radius:8px;cursor:pointer;">
+                <input type="checkbox" value="4" class="weekday-check"> ЧТ
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#f0f6ff;border:2px solid #c5d9f2;border-radius:8px;cursor:pointer;">
+                <input type="checkbox" value="5" class="weekday-check"> ПТ
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#f0f6ff;border:2px solid #c5d9f2;border-radius:8px;cursor:pointer;">
+                <input type="checkbox" value="6" class="weekday-check"> СБ
+            </label>
+        </div>
+    </div>
+    
+    <!-- Количество повторений -->
+    <div id="repeatCountGroup" style="margin-bottom:15px;">
+        <label style="font-weight:600;display:block;margin-bottom:5px;">Количество повторений</label>
+        <input type="number" id="repeatCount" min="1" max="52" value="4" style="width:100%;padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
+    </div>
+    
+    <!-- Дата окончания для weekly -->
+    <div id="repeatEndDateGroup" style="display:none;margin-bottom:15px;">
+        <label style="font-weight:600;display:block;margin-bottom:5px;">Повторять до даты</label>
+        <input type="date" id="repeatEndDate" style="width:100%;padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
+    </div>
+</div>
                     <button type="submit" class="btn btn-primary">Создать консультацию</button>
                 </form>
             </div>
@@ -143,6 +192,153 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        // Переключение отображения опций повторения
+function toggleRepeatOptions() {
+    const repeatType = document.getElementById('repeatType').value;
+    const repeatOptions = document.getElementById('repeatOptions');
+    const weekdaySelector = document.getElementById('weekdaySelector');
+    const repeatCountGroup = document.getElementById('repeatCountGroup');
+    const repeatEndDateGroup = document.getElementById('repeatEndDateGroup');
+    
+    if (repeatType === 'none') {
+        repeatOptions.style.display = 'none';
+        return;
+    }
+    
+    repeatOptions.style.display = 'block';
+    
+    if (repeatType === 'weekly') {
+        weekdaySelector.style.display = 'block';
+        repeatCountGroup.style.display = 'none';
+        repeatEndDateGroup.style.display = 'block';
+    } else {
+        weekdaySelector.style.display = 'none';
+        repeatCountGroup.style.display = 'block';
+        repeatEndDateGroup.style.display = 'none';
+    }
+}
+
+// Создание повторяющихся слотов
+async function createRepeatingSlots(baseSlot, repeatType) {
+    if (repeatType === 'weekly') {
+        await createWeeklySlots(baseSlot);
+    } else {
+        await createSimpleRepeatingSlots(baseSlot, repeatType);
+    }
+}
+
+// Еженедельное повторение по дням
+async function createWeeklySlots(baseSlot) {
+    const weekdays = [];
+    document.querySelectorAll('.weekday-check:checked').forEach(cb => {
+        weekdays.push(parseInt(cb.value));
+    });
+    
+    if (weekdays.length === 0) {
+        alert('Выберите хотя бы один день недели!');
+        return;
+    }
+    
+    const endDateStr = document.getElementById('repeatEndDate').value;
+    if (!endDateStr) {
+        alert('Выберите дату окончания повторений!');
+        return;
+    }
+    
+    const endDate = new Date(endDateStr);
+    const startDate = new Date(baseSlot.date);
+    let currentDate = new Date(startDate);
+    currentDate.setDate(currentDate.getDate() - ((currentDate.getDay() || 7) - 1));
+    
+    let createdCount = 0;
+    const slots = [];
+    
+    while (currentDate <= endDate) {
+        for (const weekday of weekdays) {
+            const slotDate = new Date(currentDate);
+            slotDate.setDate(slotDate.getDate() + weekday - 1);
+            
+            if (slotDate >= startDate && slotDate <= endDate) {
+                const dateStr = slotDate.toISOString().split('T')[0];
+                
+                slots.push({
+                    id: 's' + Date.now() + Math.random(),
+                    teacher_id: baseSlot.teacher_id,
+                    subject: baseSlot.subject,
+                    date: dateStr,
+                    time_start: baseSlot.time_start,
+                    time_end: baseSlot.time_end,
+                    format: baseSlot.format,
+                    room: baseSlot.room,
+                    max_students: baseSlot.max_students,
+                    description: baseSlot.description,
+                    topics: baseSlot.topics,
+                    status: 'active'
+                });
+                createdCount++;
+            }
+        }
+        currentDate.setDate(currentDate.getDate() + 7);
+    }
+    
+    if (slots.length > 0) {
+        const { error } = await _supabase.from('slots').insert(slots);
+        if (error) {
+            console.error('Ошибка создания повторяющихся слотов:', error);
+        } else {
+            console.log(`Создано ${createdCount} повторяющихся слотов`);
+        }
+    }
+}
+
+// Простое повторение (daily, biweekly, monthly)
+async function createSimpleRepeatingSlots(baseSlot, repeatType) {
+    const count = parseInt(document.getElementById('repeatCount').value) || 4;
+    const baseDate = new Date(baseSlot.date);
+    const slots = [];
+    
+    for (let i = 1; i <= count; i++) {
+        const newDate = new Date(baseDate);
+        
+        switch(repeatType) {
+            case 'daily':
+                newDate.setDate(newDate.getDate() + i);
+                break;
+            case 'biweekly':
+                newDate.setDate(newDate.getDate() + (i * 14));
+                break;
+            case 'monthly':
+                newDate.setMonth(newDate.getMonth() + i);
+                break;
+        }
+        
+        const dateStr = newDate.toISOString().split('T')[0];
+        
+        slots.push({
+            id: 's' + Date.now() + i,
+            teacher_id: baseSlot.teacher_id,
+            subject: baseSlot.subject,
+            date: dateStr,
+            time_start: baseSlot.time_start,
+            time_end: baseSlot.time_end,
+            format: baseSlot.format,
+            room: baseSlot.room,
+            max_students: baseSlot.max_students,
+            description: baseSlot.description,
+            topics: baseSlot.topics,
+            status: 'active'
+        });
+    }
+    
+    if (slots.length > 0) {
+        const { error } = await _supabase.from('slots').insert(slots);
+        if (error) {
+            console.error('Ошибка создания повторяющихся слотов:', error);
+        } else {
+            console.log(`Создано ${slots.length} повторяющихся слотов`);
+        }
+    }
+}
         // ЕДИНСТВЕННОЕ объявление
         const _supabase = window.supabase.createClient(
             'https://bimdjjmdxoygeucdzlmu.supabase.co',
@@ -507,13 +703,63 @@ async function deleteTeacherTopic(id) {
         function updateTotalTime() { if(selectedTopics.length){document.getElementById('slotTimeStart').value=selectedTopics[0].timeStart;document.getElementById('slotTimeEnd').value=selectedTopics[selectedTopics.length-1].timeEnd;} }
 
         async function createSlot(e) {
-            e.preventDefault();
-            if (!selectedTopics.length) { alert('Добавьте тему!'); return; }
-            const slot = { id: 's'+Date.now(), teacher_id: currentUser.id, subject: [...new Set(selectedTopics.map(t=>t.subject))].join(', '), date: document.getElementById('slotDate').value, time_start: document.getElementById('slotTimeStart').value, time_end: document.getElementById('slotTimeEnd').value, format: document.getElementById('slotFormat').value, room: document.getElementById('slotRoom').value, max_students: parseInt(document.getElementById('slotLimit').value), description: document.getElementById('slotDescription').value, topics: selectedTopics, status: 'active' };
-            const { error } = await _supabase.from('slots').insert(slot);
-            if (error) { alert('Ошибка: '+error.message); return; }
-            alert('Консультация создана!'); selectedTopics = []; renderSelectedTopics(); document.getElementById('createSlotForm').reset(); loadDashboard();
-        }
+    e.preventDefault();
+    
+    if (!selectedTopics.length) {
+        alert('Добавьте хотя бы одну тему!');
+        return;
+    }
+    
+    const date = document.getElementById('slotDate').value;
+    if (!date) {
+        alert('Выберите дату!');
+        return;
+    }
+    
+    const tStart = document.getElementById('slotTimeStart').value;
+    const tEnd = document.getElementById('slotTimeEnd').value;
+    if (!tStart || !tEnd || tStart >= tEnd) {
+        alert('Укажите корректное время!');
+        return;
+    }
+    
+    const baseSlot = {
+        id: 's' + Date.now(),
+        teacher_id: currentUser.id,
+        subject: [...new Set(selectedTopics.map(t => t.subject))].join(', '),
+        date: date,
+        time_start: tStart,
+        time_end: tEnd,
+        format: document.getElementById('slotFormat').value,
+        room: document.getElementById('slotRoom').value,
+        max_students: parseInt(document.getElementById('slotLimit').value),
+        description: document.getElementById('slotDescription').value,
+        topics: selectedTopics,
+        status: 'active'
+    };
+    
+    // Создаем основной слот
+    const { error } = await _supabase.from('slots').insert(baseSlot);
+    
+    if (error) {
+        alert('Ошибка: ' + error.message);
+        return;
+    }
+    
+    // Создаем повторения
+    const repeatType = document.getElementById('repeatType').value;
+    if (repeatType !== 'none') {
+        await createRepeatingSlots(baseSlot, repeatType);
+    }
+    
+    alert('Консультация создана!');
+    selectedTopics = [];
+    renderSelectedTopics();
+    document.getElementById('createSlotForm').reset();
+    document.getElementById('repeatOptions').style.display = 'none';
+    document.getElementById('repeatType').value = 'none';
+    loadDashboard();
+}
 
         async function loadNotifications() {
             const { data } = await _supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(50);
