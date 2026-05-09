@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Консультации НовГУ</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4fc; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        .header { background: white; border-bottom: 3px solid #0056a7; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo img { width: 48px; height: 48px; border-radius: 8px; }
+        .logo-text h2 { color: #003d7c; font-size: 1.3rem; margin: 0; }
+        .logo-text span { color: #666; font-size: 0.85rem; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .badge { background: #e8f0fe; color: #003d7c; padding: 8px 18px; border-radius: 30px; font-weight: 600; }
+        
+        .nav { background: white; border-bottom: 1px solid #dce3f0; }
+        .nav-tabs { display: flex; list-style: none; padding: 0; margin: 0; }
+        .nav-tab { padding: 15px 20px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #666; transition: all 0.3s; }
+        .nav-tab:hover { background: #e8f0fe; color: #0056a7; }
+        .nav-tab.active { border-bottom-color: #0056a7; color: #0056a7; background: #e8f0fe; font-weight: 600; }
+        
+        main { padding: 30px 0; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .card { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e8edf5; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e8edf5; }
+        .stat-number { font-size: 2.5rem; font-weight: 700; color: #0056a7; margin: 10px 0; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; display: inline-block; }
+        .btn-primary { background: #0056a7; color: white; }
+        .btn-primary:hover { background: #003d7c; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-outline { background: white; border: 2px solid #0056a7; color: #0056a7; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e0e6ed; border-radius: 10px; font-size: 14px; background: #fafbfc; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        .status-filters { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .status-filter-btn { padding: 10px 20px; border: 2px solid #e0e6ed; background: white; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 14px; color: #666; }
+        .status-filter-btn.active { background: #0056a7; color: white; border-color: #0056a7; }
+        
+        .status-section { margin-bottom: 30px; }
+        .status-section h3 { padding: 10px 20px; border-radius: 12px; display: inline-block; margin-bottom: 18px; font-size: 1rem; font-weight: 700; }
+        .status-active h3 { background: #e8f5e9; color: #0f6e3f; }
+        .status-completed h3 { background: #e3f2fd; color: #0056a7; }
+        .status-cancelled h3 { background: #ffebee; color: #c62828; }
+        
+        .slot-card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e8edf5; transition: all 0.3s; }
+        .slot-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        
+        .badge-status { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        .badge-active { background: #e8f5e9; color: #0f6e3f; }
+        .badge-completed { background: #e3f2fd; color: #0056a7; }
+        .badge-cancelled { background: #ffebee; color: #c62828; }
+        
+        .topic-chip { padding: 8px 16px; background: #f0f6ff; border: 1px solid #c5d9f2; border-radius: 20px; font-size: 0.9rem; color: #0056a7; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; margin: 4px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #666; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f0f4fc; padding: 14px; text-align: left; font-weight: 600; color: #003d7c; }
+        td { padding: 12px 14px; border-bottom: 1px solid #e8edf5; }
+        
+        .badge-notif { background: #dc3545; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px; display: none; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect fill=%22%23003d7c%22 width=%2248%22 height=%2248%22 rx=%228%22/%3E%3Ctext fill=%22white%22 x=%2250%25%22 y=%2255%25%22 font-size=%2220%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'">
+                <div class="logo-text"><h2>Администрирование</h2><span>управление системой</span></div>
+            </div>
+            <div class="user-info">
+                <span class="badge">Администратор</span>
+                <button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="container">
+            <ul class="nav-tabs" id="adminNavTabs">
+                <li class="nav-tab active" data-tab="users">Пользователи</li>
+                <li class="nav-tab" data-tab="subjects">Предметы и темы</li>
+                <li class="nav-tab" data-tab="slots">Слоты</li>
+                <li class="nav-tab" data-tab="tickets">Тикеты</li>
+                <li class="nav-tab" data-tab="requests">Запросы</li>
+                <li class="nav-tab" data-tab="stats">Статистика</li>
+            </ul>
+        </div>
+    </div>
+
+    <main class="container">
+        <div id="users" class="tab-content active">
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <h2>Пользователи</h2>
+                    <button id="addUserBtn" class="btn btn-primary">+ Добавить</button>
+                </div>
+                <input type="text" id="userSearch" placeholder="Поиск..." style="width:100%;padding:12px;border:2px solid #e0e6ed;border-radius:10px;margin-bottom:20px;">
+                <div id="usersTable"><p class="loading">Загрузка...</p></div>
+            </div>
+        </div>
+
+        <div id="subjects" class="tab-content">
+            <div class="card">
+                <h2>Предметы</h2>
+                <div id="subjectsList"><p class="loading">Загрузка...</p></div>
+            </div>
+        </div>
+
+        <div id="slots" class="tab-content">
+            <h2>Консультации</h2>
+            <div class="status-filters">
+                <button class="status-filter-btn active" data-filter="all">Все</button>
+                <button class="status-filter-btn" data-filter="active">Активные</button>
+                <button class="status-filter-btn" data-filter="completed">Завершённые</button>
+                <button class="status-filter-btn" data-filter="cancelled">Отменённые</button>
+            </div>
+            <div id="slotsList"><p class="loading">Загрузка...</p></div>
+        </div>
+
+        <div id="tickets" class="tab-content">
+            <h2>Тикеты</h2>
+            <div id="ticketsList"><p class="loading">Загрузка...</p></div>
+        </div>
+
+        <div id="requests" class="tab-content">
+            <h2>Запросы</h2>
+            <div id="requestsList"><p class="loading">Загрузка...</p></div>
+        </div>
+
+        <div id="stats" class="tab-content">
+            <div class="stats">
+                <div class="stat-card"><h3>Пользователей</h3><p id="totalUsers" class="stat-number">0</p></div>
+                <div class="stat-card"><h3>Консультаций</h3><p id="totalSlots" class="stat-number">0</p></div>
+                <div class="stat-card"><h3>Записей</h3><p id="totalBookings" class="stat-number">0</p></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle">Добавить пользователя</h3>
+            <form id="userForm">
+                <input type="hidden" id="editUserId">
+                <div class="form-group"><label>Имя</label><input type="text" id="editName" required></div>
+                <div class="form-group"><label>Фамилия</label><input type="text" id="editSurname" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="editEmail" required></div>
+                <div class="form-group"><label>Роль</label><select id="editRole"><option value="student">Студент</option><option value="teacher">Преподаватель</option><option value="admin">Админ</option></select></div>
+                <div class="form-group"><label>Пароль</label><input type="password" id="editPassword"></div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Конфигурация Supabase
+        const SUPABASE_URL = 'https://bimdjjmdxoygeucdzlmu.supabase.co/rest/v1/';
+        const SUPABASE_KEY = 'sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let currentUser = null;
+        let currentFilter = 'all';
+
+        // Проверка авторизации
+        function checkAuth() {
+            const saved = sessionStorage.getItem('currentUser');
+            if (!saved) { window.location.href = 'index.html'; return null; }
+            const user = JSON.parse(saved);
+            if (user.role !== 'admin') { window.location.href = 'index.html'; return null; }
+            return user;
+        }
+
+        // Загрузка данных
+        async function loadUsers() {
+            const { data, error } = await supabase.from('users').select('*').order('surname');
+            if (error) { console.error(error); return; }
+            
+            const search = document.getElementById('userSearch')?.value.toLowerCase() || '';
+            const users = data.filter(u => !search || u.name.toLowerCase().includes(search) || u.surname.toLowerCase().includes(search) || u.email.toLowerCase().includes(search));
+            
+            document.getElementById('usersTable').innerHTML = `
+                <table>
+                    <thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th>Действия</th></tr></thead>
+                    <tbody>${users.map(u => `
+                        <tr>
+                            <td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td>
+                            <td>${u.role}</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" onclick="editUser('${u.id}')">Ред.</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Уд.</button>
+                            </td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table>
+            `;
+        }
+
+        async function loadSlots() {
+            let query = supabase.from('slots').select('*, users!slots_teacher_id_fkey(name, surname)').order('date', { ascending: false });
+            if (currentFilter !== 'all') query = query.eq('status', currentFilter);
+            
+            const { data, error } = await query;
+            if (error) { console.error(error); return; }
+            
+            const container = document.getElementById('slotsList');
+            if (!data.length) { container.innerHTML = '<p style="color:#666;text-align:center;">Нет консультаций</p>'; return; }
+            
+            const active = data.filter(s => s.status === 'active');
+            const completed = data.filter(s => s.status === 'completed');
+            const cancelled = data.filter(s => s.status === 'cancelled');
+            
+            let html = '';
+            if (active.length) html += `<div class="status-section status-active"><h3>Активные (${active.length})</h3>${active.map(renderSlot).join('')}</div>`;
+            if (completed.length) html += `<div class="status-section status-completed"><h3>Завершённые (${completed.length})</h3>${completed.map(renderSlot).join('')}</div>`;
+            if (cancelled.length) html += `<div class="status-section status-cancelled"><h3>Отменённые (${cancelled.length})</h3>${cancelled.map(renderSlot).join('')}</div>`;
+            
+            container.innerHTML = html;
+        }
+
+        function renderSlot(slot) {
+            return `
+                <div class="slot-card">
+                    <div style="display:flex;justify-content:space-between;">
+                        <strong>${slot.subject}</strong>
+                        <span class="badge-status badge-${slot.status}">${slot.status}</span>
+                    </div>
+                    <p style="color:#666;">Преподаватель: ${slot.users?.surname || ''} ${slot.users?.name || ''} | ${slot.date} ${slot.time_start}-${slot.time_end}</p>
+                    <p style="color:#666;">Формат: ${slot.format} | Мест: ${slot.max_students}</p>
+                    <div style="display:flex;gap:10px;margin-top:10px;">
+                        ${slot.status === 'active' ? `<button class="btn btn-primary btn-sm" onclick="editSlot('${slot.id}')">Ред.</button><button class="btn btn-danger btn-sm" onclick="cancelSlot('${slot.id}')">Отм.</button>` : ''}
+                        <button class="btn btn-danger btn-sm" onclick="deleteSlot('${slot.id}')">Уд.</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadStats() {
+            const { count: users } = await supabase.from('users').select('*', { count: 'exact', head: true });
+            const { count: slots } = await supabase.from('slots').select('*', { count: 'exact', head: true });
+            const { count: bookings } = await supabase.from('bookings').select('*', { count: 'exact', head: true });
+            
+            document.getElementById('totalUsers').textContent = users || 0;
+            document.getElementById('totalSlots').textContent = slots || 0;
+            document.getElementById('totalBookings').textContent = bookings || 0;
+        }
+
+        // Действия
+        function editUser(id) { /* реализация */ }
+        async function deleteUser(id) {
+            if (confirm('Удалить?')) {
+                await supabase.from('users').delete().eq('id', id);
+                loadUsers();
+            }
+        }
+        async function cancelSlot(id) {
+            if (confirm('Отменить?')) {
+                await supabase.from('slots').update({ status: 'cancelled' }).eq('id', id);
+                loadSlots();
+            }
+        }
+        async function deleteSlot(id) {
+            if (confirm('Удалить?')) {
+                await supabase.from('slots').delete().eq('id', id);
+                loadSlots();
+            }
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', async () => {
+            currentUser = checkAuth();
+            if (!currentUser) return;
+            
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            });
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                    document.getElementById(this.dataset.tab).classList.add('active');
+                    
+                    if (this.dataset.tab === 'users') loadUsers();
+                    if (this.dataset.tab === 'slots') loadSlots();
+                    if (this.dataset.tab === 'stats') loadStats();
+                });
+            });
+            
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    loadSlots();
+                });
+            });
+            
+            loadUsers();
+            loadSlots();
+            loadStats();
+        });
+    </script>
+</body>
+</html>

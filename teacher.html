@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кабинет преподавателя - Консультации НовГУ</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4fc; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        .header { background: white; border-bottom: 3px solid #0056a7; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo img { width: 48px; height: 48px; border-radius: 8px; }
+        .logo-text h2 { color: #003d7c; font-size: 1.3rem; margin: 0; }
+        .logo-text span { color: #666; font-size: 0.85rem; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .badge { background: #e8f0fe; color: #003d7c; padding: 8px 18px; border-radius: 30px; font-weight: 600; }
+        
+        .nav { background: white; border-bottom: 1px solid #dce3f0; }
+        .nav-tabs { display: flex; list-style: none; padding: 0; margin: 0; }
+        .nav-tab { padding: 15px 20px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #666; transition: all 0.3s; }
+        .nav-tab:hover { background: #e8f0fe; color: #0056a7; }
+        .nav-tab.active { border-bottom-color: #0056a7; color: #0056a7; background: #e8f0fe; font-weight: 600; }
+        
+        main { padding: 30px 0; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .card { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e8edf5; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e8edf5; }
+        .stat-number { font-size: 2.5rem; font-weight: 700; color: #0056a7; margin: 10px 0; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; display: inline-block; }
+        .btn-primary { background: #0056a7; color: white; }
+        .btn-primary:hover { background: #003d7c; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-outline { background: white; border: 2px solid #0056a7; color: #0056a7; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e0e6ed; border-radius: 10px; font-size: 14px; background: #fafbfc; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        .consultation-card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e8edf5; transition: all 0.3s; }
+        .consultation-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        
+        .status-filters { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .status-filter-btn { padding: 10px 20px; border: 2px solid #e0e6ed; background: white; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 14px; color: #666; }
+        .status-filter-btn.active { background: #0056a7; color: white; border-color: #0056a7; }
+        
+        .status-section { margin-bottom: 30px; }
+        .status-section h3 { padding: 10px 20px; border-radius: 12px; display: inline-block; margin-bottom: 18px; font-size: 1rem; font-weight: 700; }
+        .status-active h3 { background: #e8f5e9; color: #0f6e3f; }
+        .status-completed h3 { background: #e3f2fd; color: #0056a7; }
+        .status-cancelled h3 { background: #ffebee; color: #c62828; }
+        
+        .student-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #f8fafc; border-radius: 12px; margin-bottom: 8px; border: 1px solid #e8edf5; }
+        .badge-status { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        .badge-active { background: #e8f5e9; color: #0f6e3f; }
+        .badge-completed { background: #e3f2fd; color: #0056a7; }
+        .badge-cancelled { background: #ffebee; color: #c62828; }
+        
+        .topic-time-block { background: #f8fafc; border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 2px solid #e0e6ed; }
+        .saved-topics-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .saved-topic-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: white; border: 2px solid #e0e6ed; border-radius: 25px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.3s; }
+        .saved-topic-item:hover { background: #0056a7; color: white; border-color: #0056a7; }
+        .add-topic-btn { padding: 12px 24px; background: #0056a7; color: white; border: none; border-radius: 25px; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
+        .topic-chip { padding: 8px 16px; background: #f0f6ff; border: 1px solid #c5d9f2; border-radius: 20px; font-size: 0.9rem; color: #0056a7; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; margin: 4px; }
+        .topic-chip .duration-badge { background: #e0ecff; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; color: #003d7c; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #666; }
+        
+        .loading { text-align: center; padding: 40px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect fill=%22%23003d7c%22 width=%2248%22 height=%2248%22 rx=%228%22/%3E%3Ctext fill=%22white%22 x=%2250%25%22 y=%2255%25%22 font-size=%2220%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'">
+                <div class="logo-text"><h2>Консультации</h2><span>панель преподавателя</span></div>
+            </div>
+            <div class="user-info">
+                <span id="teacherName" style="font-weight:600;"></span>
+                <span class="badge">Преподаватель</span>
+                <button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="container">
+            <ul class="nav-tabs" id="teacherNavTabs">
+                <li class="nav-tab active" data-tab="dashboard">Дашборд</li>
+                <li class="nav-tab" data-tab="create-slot">Создать консультацию</li>
+                <li class="nav-tab" data-tab="manage-bookings">Управление записями</li>
+                <li class="nav-tab" data-tab="support">Поддержка</li>
+                <li class="nav-tab" data-tab="notifications">Уведомления <span id="notifBadge" style="background:#dc3545;color:white;padding:2px 8px;border-radius:12px;font-size:12px;display:none;">0</span></li>
+                <li class="nav-tab" data-tab="statistics">Статистика</li>
+            </ul>
+        </div>
+    </div>
+
+    <main class="container">
+        <!-- Дашборд -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats">
+                <div class="stat-card"><h3>Всего консультаций</h3><p id="totalSlots" class="stat-number">0</p></div>
+                <div class="stat-card"><h3>Записалось студентов</h3><p id="totalBookings" class="stat-number">0</p></div>
+                <div class="stat-card"><h3>Сегодня</h3><p id="todaySlots" class="stat-number">0</p></div>
+            </div>
+            <h3>Ближайшие консультации</h3>
+            <div id="upcomingSlots"><p class="loading">Загрузка...</p></div>
+        </div>
+
+        <!-- Создать консультацию -->
+        <div id="create-slot" class="tab-content">
+            <div class="card">
+                <h2>Создание новой консультации</h2>
+                <div class="topic-time-block">
+                    <h3>Темы консультаций</h3>
+                    <div class="saved-topics-list" id="savedTopicsList"></div>
+                    <div style="margin-top:15px;">
+                        <input type="text" id="newTopicName" placeholder="Название темы" style="width:100%;padding:12px;border:2px solid #e0e6ed;border-radius:10px;margin-bottom:10px;">
+                        <select id="newTopicSubject" style="width:100%;padding:12px;border:2px solid #e0e6ed;border-radius:10px;margin-bottom:10px;"><option value="">Выберите предмет</option></select>
+                        <div class="form-group"><label>Длительность</label><select id="newTopicDuration"><option value="">Выберите</option><option value="5">5 минут</option><option value="10">10 минут</option><option value="15">15 минут</option><option value="20">20 минут</option><option value="30">30 минут</option><option value="45">45 минут</option><option value="60">1 час</option></select></div>
+                        <button type="button" class="add-topic-btn" id="addTopicToSlotBtn">+ Добавить тему</button>
+                    </div>
+                </div>
+                <div id="selectedTopicsContainer"><h4>Выбранные темы:</h4><div id="selectedTopicsList"><p style="color:#666;">Нет тем</p></div></div>
+                <hr>
+                <form id="createSlotForm">
+                    <input type="hidden" id="editSlotId">
+                    <div class="form-group"><label>Общее время</label><div class="form-row"><div><label style="font-size:0.8rem;">Начало</label><input type="time" id="slotTimeStart" required></div><div><label style="font-size:0.8rem;">Конец</label><input type="time" id="slotTimeEnd" required></div></div></div>
+                    <div class="form-row"><div class="form-group"><label>Формат</label><select id="slotFormat"><option value="очно">Очно</option><option value="онлайн">Онлайн</option></select></div><div class="form-group"><label>Дата</label><input type="date" id="slotDate" required></div></div>
+                    <div class="form-row"><div class="form-group"><label>Аудитория</label><input type="text" id="slotRoom"></div><div class="form-group"><label>Макс. студентов</label><input type="number" id="slotLimit" min="1" max="20" value="5"></div></div>
+                    <div class="form-group"><label>Описание</label><textarea id="slotDescription" rows="3"></textarea></div>
+                    <button type="submit" class="btn btn-primary">Создать консультацию</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Управление записями -->
+        <div id="manage-bookings" class="tab-content">
+            <h2>Управление записями</h2>
+            <div class="status-filters">
+                <button class="status-filter-btn active" data-filter="all">Все</button>
+                <button class="status-filter-btn" data-filter="active">Активные</button>
+                <button class="status-filter-btn" data-filter="completed">Завершённые</button>
+                <button class="status-filter-btn" data-filter="cancelled">Отменённые</button>
+            </div>
+            <div id="teacherSlotsList"><p class="loading">Загрузка...</p></div>
+        </div>
+
+        <!-- Поддержка -->
+        <div id="support" class="tab-content">
+            <h2>Связь с администрацией</h2>
+            <div class="card">
+                <div id="supportChat" style="max-height:400px;overflow-y:auto;margin-bottom:15px;"></div>
+                <div style="display:flex;gap:10px;">
+                    <input type="text" id="supportMessage" placeholder="Сообщение..." style="flex:1;padding:10px;border:1px solid #dce3f0;border-radius:6px;">
+                    <button id="sendSupportBtn" class="btn btn-primary">Отправить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Уведомления -->
+        <div id="notifications" class="tab-content">
+            <h2>Уведомления</h2>
+            <div id="notificationsList"><p class="loading">Загрузка...</p></div>
+        </div>
+
+        <!-- Статистика -->
+        <div id="statistics" class="tab-content">
+            <h2>Статистика</h2>
+            <div id="statsContainer"><p class="loading">Загрузка...</p></div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://bimdjjmdxoygeucdzlmu.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let currentUser = null;
+        let currentFilter = 'all';
+        let selectedTopics = [];
+        let teacherTopics = [];
+
+        function checkAuth() {
+            const saved = sessionStorage.getItem('currentUser');
+            if (!saved) { window.location.href = 'index.html'; return null; }
+            const user = JSON.parse(saved);
+            if (user.role !== 'teacher') { window.location.href = 'index.html'; return null; }
+            return user;
+        }
+
+        function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+
+        // Загрузка дашборда
+        async function loadDashboard() {
+            const { data: slots } = await supabase.from('slots').select('*').eq('teacher_id', currentUser.id);
+            const { count: totalB } = await supabase.from('bookings').select('*', { count: 'exact' }).eq('status', 'active').in('slot_id', (slots || []).map(s => s.id));
+            
+            document.getElementById('totalSlots').textContent = slots?.length || 0;
+            document.getElementById('totalBookings').textContent = totalB || 0;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todaySlots = (slots || []).filter(s => s.date === today && s.status === 'active');
+            document.getElementById('todaySlots').textContent = todaySlots.length;
+            
+            // Ближайшие
+            const upcoming = (slots || []).filter(s => s.status === 'active' && s.date >= today).sort((a,b) => a.date.localeCompare(b.date)).slice(0, 5);
+            const container = document.getElementById('upcomingSlots');
+            
+            if (!upcoming.length) { container.innerHTML = '<p style="color:#666;">Нет предстоящих консультаций</p>'; return; }
+            
+            // Получаем количество записавшихся
+            const slotIds = upcoming.map(s => s.id);
+            const { data: bookings } = await supabase.from('bookings').select('slot_id').eq('status', 'active').in('slot_id', slotIds);
+            const countMap = {};
+            (bookings || []).forEach(b => { countMap[b.slot_id] = (countMap[b.slot_id] || 0) + 1; });
+            
+            container.innerHTML = upcoming.map(slot => {
+                const free = slot.max_students - (countMap[slot.id] || 0);
+                let st = 'Свободно', sc = '#0f6e3f';
+                if (free <= 0) { st = 'Нет мест'; sc = '#dc3545'; }
+                else if (free <= 2) { st = 'Почти заполнено'; sc = '#ffc107'; }
+                
+                const topics = slot.topics || [];
+                
+                return `<div class="consultation-card">
+                    <div style="display:flex;justify-content:space-between;"><h3>${slot.subject}</h3><span style="color:${sc};font-weight:600;">${st}</span></div>
+                    <p style="color:#666;">${formatDate(slot.date)} | ${slot.time_start}-${slot.time_end} | ${slot.format} | Записано: ${countMap[slot.id] || 0}/${slot.max_students}</p>
+                    ${topics.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;">${topics.map(t => `<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration || '?'} мин.</span></span>`).join('')}</div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        // Загрузка списка консультаций преподавателя
+        async function loadTeacherSlots() {
+            let query = supabase.from('slots').select('*').eq('teacher_id', currentUser.id).order('date', { ascending: false });
+            if (currentFilter !== 'all') query = query.eq('status', currentFilter);
+            
+            const { data: slots } = await query;
+            const container = document.getElementById('teacherSlotsList');
+            
+            if (!slots?.length) { container.innerHTML = '<p style="color:#666;">Нет консультаций</p>'; return; }
+            
+            const slotIds = slots.map(s => s.id);
+            const { data: bookings } = await supabase.from('bookings').select('*, users!bookings_student_id_fkey(name, surname)').in('slot_id', slotIds);
+            
+            const active = slots.filter(s => s.status === 'active');
+            const completed = slots.filter(s => s.status === 'completed');
+            const cancelled = slots.filter(s => s.status === 'cancelled');
+            
+            let html = '';
+            if (active.length) html += `<div class="status-section status-active"><h3>Активные (${active.length})</h3>${active.map(s => renderSlot(s, bookings)).join('')}</div>`;
+            if (completed.length) html += `<div class="status-section status-completed"><h3>Завершённые (${completed.length})</h3>${completed.map(s => renderSlot(s, bookings)).join('')}</div>`;
+            if (cancelled.length) html += `<div class="status-section status-cancelled"><h3>Отменённые (${cancelled.length})</h3>${cancelled.map(s => renderSlot(s, bookings)).join('')}</div>`;
+            
+            container.innerHTML = html;
+            
+            document.querySelectorAll('.mark-btn').forEach(b => b.addEventListener('click', () => markAttendance(b.dataset.bid)));
+            document.querySelectorAll('.cancel-slot-btn').forEach(b => b.addEventListener('click', () => cancelSlot(b.dataset.sid)));
+            document.querySelectorAll('.close-reg-btn').forEach(b => b.addEventListener('click', () => closeRegistration(b.dataset.sid)));
+        }
+
+        function renderSlot(slot, allBookings) {
+            const slotBookings = (allBookings || []).filter(b => b.slot_id === slot.id);
+            const activeB = slotBookings.filter(b => b.status === 'active');
+            const topics = slot.topics || [];
+            
+            // Считаем записи по темам
+            const topicCounts = {};
+            topics.forEach(t => { topicCounts[t.name] = slotBookings.filter(b => b.topic === t.name && b.status === 'active').length; });
+            
+            return `<div class="consultation-card">
+                <div style="display:flex;justify-content:space-between;align-items:start;">
+                    <h3>${slot.subject} - ${formatDate(slot.date)}</h3>
+                    <div style="display:flex;gap:10px;">
+                        <span class="badge-status badge-${slot.status}">${slot.status}</span>
+                        ${slot.status === 'active' ? `<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${slot.id}">Закрыть запись</button>` : ''}
+                    </div>
+                </div>
+                <p style="color:#666;">${slot.time_start}-${slot.time_end} | ${slot.format} ${slot.room ? '| Ауд. '+slot.room : ''} | Записано: ${activeB.length}/${slot.max_students}</p>
+                ${topics.length ? `<div style="margin:10px 0;">${topics.map(t => `<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration || '?'} мин.</span><span style="background:${topicCounts[t.name] > 0 ? '#e8f5e9' : '#f5f5f5'};padding:2px 8px;border-radius:10px;font-size:0.75rem;">${topicCounts[t.name] || 0} зап.</span></span>`).join('')}</div>` : ''}
+                ${slotBookings.length ? `<div style="margin-top:10px;">${slotBookings.map(b => {
+                    let sb = b.status === 'active' ? '<span style="color:#0f6e3f;">Активна</span>' : b.cancelled_by === 'admin' ? '<span style="color:#c62828;">Отменена админом</span>' : b.cancelled_by === 'teacher' ? '<span style="color:#e65100;">Отменена вами</span>' : '<span style="color:#c62828;">Отменена студентом</span>';
+                    return `<div class="student-item"><div><strong>${b.users?.surname || ''} ${b.users?.name || ''}</strong><br><small>Тема: ${b.topic || 'Нет'} | ${sb}</small></div>${b.status === 'active' ? `<button class="btn btn-sm mark-btn" data-bid="${b.id}" style="background:${b.attended ? '#0f6e3f' : '#0056a7'};color:white;">${b.attended ? 'Присутствовал' : 'Отметить'}</button>` : ''}</div>`;
+                }).join('')}</div>` : '<p style="color:#666;">Нет записей</p>'}
+                ${slot.status === 'active' ? `<button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${slot.id}" style="margin-top:10px;">Отменить консультацию</button>` : ''}
+            </div>`;
+        }
+
+        async function markAttendance(bid) {
+            const { data: b } = await supabase.from('bookings').select('attended').eq('id', bid).single();
+            await supabase.from('bookings').update({ attended: !b?.attended }).eq('id', bid);
+            loadTeacherSlots();
+        }
+
+        async function cancelSlot(sid) {
+            if (!confirm('Отменить консультацию?')) return;
+            await supabase.from('slots').update({ status: 'cancelled' }).eq('id', sid);
+            await supabase.from('bookings').update({ status: 'cancelled', cancelled_by: 'teacher' }).eq('slot_id', sid).eq('status', 'active');
+            loadDashboard();
+            loadTeacherSlots();
+        }
+
+        async function closeRegistration(sid) {
+            const { data: slot } = await supabase.from('slots').select('*').eq('id', sid).single();
+            const { count } = await supabase.from('bookings').select('*', { count: 'exact' }).eq('slot_id', sid).eq('status', 'active');
+            
+            if (!confirm(`Закрыть запись? Записано: ${count}/${slot.max_students}`)) return;
+            
+            await supabase.from('slots').update({ max_students: count > 0 ? count : 1 }).eq('id', sid);
+            loadDashboard();
+            loadTeacherSlots();
+        }
+
+        // Создание консультации
+        async function loadTopics() {
+            // Загружаем глобальные темы
+            const { data: global } = await supabase.from('global_topics').select('*');
+            teacherTopics = (global || []).map(t => ({ name: t.name, subject: t.subject, duration: t.duration }));
+            
+            // Загружаем предметы
+            const { data: subjects } = await supabase.from('subjects').select('name').order('name');
+            const select = document.getElementById('newTopicSubject');
+            select.innerHTML = '<option value="">Выберите предмет</option>' + (subjects || []).map(s => `<option>${s.name}</option>`).join('');
+            
+            // Отображаем сохраненные темы
+            const container = document.getElementById('savedTopicsList');
+            container.innerHTML = teacherTopics.length ? teacherTopics.map(t => 
+                `<span class="saved-topic-item" onclick="useTopic('${t.name}','${t.subject}',${t.duration})">${t.name} (${t.duration} мин.)</span>`
+            ).join('') : '<p style="color:#666;">Нет сохраненных тем</p>';
+        }
+
+        function useTopic(name, subject, duration) {
+            document.getElementById('newTopicName').value = name;
+            document.getElementById('newTopicSubject').value = subject;
+            document.getElementById('newTopicDuration').value = duration;
+        }
+
+        function addTopicToSlot() {
+            const name = document.getElementById('newTopicName').value.trim();
+            const subject = document.getElementById('newTopicSubject').value;
+            const duration = parseInt(document.getElementById('newTopicDuration').value);
+            
+            if (!name || !subject || !duration) { alert('Заполните все поля!'); return; }
+            
+            let timeStart = '10:00';
+            if (selectedTopics.length) {
+                const last = selectedTopics[selectedTopics.length - 1];
+                const [h, m] = last.timeEnd.split(':').map(Number);
+                timeStart = String(Math.floor((h*60+m)/60)%24).padStart(2,'0') + ':' + String((h*60+m)%60).padStart(2,'0');
+            }
+            
+            const [h, m] = timeStart.split(':').map(Number);
+            const total = h*60 + m + duration;
+            const timeEnd = String(Math.floor(total/60)%24).padStart(2,'0') + ':' + String(total%60).padStart(2,'0');
+            
+            selectedTopics.push({ name, subject, timeStart, timeEnd, duration });
+            
+            document.getElementById('newTopicName').value = '';
+            document.getElementById('newTopicDuration').value = '';
+            renderSelectedTopics();
+            updateTotalTime();
+        }
+
+        function renderSelectedTopics() {
+            const c = document.getElementById('selectedTopicsList');
+            if (!selectedTopics.length) { c.innerHTML = '<p style="color:#666;">Нет тем</p>'; return; }
+            c.innerHTML = selectedTopics.map((t, i) => `
+                <div style="display:flex;justify-content:space-between;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:5px;">
+                    <span><strong>${t.name}</strong> - ${t.subject} (${t.duration} мин.)</span>
+                    <button class="btn btn-danger btn-sm" onclick="removeTopic(${i})">X</button>
+                </div>
+            `).join('');
+        }
+
+        function removeTopic(i) { selectedTopics.splice(i, 1); renderSelectedTopics(); updateTotalTime(); }
+
+        function updateTotalTime() {
+            if (selectedTopics.length) {
+                document.getElementById('slotTimeStart').value = selectedTopics[0].timeStart;
+                document.getElementById('slotTimeEnd').value = selectedTopics[selectedTopics.length - 1].timeEnd;
+            }
+        }
+
+        async function createSlot(e) {
+            e.preventDefault();
+            if (!selectedTopics.length) { alert('Добавьте тему!'); return; }
+            
+            const slot = {
+                id: 's' + Date.now(),
+                teacher_id: currentUser.id,
+                subject: [...new Set(selectedTopics.map(t => t.subject))].join(', '),
+                date: document.getElementById('slotDate').value,
+                time_start: document.getElementById('slotTimeStart').value,
+                time_end: document.getElementById('slotTimeEnd').value,
+                format: document.getElementById('slotFormat').value,
+                room: document.getElementById('slotRoom').value,
+                max_students: parseInt(document.getElementById('slotLimit').value),
+                description: document.getElementById('slotDescription').value,
+                topics: selectedTopics,
+                status: 'active'
+            };
+            
+            const { error } = await supabase.from('slots').insert(slot);
+            if (error) { alert('Ошибка: ' + error.message); return; }
+            
+            alert('Консультация создана!');
+            selectedTopics = [];
+            renderSelectedTopics();
+            document.getElementById('createSlotForm').reset();
+            loadDashboard();
+        }
+
+        // Уведомления
+        async function loadNotifications() {
+            const { data } = await supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(50);
+            const container = document.getElementById('notificationsList');
+            if (!data?.length) { container.innerHTML = '<p style="color:#666;">Нет уведомлений</p>'; return; }
+            
+            container.innerHTML = data.map(n => `
+                <div style="padding:14px;background:#fff3cd;border-left:4px solid #ffc107;margin-bottom:10px;border-radius:8px;${n.is_read ? 'opacity:0.6;' : ''}">
+                    <p>${n.message}</p><small>${new Date(n.created_at).toLocaleString('ru-RU')}</small>
+                    ${!n.is_read ? `<br><button class="btn btn-sm btn-outline" onclick="markNotifRead('${n.id}')">Прочитано</button>` : ''}
+                </div>
+            `).join('');
+            
+            const unread = data.filter(n => !n.is_read).length;
+            const badge = document.getElementById('notifBadge');
+            badge.textContent = unread;
+            badge.style.display = unread > 0 ? 'inline' : 'none';
+        }
+
+        async function markNotifRead(id) {
+            await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+            loadNotifications();
+        }
+
+        // Статистика
+        async function loadStatistics() {
+            const { data: slots } = await supabase.from('slots').select('*').eq('teacher_id', currentUser.id);
+            const container = document.getElementById('statsContainer');
+            
+            if (!slots?.length) { container.innerHTML = '<p style="color:#666;">Нет данных</p>'; return; }
+            
+            const days = {};
+            const dn = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+            slots.forEach(s => { const d = dn[new Date(s.date).getDay()]; days[d] = (days[d]||0)+1; });
+            
+            container.innerHTML = `
+                <div class="card"><h4>По дням недели</h4>${Object.entries(days).map(([d,c]) => `<div style="display:flex;justify-content:space-between;padding:8px 0;">${d}<strong>${c}</strong></div>`).join('')}</div>
+            `;
+        }
+
+        function switchTab(name, el) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            if (el) el.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            if (name === 'dashboard') loadDashboard();
+            if (name === 'manage-bookings') loadTeacherSlots();
+            if (name === 'notifications') loadNotifications();
+            if (name === 'statistics') loadStatistics();
+        }
+
+        function formatDate(d) { return d ? new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''; }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', async () => {
+            currentUser = checkAuth();
+            if (!currentUser) return;
+            
+            document.getElementById('teacherName').textContent = currentUser.surname + ' ' + currentUser.name;
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', function() { switchTab(this.dataset.tab, this); });
+            });
+            
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    loadTeacherSlots();
+                });
+            });
+            
+            document.getElementById('createSlotForm').addEventListener('submit', createSlot);
+            document.getElementById('addTopicToSlotBtn').addEventListener('click', addTopicToSlot);
+            
+            await loadTopics();
+            await loadDashboard();
+            await loadNotifications();
+        });
+
+        window.useTopic = useTopic;
+        window.removeTopic = removeTopic;
+    </script>
+</body>
+</html>
