@@ -417,7 +417,7 @@ async function createSimpleRepeatingSlots(baseSlot, repeatType) {
                 <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;color:#666;font-size:0.9rem;">
                     <span>${formatDate(slot.date)}</span>
                     <span>${slot.time_start} - ${slot.time_end}</span>
-                    <span>${slot.format === 'очно' ? 'Ауд. ' + slot.room : 'Онлайн'}</span>
+                    <span>${slot.format === 'Очно' ? 'Ауд. ' + slot.room : 'Онлайн'}</span>
                     <span>Записано: ${countMap[slot.id] || 0}/${slot.max_students}</span>
                 </div>
                 
