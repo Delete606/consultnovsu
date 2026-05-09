@@ -1103,12 +1103,13 @@ await sendNotification(
 
         async function markNotifRead(id) { await _supabase.from('notifications').update({ is_read: true }).eq('id', id); loadNotifications(); }
 
-        function switchTab(name, el) { document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active')); if(el)el.classList.add('active'); document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.getElementById(name).classList.add('active'); if(name==='dashboard')loadDashboard(); if(name==='manage-bookings')loadTeacherSlots(); if(name==='notifications')loadNotifications(); }
+        function switchTab(name, el) { document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if (name === 'support') loadTeacherSupport(); if(el)el.classList.add('active'); document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.getElementById(name).classList.add('active'); if(name==='dashboard')loadDashboard(); if(name==='manage-bookings')loadTeacherSlots(); if(name==='notifications')loadNotifications(); }
 
         function formatDate(d) { return d ? new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}) : ''; }
 
         document.addEventListener('DOMContentLoaded', async () => {
             currentUser = checkAuth(); if (!currentUser) return;
+            document.getElementById('sendSupportBtn').addEventListener('click', sendTeacherSupport);
             document.getElementById('teacherName').textContent = currentUser.surname + ' ' + currentUser.name;
             document.getElementById('logoutBtn').addEventListener('click', logout);
             document.querySelectorAll('.nav-tab').forEach(tab => tab.addEventListener('click', function() { switchTab(this.dataset.tab, this); }));
