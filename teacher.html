@@ -137,7 +137,7 @@
     <!-- Модальное окно редактирования -->
     <div id="editSlotModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeEditModal()">&times;</span><h3>Редактирование консультации</h3><form id="editSlotForm" onsubmit="saveSlotEdit(event)"><input type="hidden" id="editSlotIdModal"><div class="form-group"><label>Тема</label><input type="text" id="editSlotTopic" required></div><div class="form-row"><div class="form-group"><label>Дата</label><input type="date" id="editSlotDate" required></div><div class="form-group"><label>Формат</label><select id="editSlotFormat"><option value="очно">Очно</option><option value="онлайн">Онлайн</option></select></div></div><div class="form-row"><div class="form-group"><label>Начало</label><input type="time" id="editSlotTimeStart" required></div><div class="form-group"><label>Конец</label><input type="time" id="editSlotTimeEnd" required></div></div><div class="form-row"><div class="form-group"><label>Аудитория</label><input type="text" id="editSlotRoom"></div><div class="form-group"><label>Лимит</label><input type="number" id="editSlotLimit" min="1" max="20" required></div></div><div class="form-group"><label>Описание</label><textarea id="editSlotDescription" rows="3"></textarea></div><button type="submit" class="btn btn-primary">Сохранить изменения</button></form></div></div>
 
-    <script src="js/database.js"></script>
+    <script src="js/database-sqlite.js"></script>
     <script src="js/auth.js"></script>
     <script>
         let currentTeacher = null, currentStatusFilter = 'all', selectedTopics = [], teacherTopics = [];
