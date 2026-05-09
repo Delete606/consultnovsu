@@ -6,6 +6,15 @@
     <title>Админ-панель - Консультации НовГУ</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
+        .badge-notif {
+    background: #dc3545;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 5px;
+    display: none;
+}
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4fc; min-height: 100vh; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
@@ -81,9 +90,10 @@
             <ul class="nav-tabs" id="adminNavTabs">
                 <li class="nav-tab active" data-tab="users">Пользователи</li>
                 <li class="nav-tab" data-tab="subjects">Предметы</li>
-                <li class="nav-tab" data-tab="slots">Слоты</li>
-                <li class="nav-tab" data-tab="stats">Статистика</li>
                 <li class="nav-tab" data-tab="topics">Глобальные темы</li>
+                <li class="nav-tab" data-tab="slots">Слоты</li>
+                <li class="nav-tab" data-tab="tickets">Тикеты <span id="ticketBadge" class="badge-notif">0</span></li>
+                <li class="nav-tab" data-tab="stats">Статистика</li>
             </ul>
         </div>
     </div>
@@ -108,6 +118,10 @@
                 <div id="subjectsList"><p class="loading">Загрузка...</p></div>
             </div>
         </div>
+        <div id="tickets" class="tab-content">
+    <h2 style="margin-bottom:20px;">Обращения пользователей</h2>
+    <div id="adminTicketsList"><p class="loading">Загрузка...</p></div>
+</div>
         <div id="topics" class="tab-content">
     <div class="card">
         <h2>Глобальные темы</h2>
@@ -165,6 +179,207 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        // Загрузка тикетов
+async function loadTickets() {
+    const container = document.getElementById('adminTicketsList');
+    container.innerHTML = '<p class="loading">Загрузка...</p>';
+    
+    const { data: tickets, error } = await _supabase
+        .from('tickets')
+        .select('*')
+        .order('created_at', { ascending: false });
+    
+    if (error) {
+        container.innerHTML = `<p style="color:#dc3545;">Ошибка: ${error.message}</p>`;
+        return;
+    }
+    
+    if (!tickets || tickets.length === 0) {
+        container.innerHTML = '<div class="card"><p style="color:#666;text-align:center;padding:20px;">Нет обращений</p></div>';
+        updateTicketBadge();
+        return;
+    }
+    
+    // Получаем всех пользователей для отображения имён
+    const userIds = [...new Set(tickets.map(t => t.user_id))];
+    const { data: users } = await _supabase
+        .from('users')
+        .select('id, name, surname, role')
+        .in('id', userIds);
+    
+    const userMap = {};
+    (users || []).forEach(u => { userMap[u.id] = u; });
+    
+    container.innerHTML = tickets.map(ticket => {
+        const user = userMap[ticket.user_id];
+        const messages = ticket.messages || [];
+        const isOpen = ticket.status === 'open';
+        
+        return `
+            <div class="card" style="margin-bottom:15px;${isOpen ? 'border-left:4px solid #0f6e3f;' : 'border-left:4px solid #c62828;'}">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #e8edf5;">
+                    <div>
+                        <strong style="font-size:1.1rem;">${user ? user.surname + ' ' + user.name : 'Неизвестный'}</strong>
+                        <span style="margin-left:10px;color:#666;">(${user ? user.role : '?'})</span>
+                        <span style="margin-left:10px;color:${isOpen ? '#0f6e3f' : '#c62828'};font-weight:600;">
+                            ${isOpen ? 'Открыт' : 'Закрыт'}
+                        </span>
+                    </div>
+                    <small style="color:#666;">${new Date(ticket.created_at).toLocaleString('ru-RU')}</small>
+                </div>
+                
+                <div style="max-height:350px;overflow-y:auto;margin-bottom:15px;padding:10px;background:#f8fafc;border-radius:8px;">
+                    ${messages.map(msg => `
+                        <div style="margin-bottom:12px;display:flex;flex-direction:column;align-items:${msg.sender === 'admin' ? 'flex-end' : 'flex-start'};">
+                            <div style="padding:10px 14px;border-radius:12px;max-width:80%;background:${msg.sender === 'admin' ? '#0056a7' : '#f0f4fc'};color:${msg.sender === 'admin' ? 'white' : '#333'};">
+                                <p style="margin:0;">${msg.text}</p>
+                            </div>
+                            <small style="color:#666;margin-top:4px;font-size:0.75rem;">
+                                ${msg.sender === 'admin' ? 'Вы' : user?.name || 'Пользователь'} · ${new Date(msg.timestamp).toLocaleString('ru-RU')}
+                            </small>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${isOpen ? `
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <input type="text" id="adminReply_${ticket.id}" placeholder="Введите ответ..." 
+                               style="flex:1;padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
+                        <button class="btn btn-primary btn-sm" onclick="replyToTicket('${ticket.id}')">
+                            Ответить
+                        </button>
+                        <button class="btn btn-sm" onclick="closeTicket('${ticket.id}')" 
+                                style="background:#ffc107;color:#333;">
+                            Закрыть
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteTicket('${ticket.id}')">
+                            Удалить
+                        </button>
+                    </div>
+                ` : `
+                    <button class="btn btn-danger btn-sm" onclick="deleteTicket('${ticket.id}')">
+                        Удалить
+                    </button>
+                `}
+            </div>
+        `;
+    }).join('');
+    
+    updateTicketBadge();
+}
+
+// Ответ на тикет
+async function replyToTicket(ticketId) {
+    const input = document.getElementById('adminReply_' + ticketId);
+    const message = input?.value.trim();
+    
+    if (!message) {
+        alert('Введите ответ!');
+        return;
+    }
+    
+    // Получаем тикет
+    const { data: ticket } = await _supabase
+        .from('tickets')
+        .select('*')
+        .eq('id', ticketId)
+        .single();
+    
+    if (!ticket) return;
+    
+    // Добавляем сообщение
+    const messages = [...(ticket.messages || []), {
+        sender: 'admin',
+        text: message,
+        timestamp: new Date().toISOString()
+    }];
+    
+    const { error } = await _supabase
+        .from('tickets')
+        .update({ messages })
+        .eq('id', ticketId);
+    
+    if (error) {
+        console.error('Ошибка:', error);
+        return;
+    }
+    
+    // Уведомление пользователю
+    await sendNotification(
+        ticket.user_id,
+        'Администратор ответил на ваше обращение',
+        'support',
+        ticketId
+    );
+    
+    loadTickets();
+}
+
+// Закрытие тикета
+async function closeTicket(ticketId) {
+    if (!confirm('Закрыть обращение?')) return;
+    
+    const { error } = await _supabase
+        .from('tickets')
+        .update({ status: 'closed' })
+        .eq('id', ticketId);
+    
+    if (error) {
+        console.error('Ошибка:', error);
+        return;
+    }
+    
+    loadTickets();
+}
+
+// Удаление тикета
+async function deleteTicket(ticketId) {
+    if (!confirm('Удалить обращение?')) return;
+    
+    const { error } = await _supabase
+        .from('tickets')
+        .delete()
+        .eq('id', ticketId);
+    
+    if (error) {
+        console.error('Ошибка:', error);
+        return;
+    }
+    
+    loadTickets();
+}
+
+// Обновление счетчика
+function updateTicketBadge() {
+    _supabase
+        .from('tickets')
+        .select('*', { count: 'exact' })
+        .eq('status', 'open')
+        .then(({ count }) => {
+            const badge = document.getElementById('ticketBadge');
+            if (badge) {
+                badge.textContent = count || 0;
+                badge.style.display = count > 0 ? 'inline' : 'none';
+            }
+        });
+}
+
+// Функция отправки уведомлений (добавь если нет)
+async function sendNotification(userId, message, type = 'info', relatedId = null) {
+    try {
+        await _supabase.from('notifications').insert({
+            id: 'n' + Date.now() + Math.random(),
+            user_id: userId,
+            related_slot_id: relatedId,
+            message: message,
+            type: type,
+            is_read: false,
+            created_at: new Date().toISOString()
+        });
+    } catch(e) {
+        console.error('Ошибка уведомления:', e);
+    }
+}
         // ЕДИНСТВЕННОЕ объявление supabase
         const _supabase = window.supabase.createClient(
             'https://bimdjjmdxoygeucdzlmu.supabase.co',
@@ -438,6 +653,7 @@ async function deleteGlobalTopic(id) {
 
         function switchTab(name, el) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            if (name === 'tickets') loadTickets();
             if (name === 'topics') loadGlobalTopics();
             if (el) el.classList.add('active');
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -459,7 +675,7 @@ async function deleteGlobalTopic(id) {
             document.getElementById('userForm').addEventListener('submit', saveUser);
             document.getElementById('addSubjectBtn').addEventListener('click', addSubject);
             document.getElementById('userSearch').addEventListener('input', loadUsers);
-            loadUsers(); loadSubjects(); loadSlots(); loadStats();
+            loadUsers(); loadSubjects(); loadSlots(); loadStats();loadTickets();updateTicketBadge();
         });
     </script>
 </body>
