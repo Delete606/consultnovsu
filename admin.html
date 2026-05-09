@@ -41,181 +41,379 @@
     <div id="userModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal()">&times;</span><h3 id="modalTitle">Добавить</h3><form id="userForm"><input type="hidden" id="editUserId"><div class="form-group"><label>Имя</label><input type="text" id="editName" required></div><div class="form-group"><label>Фамилия</label><input type="text" id="editSurname" required></div><div class="form-group"><label>Email</label><input type="email" id="editEmail" required></div><div class="form-group"><label>Роль</label><select id="editRole"><option value="student">Студент</option><option value="teacher">Преподаватель</option><option value="admin">Админ</option></select></div><div class="form-group"><label>Пароль</label><input type="password" id="editPassword" placeholder="Оставьте пустым"></div><button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button></form></div></div>
     <div id="infoModal" class="modal"><div class="modal-content" style="max-width:550px;"><span class="close-modal" onclick="closeInfoModal()">&times;</span><h3 style="margin-bottom:16px;">Информация о консультации</h3><div id="infoContent"></div></div></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
     const _s = window.supabase.createClient('https://bimdjjmdxoygeucdzlmu.supabase.co','sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje');
     let U=null,FF='all',up=1,sp=1,tp=1;
     const PER=5;
     let slotsCache=null,bookingsCache=null,allUsersCache=null;
 
-    function A(){const s=sessionStorage.getItem('currentUser');if(!s){location.href='index.html';return null;}const u=JSON.parse(s);if(u.role!=='admin'){location.href='index.html';return null;}return u;}
+    // Проверка авторизации
+    function A(){
+        const s=sessionStorage.getItem('currentUser');
+        if(!s){location.href='index.html';return null;}
+        const u=JSON.parse(s);
+        if(u.role!=='admin'){location.href='index.html';return null;}
+        return u;
+    }
     function L(){sessionStorage.removeItem('currentUser');location.href='index.html';}
-    function ST(n,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(n).classList.add('active');if(n==='users')LU(up);if(n==='subjects')LSB();if(n==='slots')LSL(sp);if(n==='tickets')LT(tp);if(n==='requests')LR();if(n==='stats')LST();}
 
-    // Универсальная функция создания пагинации
-    function makePagination(containerId, page, total, funcName) {
-        var c = document.getElementById(containerId);
-        if (!c) return;
-        if (total <= PER) { c.innerHTML = ''; return; }
-        var pages = Math.ceil(total / PER);
-        var h = '';
-        
-        if (page > 1) {
-            h += '<button class="page-btn" onclick="' + funcName + '(' + (page - 1) + ')">&lt;</button>';
-        } else {
-            h += '<button class="page-btn" disabled>&lt;</button>';
-        }
-        
-        for (var i = 1; i <= pages; i++) {
-            if (i === page) {
-                h += '<button class="page-btn active">' + i + '</button>';
-            } else {
-                h += '<button class="page-btn" onclick="' + funcName + '(' + i + ')">' + i + '</button>';
-            }
-        }
-        
-        if (page < pages) {
-            h += '<button class="page-btn" onclick="' + funcName + '(' + (page + 1) + ')">&gt;</button>';
-        } else {
-            h += '<button class="page-btn" disabled>&gt;</button>';
-        }
-        
-        h += '<span style="margin-left:10px;color:#666;font-size:0.8rem;">' + ((page-1)*PER+1) + '-' + Math.min(page*PER,total) + ' из ' + total + '</span>';
-        c.innerHTML = h;
+    // Переключение вкладок
+    function ST(n,el){
+        document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+        if(el)el.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        document.getElementById(n).classList.add('active');
+        if(n==='users')goUsersPage(up);
+        if(n==='subjects')LSB();
+        if(n==='slots')goSlotsPage(sp);
+        if(n==='tickets')goTicketsPage(tp);
+        if(n==='requests')LR();
+        if(n==='stats')LST();
     }
 
-    // ПОЛЬЗОВАТЕЛИ
-    function LU(p) {
-        if (!p) p = up;
+    // ========== ПОЛЬЗОВАТЕЛИ (простая пагинация) ==========
+    window.goUsersPage = function(p) {
         up = p;
-        
-        console.log('LU вызвана с p=' + p);
-        
         var c = document.getElementById('usersTable');
         c.innerHTML = '<p class="loading">Загрузка...</p>';
         
+        // Загружаем если нет кеша
         if (!allUsersCache) {
             _s.from('users').select('*').order('surname').then(function(r) {
                 allUsersCache = r.data || [];
-                renderUsers(p);
+                renderUsersPage(p);
             });
         } else {
-            renderUsers(p);
+            renderUsersPage(p);
         }
-    }
-    
-    function renderUsers(p) {
+    };
+
+    function renderUsersPage(p) {
         var search = (document.getElementById('userSearch')?.value || '').toLowerCase();
-        var f = allUsersCache;
+        var filtered = allUsersCache;
         
         if (search) {
-            f = allUsersCache.filter(function(u) {
+            filtered = allUsersCache.filter(function(u) {
                 return (u.name && u.name.toLowerCase().includes(search)) || 
                        (u.surname && u.surname.toLowerCase().includes(search)) || 
                        (u.email && u.email.toLowerCase().includes(search));
             });
         }
         
-        var total = f.length;
+        var total = filtered.length;
+        var pages = Math.ceil(total / PER);
+        if (total === 0) pages = 1;
         
-        if ((p - 1) * PER >= total && total > 0) {
-            p = 1;
-            up = 1;
-        }
+        // Корректируем страницу если вышли за пределы
+        if (p > pages) p = pages;
+        if (p < 1) p = 1;
+        up = p;
         
         var from = (p - 1) * PER;
-        var pu = f.slice(from, from + PER);
+        var pageUsers = filtered.slice(from, from + PER);
         var c = document.getElementById('usersTable');
-        
-        if (!pu.length) {
-            c.innerHTML = '<p style="color:#666;text-align:center;">Нет пользователей</p>';
-            makePagination('usersPagination', p, total, 'LU');
-            return;
-        }
         
         var h = '<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>';
         
-        pu.forEach(function(u) {
-            h += '<tr>' +
-                '<td>' + u.id + '</td>' +
-                '<td>' + u.surname + ' ' + u.name + '</td>' +
-                '<td>' + u.email + '</td>' +
-                '<td>' + (u.role === 'student' ? 'Студент' : u.role === 'teacher' ? 'Преподаватель' : 'Админ') + '</td>' +
-                '<td>' +
-                    '<button class="btn btn-primary btn-sm" onclick="EU(\'' + u.id + '\')">Р</button> ' +
-                    '<button class="btn btn-danger btn-sm" onclick="DU(\'' + u.id + '\')">У</button>' +
-                '</td>' +
-            '</tr>';
-        });
+        if (pageUsers.length === 0) {
+            h += '<tr><td colspan="5" style="text-align:center;padding:20px;">Нет пользователей</td></tr>';
+        } else {
+            pageUsers.forEach(function(u) {
+                h += '<tr>' +
+                    '<td>' + u.id + '</td>' +
+                    '<td>' + u.surname + ' ' + u.name + '</td>' +
+                    '<td>' + u.email + '</td>' +
+                    '<td>' + (u.role === 'student' ? 'Студент' : u.role === 'teacher' ? 'Преподаватель' : 'Админ') + '</td>' +
+                    '<td>' +
+                        '<button class="btn btn-primary btn-sm" onclick="window.EU(\'' + u.id + '\')">Р</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="window.DU(\'' + u.id + '\')">У</button>' +
+                    '</td>' +
+                '</tr>';
+            });
+        }
         
         h += '</tbody></table>';
         c.innerHTML = h;
-        makePagination('usersPagination', p, total, 'LU');
         
-        console.log('Страница ' + p + ' из ' + Math.ceil(total / PER) + ', пользователей: ' + pu.length);
+        // Пагинация
+        var pc = document.getElementById('usersPagination');
+        var ph = '';
+        
+        if (pages > 1) {
+            // Кнопка Назад
+            if (p > 1) {
+                ph += '<button class="page-btn" onclick="window.goUsersPage(' + (p - 1) + ')">◀</button> ';
+            }
+            
+            // Номера страниц
+            for (var i = 1; i <= pages; i++) {
+                if (i === p) {
+                    ph += '<button class="page-btn active">' + i + '</button> ';
+                } else {
+                    ph += '<button class="page-btn" onclick="window.goUsersPage(' + i + ')">' + i + '</button> ';
+                }
+            }
+            
+            // Кнопка Вперед
+            if (p < pages) {
+                ph += '<button class="page-btn" onclick="window.goUsersPage(' + (p + 1) + ')">▶</button> ';
+            }
+            
+            ph += '<span style="margin-left:8px;color:#666;font-size:0.8rem;">' + ((p-1)*PER+1) + '-' + Math.min(p*PER,total) + ' из ' + total + '</span>';
+        }
+        
+        pc.innerHTML = ph;
     }
-        async function EU(id){var r=await _s.from('users').select('*').eq('id',id).single();if(!r.data)return;var u=r.data;document.getElementById('modalTitle').textContent='Редактировать';document.getElementById('editUserId').value=u.id;document.getElementById('editName').value=u.name;document.getElementById('editSurname').value=u.surname;document.getElementById('editEmail').value=u.email;document.getElementById('editRole').value=u.role;document.getElementById('editPassword').value='';document.getElementById('userModal').classList.add('show');}
-        function openAddModal(){document.getElementById('modalTitle').textContent='Добавить';document.getElementById('userForm').reset();document.getElementById('editUserId').value='';document.getElementById('userModal').classList.add('show');}
-        function closeModal(){document.getElementById('userModal').classList.remove('show');}
-        async function SU(e){e.preventDefault();var id=document.getElementById('editUserId').value,d={name:document.getElementById('editName').value,surname:document.getElementById('editSurname').value,email:document.getElementById('editEmail').value,role:document.getElementById('editRole').value,active:true};if(id){var p=document.getElementById('editPassword').value;if(p)d.password=p;await _s.from('users').update(d).eq('id',id);}else{d.id='u'+Date.now();d.password=document.getElementById('editPassword').value||'123';await _s.from('users').insert(d);}allUsersCache=null;closeModal();LU(up);LST();}
-        async function DU(id){if(!confirm('Удалить?'))return;await _s.from('users').delete().eq('id',id);allUsersCache=null;LU(up);LST();}
 
-        // ПРЕДМЕТЫ
-        async function LSB(){var r=await _s.from('subjects').select('*').order('name');var d=r.data||[];document.getElementById('subjectsList').innerHTML=d.length?d.map(function(s){return'<div style="display:flex;justify-content:space-between;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:4px;"><span>'+s.name+'</span><button class="btn btn-danger btn-sm" onclick="DS(\''+s.name+'\')">У</button></div>';}).join(''):'<p style="color:#666;">Нет предметов</p>';}
-        async function AS(){var n=document.getElementById('newSubject').value.trim();if(!n)return;await _s.from('subjects').insert({name:n});document.getElementById('newSubject').value='';LSB();}
-        async function DS(n){await _s.from('subjects').delete().eq('name',n);LSB();}
+    // ========== СЛОТЫ (простая пагинация) ==========
+    window.goSlotsPage = function(p) {
+        sp = p;
+        var c = document.getElementById('slotsList');
+        c.innerHTML = '<p class="loading">Загрузка...</p>';
+        
+        if (!slotsCache) {
+            Promise.all([
+                _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date',{ascending:false}),
+                _s.from('bookings').select('*,users!bookings_student_id_fkey(name,surname)')
+            ]).then(function(results) {
+                slotsCache = results[0].data || [];
+                bookingsCache = results[1].data || [];
+                renderSlotsPage(p);
+            });
+        } else {
+            renderSlotsPage(p);
+        }
+    };
 
-        // СЛОТЫ
-        async function LSL(p,force){if(!p)p=sp;sp=p;var c=document.getElementById('slotsList');c.innerHTML='<p class="loading">Загрузка...</p>';
-            if(!slotsCache||force){var sr=await _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date',{ascending:false});var br=await _s.from('bookings').select('*,users!bookings_student_id_fkey(name,surname)');slotsCache=sr.data||[];bookingsCache=br.data||[];}
-            var slots=slotsCache;if(FF!=='all')slots=slotsCache.filter(function(s){return s.status===FF;});
-            if(!Array.isArray(slots)){c.innerHTML='<p style="color:#dc3545;">Ошибка</p>';return;}
-            var total=slots.length;var from=(p-1)*PER;var ps=slots.slice(from,from+PER);
-            if(!ps.length){c.innerHTML='<p style="color:#666;">Нет</p>';makePagination('slotsPagination',p,total,'LSL');return;}
-            var a=ps.filter(function(s){return s.status==='active';}),cm=ps.filter(function(s){return s.status==='completed';}),cn=ps.filter(function(s){return s.status==='cancelled';});
-            var h='';
-            if(a.length)h+='<div class="status-section status-active"><h3>Активные ('+slots.filter(function(s){return s.status==='active';}).length+')</h3>'+a.map(RS).join('')+'</div>';
-            if(cm.length)h+='<div class="status-section status-completed"><h3>Завершённые</h3>'+cm.map(RS).join('')+'</div>';
-            if(cn.length)h+='<div class="status-section status-cancelled"><h3>Отменённые</h3>'+cn.map(RS).join('')+'</div>';
-            c.innerHTML=h;makePagination('slotsPagination',p,total,'LSL');
-            c.onclick=function(e){var t=e.target;if(t.classList.contains('cancel-slot-btn'))CSL(t.dataset.sid);if(t.classList.contains('delete-slot-btn'))DSL(t.dataset.sid);if(t.classList.contains('close-reg-btn'))CR(t.dataset.sid);if(t.classList.contains('info-btn'))SI(t.dataset.sid);};}
-        function RS(s){var sb=(bookingsCache||[]).filter(function(b){return b.slot_id===s.id;}),ab=sb.filter(function(b){return b.status==='active';});return'<div class="slot-card"><div class="slot-header"><div><strong style="font-size:1.05rem;">'+s.subject+'</strong><p style="color:#666;font-size:0.85rem;margin-top:2px;">'+s.date+' | '+s.time_start+'-'+s.time_end+'</p></div><span class="badge-status badge-'+s.status+'">'+(s.status==='active'?'Активна':s.status==='completed'?'Завершена':'Отменена')+'</span></div><div class="slot-info"><span><strong>Преподаватель:</strong> '+(s.users?.surname||'')+' '+(s.users?.name||'')+'</span><span><strong>Формат:</strong> '+s.format+(s.room?' | Ауд. '+s.room:'')+'</span><span><strong>Записано:</strong> <span style="color:#0056a7;font-weight:700;">'+ab.length+'</span>/'+s.max_students+'</span></div><div class="slot-actions"><button class="btn btn-outline btn-sm info-btn" data-sid="'+s.id+'">Инфо</button>'+(s.status==='active'?'<button class="btn btn-warning btn-sm close-reg-btn" data-sid="'+s.id+'">Закрыть</button><button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="'+s.id+'">Отменить</button>':'')+'<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="'+s.id+'">Удалить</button></div></div>';}
-        async function SI(sid){var s=slotsCache.find(function(x){return x.id===sid;});if(!s)return;var sb=(bookingsCache||[]).filter(function(b){return b.slot_id===sid;});var ab=sb.filter(function(b){return b.status==='active';});var tp=s.topics||[];var h='';h+='<div class="info-row"><span class="info-label">Предмет</span><span class="info-value">'+s.subject+'</span></div>';h+='<div class="info-row"><span class="info-label">Преподаватель</span><span class="info-value">'+(s.users?.surname||'')+' '+(s.users?.name||'')+'</span></div>';h+='<div class="info-row"><span class="info-label">Дата и время</span><span class="info-value">'+s.date+' '+s.time_start+'-'+s.time_end+'</span></div>';h+='<div class="info-row"><span class="info-label">Формат</span><span class="info-value">'+s.format+(s.room?' | Ауд. '+s.room:'')+'</span></div>';h+='<div class="info-row"><span class="info-label">Записано</span><span class="info-value">'+ab.length+'/'+s.max_students+'</span></div>';h+='<div class="info-row"><span class="info-label">Статус</span><span class="info-value">'+(s.status==='active'?'Активна':s.status==='completed'?'Завершена':'Отменена')+'</span></div>';if(s.description)h+='<div class="info-row"><span class="info-label">Описание</span><span class="info-value">'+s.description+'</span></div>';if(tp.length){h+='<div style="margin-top:12px;"><strong>Темы:</strong><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">'+tp.map(function(t){return'<span class="topic-chip"><span>'+t.name+'</span><span class="duration-badge">'+(t.duration||'?')+' мин</span></span>';}).join('')+'</div></div>';}if(sb.length){h+='<div style="margin-top:12px;"><strong>Студенты ('+ab.length+' активных):</strong>'+sb.map(function(b){return'<div class="student-list-item"><div class="student-avatar">'+(b.users?.name||'?')[0]+(b.users?.surname||'?')[0]+'</div><div><strong>'+(b.users?.surname||'')+' '+(b.users?.name||'')+'</strong><br><small style="color:#0056a7;">Тема: '+(b.topic||'Не указана')+'</small><br><small style="color:'+(b.status==='active'?'#0f6e3f':'#c62828')+';">'+(b.status==='active'?'Активна':b.cancelled_by==='admin'?'Отменена админом':b.cancelled_by==='teacher'?'Отменена преподавателем':'Отменена студентом')+'</small></div></div>';}).join('')+'</div>';}document.getElementById('infoContent').innerHTML=h;document.getElementById('infoModal').classList.add('show');}
-        function closeInfoModal(){document.getElementById('infoModal').classList.remove('show');}
-        async function CSL(id){if(!confirm('Отменить?'))return;await _s.from('slots').update({status:'cancelled'}).eq('id',id);await _s.from('bookings').update({status:'cancelled',cancelled_by:'admin'}).eq('slot_id',id).eq('status','active');slotsCache=null;LSL(sp,true);}
-        async function DSL(id){if(!confirm('Удалить?'))return;await _s.from('slots').delete().eq('id',id);slotsCache=null;LSL(sp,true);}
-        async function CR(id){var r=await _s.from('slots').select('*').eq('id',id).single();var s=r.data;var rr=await _s.from('bookings').select('*',{count:'exact'}).eq('slot_id',id).eq('status','active');var count=rr.count||0;if(!confirm('Закрыть? Записано: '+count+'/'+s.max_students))return;await _s.from('slots').update({max_students:count>0?count:1}).eq('id',id);slotsCache=null;LSL(sp,true);}
+    function renderSlotsPage(p) {
+        var slots = slotsCache;
+        if (FF !== 'all') slots = slotsCache.filter(function(s) { return s.status === FF; });
+        
+        var total = slots.length;
+        var pages = Math.ceil(total / PER);
+        if (total === 0) pages = 1;
+        if (p > pages) p = pages;
+        if (p < 1) p = 1;
+        sp = p;
+        
+        var from = (p - 1) * PER;
+        var pageSlots = slots.slice(from, from + PER);
+        var c = document.getElementById('slotsList');
+        
+        if (pageSlots.length === 0) {
+            c.innerHTML = '<p style="color:#666;text-align:center;">Нет консультаций</p>';
+        } else {
+            var a = pageSlots.filter(function(s) { return s.status === 'active'; });
+            var cm = pageSlots.filter(function(s) { return s.status === 'completed'; });
+            var cn = pageSlots.filter(function(s) { return s.status === 'cancelled'; });
+            
+            var h = '';
+            if (a.length) h += '<div class="status-section status-active"><h3>Активные</h3>' + a.map(RS).join('') + '</div>';
+            if (cm.length) h += '<div class="status-section status-completed"><h3>Завершённые</h3>' + cm.map(RS).join('') + '</div>';
+            if (cn.length) h += '<div class="status-section status-cancelled"><h3>Отменённые</h3>' + cn.map(RS).join('') + '</div>';
+            c.innerHTML = h;
+        }
+        
+        // Пагинация
+        var pc = document.getElementById('slotsPagination');
+        var ph = '';
+        if (pages > 1) {
+            if (p > 1) ph += '<button class="page-btn" onclick="window.goSlotsPage(' + (p-1) + ')">◀</button> ';
+            for (var i = 1; i <= pages; i++) {
+                if (i === p) ph += '<button class="page-btn active">' + i + '</button> ';
+                else ph += '<button class="page-btn" onclick="window.goSlotsPage(' + i + ')">' + i + '</button> ';
+            }
+            if (p < pages) ph += '<button class="page-btn" onclick="window.goSlotsPage(' + (p+1) + ')">▶</button> ';
+            ph += '<span style="margin-left:8px;color:#666;font-size:0.8rem;">' + ((p-1)*PER+1) + '-' + Math.min(p*PER,total) + ' из ' + total + '</span>';
+        }
+        pc.innerHTML = ph;
+    }
 
-        // ТИКЕТЫ
-        async function LT(p){if(!p)p=tp;tp=p;var c=document.getElementById('ticketsList');c.innerHTML='<p class="loading">Загрузка...</p>';var from=(p-1)*PER,to=from+PER-1;var r=await _s.from('tickets').select('*',{count:'exact'}).order('created_at',{ascending:false}).range(from,to);var data=r.data,count=r.count;if(!data||!data.length){c.innerHTML='<p style="color:#666;">Нет тикетов</p>';makePagination('ticketsPagination',p,count||0,'LT');UTB();return;}var uids=[...new Set(data.map(function(t){return t.user_id;}))];var ur=await _s.from('users').select('id,name,surname,role').in('id',uids);var um={};(ur.data||[]).forEach(function(u){um[u.id]=u;});c.innerHTML=data.map(function(t){var u=um[t.user_id],ms=t.messages||[],open=t.status==='open';var last=ms.length?ms[ms.length-1]:null;var preview=last?last.text.substring(0,80)+(last.text.length>80?'...':''):'Нет сообщений';return'<div class="ticket-card" style="border-left:4px solid '+(open?'#0f6e3f':'#c62828')+';overflow:hidden;" id="ticket_'+t.id+'"><div class="ticket-header-row" onclick="toggleTicket(\''+t.id+'\')"><div class="ticket-avatar">'+(u?.name||'?')[0]+(u?.surname||'?')[0]+'</div><div class="ticket-info"><div style="display:flex;align-items:center;gap:8px;"><strong>'+(u?u.surname+' '+u.name:'Неизвестный')+'</strong><span style="padding:2px 10px;border-radius:10px;font-size:0.7rem;font-weight:600;color:'+(open?'#0f6e3f':'#c62828')+';background:'+(open?'#e8f5e9':'#ffebee')+';">'+(open?'Открыт':'Закрыт')+'</span></div><p style="color:#666;font-size:0.82rem;margin:3px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+preview+'</p></div><div class="ticket-meta"><small style="color:#999;font-size:0.75rem;display:block;">'+new Date(t.created_at).toLocaleDateString('ru-RU')+'</small><div class="ticket-arrow">▼</div></div></div><div class="ticket-body" id="body_'+t.id+'"><div style="padding:10px;background:#f8fafc;border-radius:12px;margin-bottom:12px;max-height:300px;overflow-y:auto;">'+(ms.length?ms.map(function(m,j){return'<div class="chat-message '+m.sender+'" style="margin-bottom:'+(j<ms.length-1?'12px':'0')+';"><div style="display:flex;align-items:flex-end;gap:8px;flex-direction:'+(m.sender==='admin'?'row-reverse':'row')+';"><div style="width:26px;height:26px;background:'+(m.sender==='admin'?'linear-gradient(135deg,#0056a7,#003d7c)':'#e0e6ed')+';border-radius:50%;display:flex;align-items:center;justify-content:center;color:'+(m.sender==='admin'?'white':'#666')+';font-weight:700;font-size:0.65rem;">'+(m.sender==='admin'?'A':(u?.name||'?')[0])+'</div><div class="chat-bubble '+m.sender+'" style="max-width:75%;"><p style="margin:0;font-size:0.85rem;">'+m.text+'</p></div></div><div class="chat-meta" style="text-align:'+(m.sender==='admin'?'right':'left')+';margin-top:3px;">'+(m.sender==='admin'?'Администратор':u?.name||'Пользователь')+'</div></div>';}).join(''):'<p style="color:#999;text-align:center;">Нет сообщений</p>')+'</div>'+(open?'<div style="display:flex;gap:8px;align-items:center;padding:10px;background:#fafbfc;border-radius:10px;border:2px solid #e0e6ed;"><input type="text" id="AR_'+t.id+'" placeholder="Ответ..." style="flex:1;padding:9px 12px;border:2px solid #e0e6ed;border-radius:8px;font-size:0.85rem;"><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();RT(\''+t.id+'\')">Отв.</button><button class="btn btn-sm" onclick="event.stopPropagation();CT(\''+t.id+'\')" style="background:#ffc107;color:#333;">Закр.</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();DT(\''+t.id+'\')">Уд.</button></div>':'<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();DT(\''+t.id+'\')">Удалить</button>')+'</div></div>';}).join('');makePagination('ticketsPagination',p,count||0,'LT');UTB();}
-        function toggleTicket(id){var body=document.getElementById('body_'+id);var arrow=document.querySelector('#ticket_'+id+' .ticket-arrow');if(!body.style.display||body.style.display==='none'){body.style.display='block';if(arrow){arrow.style.transform='rotate(180deg)';arrow.style.color='#0056a7';}}else{body.style.display='none';if(arrow){arrow.style.transform='rotate(0deg)';arrow.style.color='#999';}}}
-        async function RT(id){var i=document.getElementById('AR_'+id),msg=i?.value.trim();if(!msg)return;var r=await _s.from('tickets').select('messages,user_id').eq('id',id).single();var t=r.data;if(!t)return;var ms=[...(t.messages||[]),{sender:'admin',text:msg,timestamp:new Date().toISOString()}];await _s.from('tickets').update({messages:ms}).eq('id',id);await _s.from('notifications').insert({id:'n'+Date.now(),user_id:t.user_id,message:'Администратор ответил на обращение',type:'support',is_read:false});LT(tp);}
-        async function CT(id){await _s.from('tickets').update({status:'closed'}).eq('id',id);LT(tp);}
-        async function DT(id){if(!confirm('Удалить?'))return;await _s.from('tickets').delete().eq('id',id);LT(tp);}
-        async function UTB(){var r=await _s.from('tickets').select('*',{count:'exact',head:true}).eq('status','open');var b=document.getElementById('ticketBadge');if(b){b.textContent=r.count||0;b.style.display=r.count>0?'inline':'none';}}
+    function RS(s) {
+        var sb = (bookingsCache||[]).filter(function(b){return b.slot_id===s.id});
+        var ab = sb.filter(function(b){return b.status==='active'});
+        return '<div class="slot-card"><div class="slot-header"><div><strong>'+s.subject+'</strong><p style="color:#666;font-size:0.85rem;">'+s.date+' | '+s.time_start+'-'+s.time_end+'</p></div><span class="badge-status badge-'+s.status+'">'+(s.status==='active'?'Активна':s.status==='completed'?'Завершена':'Отменена')+'</span></div><div class="slot-info"><span><strong>Преподаватель:</strong> '+(s.users?.surname||'')+' '+(s.users?.name||'')+'</span><span><strong>Формат:</strong> '+s.format+(s.room?' | Ауд. '+s.room:'')+'</span><span><strong>Записано:</strong> '+ab.length+'/'+s.max_students+'</span></div><div class="slot-actions"><button class="btn btn-outline btn-sm info-btn" onclick="window.SI(\''+s.id+'\')">Инфо</button>'+(s.status==='active'?'<button class="btn btn-warning btn-sm" onclick="window.CR(\''+s.id+'\')">Закрыть</button><button class="btn btn-danger btn-sm" onclick="window.CSL(\''+s.id+'\')">Отменить</button>':'')+'<button class="btn btn-danger btn-sm" onclick="window.DSL(\''+s.id+'\')">Удалить</button></div></div>';
+    }
 
-        // ЗАПРОСЫ
-        async function LR(){var r=await _s.from('notifications').select('*').eq('type','teacher_request').order('created_at',{ascending:false});var d=r.data||[];document.getElementById('requestsList').innerHTML=d.length?d.map(function(n){return'<div class="card" style="margin-bottom:8px;'+(n.is_read?'opacity:0.6;':'border-left:4px solid #ffc107;')+'"><p>'+n.message+'</p><small>'+new Date(n.created_at).toLocaleString('ru-RU')+'</small></div>';}).join(''):'<p style="color:#666;">Нет запросов</p>';}
+    // ========== ТИКЕТЫ (простая пагинация) ==========
+    window.goTicketsPage = function(p) {
+        tp = p;
+        var c = document.getElementById('ticketsList');
+        c.innerHTML = '<p class="loading">Загрузка...</p>';
+        
+        var from = (p-1)*PER, to = from+PER-1;
+        _s.from('tickets').select('*',{count:'exact'}).order('created_at',{ascending:false}).range(from,to).then(function(r) {
+            var data = r.data || [];
+            var count = r.count || 0;
+            
+            if (data.length === 0) {
+                c.innerHTML = '<p style="color:#666;">Нет тикетов</p>';
+                renderTicketsPagination(p, count);
+                return;
+            }
+            
+            var uids = [...new Set(data.map(function(t){return t.user_id;}))];
+            _s.from('users').select('id,name,surname,role').in('id',uids).then(function(ur) {
+                var um = {};
+                (ur.data||[]).forEach(function(u){um[u.id]=u;});
+                
+                c.innerHTML = data.map(function(t) {
+                    var u = um[t.user_id];
+                    var ms = t.messages || [];
+                    var open = t.status === 'open';
+                    var last = ms.length ? ms[ms.length-1] : null;
+                    var preview = last ? last.text.substring(0,80) + (last.text.length>80?'...':'') : 'Нет сообщений';
+                    
+                    return '<div class="ticket-card" style="border-left:4px solid '+(open?'#0f6e3f':'#c62828')+';">' +
+                        '<div class="ticket-header-row" onclick="window.toggleTicket(\''+t.id+'\')">' +
+                            '<div class="ticket-avatar">'+(u?.name||'?')[0]+(u?.surname||'?')[0]+'</div>' +
+                            '<div class="ticket-info">' +
+                                '<strong>'+(u?u.surname+' '+u.name:'Неизвестный')+'</strong> ' +
+                                '<span style="color:'+(open?'#0f6e3f':'#c62828')+';">'+(open?'Открыт':'Закрыт')+'</span>' +
+                                '<p style="color:#666;font-size:0.82rem;">'+preview+'</p>' +
+                            '</div>' +
+                            '<div class="ticket-meta">' +
+                                '<small>'+new Date(t.created_at).toLocaleDateString('ru-RU')+'</small>' +
+                                '<div class="ticket-arrow">▼</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="ticket-body" id="body_'+t.id+'">' +
+                            (ms.length ? ms.map(function(m) {
+                                return '<div class="chat-message '+m.sender+'"><div class="chat-bubble '+m.sender+'">'+m.text+'</div></div>';
+                            }).join('') : '<p>Нет сообщений</p>') +
+                            (open ? '<div style="display:flex;gap:6px;margin-top:8px;"><input type="text" id="AR_'+t.id+'" placeholder="Ответ..."><button class="btn btn-primary btn-sm" onclick="window.RT(\''+t.id+'\')">Отв</button><button class="btn btn-sm" onclick="window.CT(\''+t.id+'\')">Закр</button></div>' : '') +
+                            '<button class="btn btn-danger btn-sm" onclick="window.DT(\''+t.id+'\')">Удалить</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+                
+                renderTicketsPagination(p, count);
+            });
+        });
+    };
 
-        // СТАТИСТИКА
-        async function LST(){var r1=await _s.from('users').select('*',{count:'exact',head:true});var r2=await _s.from('slots').select('*',{count:'exact',head:true});var r3=await _s.from('bookings').select('*',{count:'exact',head:true});document.getElementById('totalUsers').textContent=r1.count||0;document.getElementById('totalSlots').textContent=r2.count||0;document.getElementById('totalBookings').textContent=r3.count||0;}
+    function renderTicketsPagination(p, total) {
+        var pc = document.getElementById('ticketsPagination');
+        var pages = Math.ceil(total / PER);
+        if (pages <= 1) { pc.innerHTML = ''; return; }
+        
+        var ph = '';
+        if (p > 1) ph += '<button class="page-btn" onclick="window.goTicketsPage('+(p-1)+')">◀</button> ';
+        for (var i = 1; i <= pages; i++) {
+            if (i === p) ph += '<button class="page-btn active">'+i+'</button> ';
+            else ph += '<button class="page-btn" onclick="window.goTicketsPage('+i+')">'+i+'</button> ';
+        }
+        if (p < pages) ph += '<button class="page-btn" onclick="window.goTicketsPage('+(p+1)+')">▶</button> ';
+        ph += '<span style="font-size:0.8rem;">' + ((p-1)*PER+1) + '-' + Math.min(p*PER,total) + ' из ' + total + '</span>';
+        pc.innerHTML = ph;
+    }
 
-        // ИНИЦИАЛИЗАЦИЯ
-        document.addEventListener('DOMContentLoaded',async function(){U=A();if(!U)return;document.getElementById('logoutBtn').addEventListener('click',L);document.querySelectorAll('.nav-tab').forEach(function(tab){tab.addEventListener('click',function(){ST(this.dataset.tab,this);});});document.querySelectorAll('.status-filter-btn').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(function(b){b.classList.remove('active');});this.classList.add('active');FF=this.dataset.filter;sp=1;LSL(1,true);});});document.getElementById('addUserBtn').addEventListener('click',openAddModal);document.getElementById('userForm').addEventListener('submit',SU);document.getElementById('addSubjectBtn').addEventListener('click',AS);document.getElementById('userSearch').addEventListener('input',function(){up=1;LU(1);});await Promise.all([LU(1),LSB(),LSL(1,true),LT(1),LST()]);UTB();});
-        window.LU = LU;
-    window.LSL = LSL;
-    window.LT = LT;
-    window.EU = EU;
-    window.DU = DU;
-    window.DS = DS;
-    window.RT = RT;
-    window.CT = CT;
-    window.DT = DT;
-    window.SI = SI;
-    window.toggleTicket = toggleTicket;
-    window.closeInfoModal = closeInfoModal;
-    window.openAddModal = openAddModal;
-    window.closeModal = closeModal;
-    </script>
+    // Глобальные функции
+    window.toggleTicket = function(id) {
+        var body = document.getElementById('body_'+id);
+        var arrow = document.querySelector('#ticket_'+id+' .ticket-arrow');
+        if (!body.style.display || body.style.display === 'none') {
+            body.style.display = 'block';
+            if (arrow) { arrow.style.transform = 'rotate(180deg)'; arrow.style.color = '#0056a7'; }
+        } else {
+            body.style.display = 'none';
+            if (arrow) { arrow.style.transform = 'rotate(0deg)'; arrow.style.color = '#999'; }
+        }
+    };
+
+    // Заглушки для функций (добавьте реальные если нужны)
+    window.EU = function(id) { console.log('Редактировать:', id); };
+    window.DU = function(id) { if(confirm('Удалить?')) { _s.from('users').delete().eq('id',id).then(function() { allUsersCache=null; goUsersPage(up); }); } };
+    window.DS = function(n) { _s.from('subjects').delete().eq('name',n).then(LSB); };
+    window.RT = function(id) { var i=document.getElementById('AR_'+id); if(!i)return; var msg=i.value.trim(); if(!msg)return; _s.from('tickets').select('messages,user_id').eq('id',id).single().then(function(r) { var t=r.data; if(!t)return; var ms=[...(t.messages||[]),{sender:'admin',text:msg,timestamp:new Date().toISOString()}]; _s.from('tickets').update({messages:ms}).eq('id',id).then(function() { goTicketsPage(tp); }); }); };
+    window.CT = function(id) { _s.from('tickets').update({status:'closed'}).eq('id',id).then(function() { goTicketsPage(tp); }); };
+    window.DT = function(id) { if(confirm('Удалить?')) { _s.from('tickets').delete().eq('id',id).then(function() { goTicketsPage(tp); }); } };
+    window.SI = function(sid) { alert('Информация о слоте ' + sid); };
+    window.CSL = function(id) { if(confirm('Отменить?')) { _s.from('slots').update({status:'cancelled'}).eq('id',id).then(function() { slotsCache=null; goSlotsPage(sp); }); } };
+    window.DSL = function(id) { if(confirm('Удалить?')) { _s.from('slots').delete().eq('id',id).then(function() { slotsCache=null; goSlotsPage(sp); }); } };
+    window.CR = function(id) { alert('Закрыть запись: ' + id); };
+
+    // Предметы
+    function LSB() {
+        _s.from('subjects').select('*').order('name').then(function(r) {
+            var d = r.data || [];
+            document.getElementById('subjectsList').innerHTML = d.length ? d.map(function(s) {
+                return '<div style="display:flex;justify-content:space-between;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:4px;"><span>'+s.name+'</span><button class="btn btn-danger btn-sm" onclick="window.DS(\''+s.name+'\')">У</button></div>';
+            }).join('') : '<p style="color:#666;">Нет предметов</p>';
+        });
+    }
+    window.AS = function() {
+        var n = document.getElementById('newSubject').value.trim();
+        if (!n) return;
+        _s.from('subjects').insert({name:n}).then(function() {
+            document.getElementById('newSubject').value = '';
+            LSB();
+        });
+    };
+
+    // Статистика
+    function LST() {
+        Promise.all([
+            _s.from('users').select('*',{count:'exact',head:true}),
+            _s.from('slots').select('*',{count:'exact',head:true}),
+            _s.from('bookings').select('*',{count:'exact',head:true})
+        ]).then(function(r) {
+            document.getElementById('totalUsers').textContent = r[0].count || 0;
+            document.getElementById('totalSlots').textContent = r[1].count || 0;
+            document.getElementById('totalBookings').textContent = r[2].count || 0;
+        });
+    }
+    function LR() {
+        _s.from('notifications').select('*').eq('type','teacher_request').order('created_at',{ascending:false}).then(function(r) {
+            var d = r.data || [];
+            document.getElementById('requestsList').innerHTML = d.length ? d.map(function(n) {
+                return '<div class="card" style="margin-bottom:8px;"><p>'+n.message+'</p></div>';
+            }).join('') : '<p style="color:#666;">Нет запросов</p>';
+        });
+    }
+
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', function() {
+        U = A(); if (!U) return;
+        document.getElementById('logoutBtn').addEventListener('click', L);
+        document.querySelectorAll('.nav-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() { ST(this.dataset.tab, this); });
+        });
+        document.querySelectorAll('.status-filter-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.status-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                FF = this.dataset.filter;
+                sp = 1;
+                goSlotsPage(1);
+            });
+        });
+        document.getElementById('addSubjectBtn').addEventListener('click', window.AS);
+        document.getElementById('userSearch').addEventListener('input', function() { up = 1; goUsersPage(1); });
+        
+        goUsersPage(1);
+        LSB();
+        goSlotsPage(1);
+        goTicketsPage(1);
+        LST();
+    });
+    // Глобальные функции (ОБЯЗАТЕЛЬНО для onclick в HTML)
+window.goUsersPage = goUsersPage;
+window.goSlotsPage = goSlotsPage;
+window.goTicketsPage = goTicketsPage;
+window.toggleTicket = toggleTicket;
+window.EU = EU;
+window.DU = DU;
+window.DS = DS;
+window.RT = RT;
+window.CT = CT;
+window.DT = DT;
+window.SI = SI;
+window.CSL = CSL;
+window.DSL = DSL;
+window.CR = CR;
+window.AS = AS;
+</script>
 </body>
 </html>
