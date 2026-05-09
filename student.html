@@ -91,7 +91,7 @@
         <div id="notifications" class="tab-content"><h2>Уведомления</h2><div id="notificationsList"></div></div>
     </main>
     <div id="requestModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;"><div class="modal-content" style="background:white;padding:30px;border-radius:20px;max-width:500px;width:90%;"><span class="close-modal" style="position:absolute;top:15px;right:20px;font-size:28px;cursor:pointer;">&times;</span><h3>Запрос на добавление преподавателя</h3><form id="requestTeacherForm"><div class="form-group"><label>Фамилия</label><input type="text" id="requestSurname" required></div><div class="form-group"><label>Имя</label><input type="text" id="requestName"></div><div class="form-group"><label>Предмет</label><input type="text" id="requestSubject"></div><button type="submit" class="btn btn-primary" style="width:100%;">Отправить</button></form></div></div>
-    <script src="js/database.js"></script>
+    <script src="js/database-sqlite.js"></script>
     <script src="js/auth.js"></script>
     <script>
         let studentUser = null, currentBookingFilter = 'all';
