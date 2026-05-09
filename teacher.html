@@ -172,8 +172,38 @@
         async function loadNotifications(){const{data}=await _supabase.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(30);const c=document.getElementById('teacherNotificationsList');if(!data?.length){c.innerHTML='<p style="color:#666;text-align:center;">Нет уведомлений</p>';return;}c.innerHTML=data.map(n=>`<div style="padding:14px;background:#fff3cd;border-left:4px solid #ffc107;margin-bottom:10px;border-radius:8px;${n.is_read?'opacity:0.6;background:#f8f9fa;':''}"><p style="margin-bottom:6px;">${n.message}</p><small style="color:#666;">${new Date(n.created_at).toLocaleString('ru-RU')}</small>${!n.is_read?`<br><button class="btn btn-sm btn-outline" onclick="markNotifRead('${n.id}')" style="margin-top:6px;">Прочитано</button>`:''}</div>`).join('');const ur=data.filter(n=>!n.is_read).length,badge=document.getElementById('notifBadge');badge.textContent=ur;badge.style.display=ur>0?'inline':'none';}
         async function markNotifRead(id){await _supabase.from('notifications').update({is_read:true}).eq('id',id);loadNotifications();}
 
-        async function loadStatistics(){const{data:slots}=await _supabase.from('slots').select('*').eq('teacher_id',currentUser.id);const c=document.getElementById('statsContainer');if(!slots?.length){c.innerHTML='<div class="card"><p style="color:#666;">Нет данных для отображения</p></div>';return;}const days={},dn=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];slots.forEach(s=>{const d=dn[new Date(s.date).getDay()];days[d]=(days[d]||0)+1;});let att=0,tot=0;const sids=slots.map(s=>s.id);const{data:bks}=await _supabase.from('bookings').select('attended').in('slot_id',sids);(bks||[]).forEach(b=>{tot++;if(b.attended)att++;});c.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;"><div class="card"><h4 style="margin-bottom:12px;">По дням недели</h4>${Object.entries(days).length?Object.entries(days).map(([d,c2])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">${d}<strong style="color:#0056a7;">${c2} конс</strong></div>`).join(''):'<p style="color:#666;">Нет данных</p>'}</div><div class="card"><h4 style="margin-bottom:12px;">Явка студентов</h4><p>Всего записей: <strong>${tot}</strong></p><p>Присутствовало: <strong style="color:#0f6e3f;">${att}</strong></p><div style="background:#e0e6ed;border-radius:10px;height:20px;margin-top:10px;overflow:hidden;"><div style="width:${tot?Math.round(att/tot*100):0}%;height:100%;background:linear-gradient(90deg,#0056a7,#0077cc);border-radius:10px;"></div></div><p style="text-align:center;margin-top:6px;"><strong>${tot?Math.round(att/tot*100):0}%</strong></p></div></div>`;
-
+        async function loadStatistics(){
+    const{data:slots}=await _supabase.from('slots').select('*').eq('teacher_id',currentUser.id);
+    const c=document.getElementById('statsContainer');
+    if(!slots?.length){
+        c.innerHTML='<div class="card"><p style="color:#666;">Нет данных для отображения</p></div>';
+        return;
+    }
+    const days={},dn=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+    slots.forEach(s=>{const d=dn[new Date(s.date).getDay()];days[d]=(days[d]||0)+1;});
+    let att=0,tot=0;
+    const sids=slots.map(s=>s.id);
+    const{data:bks}=await _supabase.from('bookings').select('attended').in('slot_id',sids);
+    (bks||[]).forEach(b=>{tot++;if(b.attended)att++;});
+    const pct=tot?Math.round(att/tot*100):0;
+    c.innerHTML=`
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="card">
+                <h4 style="margin-bottom:12px;">По дням недели</h4>
+                ${Object.entries(days).length?Object.entries(days).map(([d,c2])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">${d}<strong style="color:#0056a7;">${c2} конс</strong></div>`).join(''):'<p style="color:#666;">Нет данных</p>'}
+            </div>
+            <div class="card">
+                <h4 style="margin-bottom:12px;">Явка студентов</h4>
+                <p>Всего записей: <strong>${tot}</strong></p>
+                <p>Присутствовало: <strong style="color:#0f6e3f;">${att}</strong></p>
+                <div style="background:#e0e6ed;border-radius:10px;height:20px;margin-top:10px;overflow:hidden;">
+                    <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#0056a7,#0077cc);border-radius:10px;"></div>
+                </div>
+                <p style="text-align:center;margin-top:6px;"><strong>${pct}%</strong></p>
+            </div>
+        </div>
+    `;
+}
         async function loadSupport(){const c=document.getElementById('teacherSupportChat');const{data:tickets}=await _supabase.from('tickets').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(10);if(!tickets?.length){c.innerHTML='<p style="color:#666;text-align:center;padding:20px;">Нет обращений. Напишите нам!</p>';return;}c.innerHTML=tickets.map(t=>{const ms=t.messages||[],open=t.status==='open';return`<div style="margin-bottom:18px;border:1px solid #e8edf5;border-radius:14px;padding:16px;background:white;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e8edf5;"><div><strong style="color:#0056a7;">Обращение #${t.id.slice(-6)}</strong><span style="margin-left:10px;color:${open?'#0f6e3f':'#666'};font-weight:600;">${open?'Открыто':'Закрыто'}</span></div><small style="color:#666;">${new Date(t.created_at).toLocaleString('ru-RU')}</small></div><div style="margin-bottom:12px;">${ms.map(m=>`<div class="chat-message ${m.sender}"><div class="chat-bubble ${m.sender}"><p style="margin:0;">${m.text}</p></div><div class="chat-meta">${m.sender==='admin'?'Администратор':'Вы'} &middot; ${new Date(m.timestamp).toLocaleString('ru-RU')}</div></div>`).join('')}</div>${open?`<div style="display:flex;gap:8px;"><input type="text" id="teacherReply_${t.id}" placeholder="Ваш ответ..." style="flex:1;padding:10px;border:2px solid #e0e6ed;border-radius:10px;font-size:0.9rem;"><button class="btn btn-primary btn-sm" onclick="replyTeacherTicket('${t.id}')">Отправить</button></div>`:''}</div>`;}).join('');}
         async function sendTeacherSupport(){if(isSending)return;const btn=document.getElementById('sendTeacherSupportBtn'),input=document.getElementById('teacherSupportMsg'),msg=input.value.trim();if(!msg){alert('Введите сообщение!');return;}isSending=true;btn.disabled=true;btn.textContent='Отправка...';try{const{data:ex}=await _supabase.from('tickets').select('*').eq('user_id',currentUser.id).eq('status','open').limit(1);if(ex?.length){const ms=[...(ex[0].messages||[]),{sender:'user',text:msg,timestamp:new Date().toISOString()}];await _supabase.from('tickets').update({messages:ms}).eq('id',ex[0].id);}else{const{data:t}=await _supabase.from('tickets').insert({id:'t'+Date.now(),user_id:currentUser.id,status:'open',messages:[{sender:'user',text:msg,timestamp:new Date().toISOString()}]}).select();if(t?.length){const{data:admins}=await _supabase.from('users').select('id').eq('role','admin');if(admins)for(const a of admins)await _supabase.from('notifications').insert({id:'n'+Date.now()+Math.random(),user_id:a.id,message:`Новое обращение от преподавателя ${currentUser.surname} ${currentUser.name}`,type:'support',is_read:false});}}input.value='';await loadSupport();}catch(e){console.error(e);}isSending=false;btn.disabled=false;btn.textContent='Отправить';}
         async function replyTeacherTicket(tid){const input=document.getElementById('teacherReply_'+tid),msg=input?.value.trim();if(!msg)return;const{data:t}=await _supabase.from('tickets').select('*').eq('id',tid).single();if(!t)return;const ms=[...(t.messages||[]),{sender:'user',text:msg,timestamp:new Date().toISOString()}];await _supabase.from('tickets').update({messages:ms}).eq('id',tid);await loadSupport();}
