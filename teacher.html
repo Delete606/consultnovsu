@@ -85,7 +85,7 @@
                 <li class="nav-tab active" data-tab="dashboard">Дашборд</li>
                 <li class="nav-tab" data-tab="create-slot">Создать консультацию</li>
                 <li class="nav-tab" data-tab="manage-bookings">Управление записями</li>
-                <li class="nav-tab" data-tab="support">Поддержка</li>
+                <li class="nav-tab" data-tab="support">Связь с администрацией</li>
                 <li class="nav-tab" data-tab="notifications">Уведомления <span id="notifBadge" style="background:#dc3545;color:white;padding:2px 8px;border-radius:12px;font-size:12px;display:none;">0</span></li>
                 <li class="nav-tab" data-tab="statistics">Статистика</li>
             </ul>
@@ -690,7 +690,12 @@ async function createSimpleRepeatingSlots(baseSlot, repeatType) {
 }
         // Загрузка чата поддержки
 async function loadTeacherSupport() {
-    const container = document.getElementById('supportChat');
+    const container = document.getElementById('teacherSupportChat');
+    
+    if (!container) {
+        console.error('Контейнер teacherSupportChat не найден!');
+        return;
+    }
     
     if (!currentUser) {
         container.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Пользователь не авторизован</p>';
@@ -711,7 +716,7 @@ async function loadTeacherSupport() {
     }
     
     if (!tickets || tickets.length === 0) {
-        container.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Нет обращений. Напишите нам, и мы поможем!</p>';
+        container.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Нет обращений. Напишите нам!</p>';
         return;
     }
     
@@ -738,7 +743,7 @@ async function loadTeacherSupport() {
                                 <p style="margin:0;">${msg.text}</p>
                             </div>
                             <small style="color:#666;margin-top:4px;font-size:0.75rem;">
-                                ${msg.sender === 'admin' ? 'Администратор' : 'Вы'} · ${new Date(msg.timestamp).toLocaleString('ru-RU')}
+                                ${msg.sender === 'admin' ? 'Администратор' : 'Вы'}
                             </small>
                         </div>
                     `).join('')}
@@ -756,8 +761,6 @@ async function loadTeacherSupport() {
             </div>
         `;
     }).join('');
-    
-    console.log('Загружено тикетов:', tickets.length);
 }
 
 // Отправка сообщения в поддержку
