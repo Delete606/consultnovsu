@@ -2,680 +2,178 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Админ-панель - Консультации НовГУ</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
-        .badge-notif {
-    background: #dc3545;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    margin-left: 5px;
-    display: none;
-}
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4fc; min-height: 100vh; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        .header { background: white; border-bottom: 3px solid #0056a7; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .logo { display: flex; align-items: center; gap: 12px; }
-        .logo img { width: 48px; height: 48px; border-radius: 8px; }
-        .logo-text h2 { color: #003d7c; font-size: 1.3rem; margin: 0; }
-        .logo-text span { color: #666; font-size: 0.85rem; }
-        .user-info { display: flex; align-items: center; gap: 12px; }
-        .badge { background: #e8f0fe; color: #003d7c; padding: 8px 18px; border-radius: 30px; font-weight: 600; }
-        .nav { background: white; border-bottom: 1px solid #dce3f0; }
-        .nav-tabs { display: flex; list-style: none; padding: 0; margin: 0; }
-        .nav-tab { padding: 15px 20px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #666; }
-        .nav-tab:hover { background: #e8f0fe; color: #0056a7; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4fc; min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 12px; }
+        .header { background: white; border-bottom: 3px solid #0056a7; padding: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .logo { display: flex; align-items: center; gap: 8px; }
+        .logo img { width: 38px; height: 38px; border-radius: 8px; }
+        .logo-text h2 { color: #003d7c; font-size: 1.1rem; margin: 0; }
+        .logo-text span { color: #666; font-size: 0.75rem; }
+        .user-info { display: flex; align-items: center; gap: 8px; }
+        .badge { background: #e8f0fe; color: #003d7c; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; }
+        .nav { background: white; border-bottom: 1px solid #dce3f0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .nav-tabs { display: flex; list-style: none; padding: 0; margin: 0; white-space: nowrap; }
+        .nav-tab { padding: 11px 13px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #666; font-size: 0.8rem; }
         .nav-tab.active { border-bottom-color: #0056a7; color: #0056a7; background: #e8f0fe; font-weight: 600; }
-        main { padding: 30px 0; }
+        main { padding: 18px 0; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .card { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e8edf5; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 25px; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e8edf5; }
-        .stat-number { font-size: 2.5rem; font-weight: 700; color: #0056a7; margin: 10px 0; }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .card { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 14px; border: 1px solid #e8edf5; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+        .stat-card { background: white; padding: 16px 8px; border-radius: 14px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e8edf5; }
+        .stat-number { font-size: 1.8rem; font-weight: 700; color: #0056a7; margin: 4px 0; }
+        .stat-card h3 { font-size: 0.75rem; color: #666; }
+        .btn { padding: 9px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; display: inline-block; }
         .btn-primary { background: #0056a7; color: white; }
         .btn-primary:hover { background: #003d7c; }
+        .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
         .btn-danger { background: #dc3545; color: white; }
         .btn-warning { background: #ffc107; color: #333; }
         .btn-outline { background: white; border: 2px solid #0056a7; color: #0056a7; }
-        .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #333; }
-        .form-group input, .form-group select { width: 100%; padding: 12px; border: 2px solid #e0e6ed; border-radius: 10px; font-size: 14px; background: #fafbfc; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .status-filters { display: flex; gap: 10px; margin-bottom: 25px; }
-        .status-filter-btn { padding: 10px 20px; border: 2px solid #e0e6ed; background: white; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 14px; color: #666; }
+        .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 5px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: 600; color: #333; font-size: 0.85rem; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 2px solid #e0e6ed; border-radius: 10px; font-size: 14px; background: #fafbfc; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .status-filters { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+        .status-filter-btn { padding: 7px 12px; border: 2px solid #e0e6ed; background: white; border-radius: 18px; cursor: pointer; font-weight: 600; font-size: 0.75rem; color: #666; }
         .status-filter-btn.active { background: #0056a7; color: white; border-color: #0056a7; }
-        .status-section { margin-bottom: 30px; }
-        .status-section h3 { padding: 10px 20px; border-radius: 12px; display: inline-block; margin-bottom: 18px; font-size: 1rem; font-weight: 700; }
+        .status-section { margin-bottom: 22px; }
+        .status-section h3 { padding: 7px 12px; border-radius: 10px; display: inline-block; margin-bottom: 12px; font-size: 0.85rem; font-weight: 700; }
         .status-active h3 { background: #e8f5e9; color: #0f6e3f; }
         .status-completed h3 { background: #e3f2fd; color: #0056a7; }
         .status-cancelled h3 { background: #ffebee; color: #c62828; }
-        .slot-card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e8edf5; }
-        .badge-status { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        .slot-card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e8edf5; }
+        .badge-status { padding: 4px 10px; border-radius: 15px; font-size: 0.7rem; font-weight: 700; }
         .badge-active { background: #e8f5e9; color: #0f6e3f; }
         .badge-completed { background: #e3f2fd; color: #0056a7; }
         .badge-cancelled { background: #ffebee; color: #c62828; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
         .modal.show { display: flex; }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 600px; width: 90%; position: relative; }
-        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #666; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f0f4fc; padding: 14px; text-align: left; font-weight: 600; color: #003d7c; }
-        td { padding: 12px 14px; border-bottom: 1px solid #e8edf5; }
-        .loading { text-align: center; padding: 40px; color: #666; }
+        .modal-content { background: white; padding: 22px; border-radius: 16px; max-width: 500px; width: 92%; max-height: 85vh; overflow-y: auto; position: relative; }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #666; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th { background: #f0f4fc; padding: 10px 8px; text-align: left; font-weight: 600; color: #003d7c; font-size: 0.75rem; }
+        td { padding: 8px; border-bottom: 1px solid #e8edf5; font-size: 0.8rem; }
+        .ticket-card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e8edf5; }
+        .chat-message { margin-bottom: 8px; display: flex; flex-direction: column; }
+        .chat-message.admin { align-items: flex-end; }
+        .chat-message.user { align-items: flex-start; }
+        .chat-bubble { padding: 8px 12px; border-radius: 10px; max-width: 85%; font-size: 0.85rem; }
+        .chat-bubble.admin { background: #0056a7; color: white; }
+        .chat-bubble.user { background: #f0f4fc; color: #333; }
+        .chat-meta { font-size: 0.7rem; color: #666; margin-top: 3px; }
+        .badge-notif { background: #dc3545; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 4px; display: none; }
+        .loading { text-align: center; padding: 30px; color: #666; }
+        @media (max-width: 768px) {
+            .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .stat-card { padding: 12px 6px; }
+            .stat-number { font-size: 1.4rem; }
+            .form-row { grid-template-columns: 1fr; }
+            .header-content { flex-direction: column; text-align: center; }
+            .user-info { justify-content: center; }
+            .btn { padding: 8px 12px; font-size: 12px; }
+            .slot-card { padding: 12px; }
+            table { font-size: 0.7rem; }
+            th, td { padding: 6px 4px; }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="container header-content">
-            <div class="logo">
-                <img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect fill=%22%23003d7c%22 width=%2248%22 height=%2248%22 rx=%228%22/%3E%3Ctext fill=%22white%22 x=%2250%25%22 y=%2255%25%22 font-size=%2220%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'">
-                <div class="logo-text"><h2>Администрирование</h2><span>управление системой</span></div>
-            </div>
-            <div class="user-info">
-                <span class="badge">Администратор</span>
-                <button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button>
-            </div>
-        </div>
-    </div>
-    <div class="nav">
-        <div class="container">
-            <ul class="nav-tabs" id="adminNavTabs">
-                <li class="nav-tab active" data-tab="users">Пользователи</li>
-                <li class="nav-tab" data-tab="subjects">Предметы</li>
-                <li class="nav-tab" data-tab="topics">Глобальные темы</li>
-                <li class="nav-tab" data-tab="slots">Слоты</li>
-                <li class="nav-tab" data-tab="tickets">Тикеты <span id="ticketBadge" class="badge-notif">0</span></li>
-                <li class="nav-tab" data-tab="stats">Статистика</li>
-            </ul>
-        </div>
-    </div>
+    <div class="header"><div class="container header-content"><div class="logo"><img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2238%22 height=%2238%22%3E%3Crect fill=%22%23003d7c%22 width=%2238%22 height=%2238%22 rx=%228%22/%3E%3Ctext fill=%22white%22 x=%2250%25%22 y=%2255%25%22 font-size=%2216%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'"><div class="logo-text"><h2>Администрирование</h2><span>управление системой</span></div></div><div class="user-info"><span class="badge">Администратор</span><button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button></div></div></div>
+    <div class="nav"><div class="container"><ul class="nav-tabs" id="adminNavTabs"><li class="nav-tab active" data-tab="users">Пользователи</li><li class="nav-tab" data-tab="subjects">Предметы</li><li class="nav-tab" data-tab="slots">Слоты</li><li class="nav-tab" data-tab="tickets">Тикеты <span id="ticketBadge" class="badge-notif">0</span></li><li class="nav-tab" data-tab="requests">Запросы</li><li class="nav-tab" data-tab="stats">Статистика</li></ul></div></div>
     <main class="container">
-        <div id="users" class="tab-content active">
-            <div class="card">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                    <h2>Пользователи</h2>
-                    <button id="addUserBtn" class="btn btn-primary">+ Добавить</button>
-                </div>
-                <input type="text" id="userSearch" placeholder="Поиск..." style="width:100%;padding:12px;border:2px solid #e0e6ed;border-radius:10px;margin-bottom:20px;">
-                <div id="usersTable"><p class="loading">Загрузка...</p></div>
-            </div>
-        </div>
-        <div id="subjects" class="tab-content">
-            <div class="card">
-                <h2>Предметы</h2>
-                <div style="display:flex;gap:10px;margin-bottom:20px;">
-                    <input type="text" id="newSubject" placeholder="Название предмета" style="flex:1;padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
-                    <button id="addSubjectBtn" class="btn btn-primary">+ Добавить</button>
-                </div>
-                <div id="subjectsList"><p class="loading">Загрузка...</p></div>
-            </div>
-        </div>
-        <div id="tickets" class="tab-content">
-    <h2 style="margin-bottom:20px;">Обращения пользователей</h2>
-    <div id="adminTicketsList"><p class="loading">Загрузка...</p></div>
-</div>
-        <div id="topics" class="tab-content">
-    <div class="card">
-        <h2>Глобальные темы</h2>
-        <p style="color:#666;margin-bottom:15px;">Добавьте темы с длительностью для всех преподавателей</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
-            <input type="text" id="newTopicName" placeholder="Название темы" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
-            <input type="text" id="newTopicSubject" placeholder="Предмет" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
-            <select id="newTopicDuration" style="padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
-                <option value="5">5 минут</option>
-                <option value="10">10 минут</option>
-                <option value="15">15 минут</option>
-                <option value="20">20 минут</option>
-                <option value="30">30 минут</option>
-                <option value="45">45 минут</option>
-                <option value="60">1 час</option>
-            </select>
-        </div>
-        <button id="addGlobalTopicBtn" class="btn btn-primary">+ Добавить тему</button>
-        <div id="globalTopicsList" style="margin-top:20px;"><p class="loading">Загрузка...</p></div>
-    </div>
-</div>
-        <div id="slots" class="tab-content">
-            <h2>Консультации</h2>
-            <div class="status-filters">
-                <button class="status-filter-btn active" data-filter="all">Все</button>
-                <button class="status-filter-btn" data-filter="active">Активные</button>
-                <button class="status-filter-btn" data-filter="completed">Завершённые</button>
-                <button class="status-filter-btn" data-filter="cancelled">Отменённые</button>
-            </div>
-            <div id="slotsList"><p class="loading">Загрузка...</p></div>
-        </div>
-        <div id="stats" class="tab-content">
-            <div class="stats">
-                <div class="stat-card"><h3>Пользователей</h3><p id="totalUsers" class="stat-number">0</p></div>
-                <div class="stat-card"><h3>Консультаций</h3><p id="totalSlots" class="stat-number">0</p></div>
-                <div class="stat-card"><h3>Записей</h3><p id="totalBookings" class="stat-number">0</p></div>
-            </div>
-        </div>
+        <div id="users" class="tab-content active"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h2 style="font-size:1.1rem;">Пользователи</h2><button id="addUserBtn" class="btn btn-primary btn-sm">+ Добавить</button></div><input type="text" id="userSearch" placeholder="Поиск..." style="width:100%;padding:10px;border:2px solid #e0e6ed;border-radius:10px;margin-bottom:14px;"><div style="overflow-x:auto;" id="usersTable"><p class="loading">Загрузка...</p></div></div></div>
+        <div id="subjects" class="tab-content"><div class="card"><h2 style="font-size:1.1rem;">Предметы</h2><div style="display:flex;gap:8px;margin-bottom:14px;"><input type="text" id="newSubject" placeholder="Название" style="flex:1;padding:10px;border:2px solid #e0e6ed;border-radius:10px;"><button id="addSubjectBtn" class="btn btn-primary btn-sm">+</button></div><div id="subjectsList"><p class="loading">Загрузка...</p></div></div></div>
+        <div id="slots" class="tab-content"><h2 style="font-size:1.1rem;">Консультации</h2><div class="status-filters"><button class="status-filter-btn active" data-filter="all">Все</button><button class="status-filter-btn" data-filter="active">Активные</button><button class="status-filter-btn" data-filter="completed">Завершённые</button><button class="status-filter-btn" data-filter="cancelled">Отменённые</button></div><div id="slotsList"><p class="loading">Загрузка...</p></div></div>
+        <div id="tickets" class="tab-content"><h2 style="font-size:1.1rem;">Тикеты</h2><div id="ticketsList"><p class="loading">Загрузка...</p></div></div>
+        <div id="requests" class="tab-content"><h2 style="font-size:1.1rem;">Запросы</h2><div id="requestsList"><p class="loading">Загрузка...</p></div></div>
+        <div id="stats" class="tab-content"><div class="stats"><div class="stat-card"><h3>Пользователей</h3><p id="totalUsers" class="stat-number">0</p></div><div class="stat-card"><h3>Консультаций</h3><p id="totalSlots" class="stat-number">0</p></div><div class="stat-card"><h3>Записей</h3><p id="totalBookings" class="stat-number">0</p></div></div></div>
     </main>
-    <div id="userModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <h3 id="modalTitle">Добавить пользователя</h3>
-            <form id="userForm">
-                <input type="hidden" id="editUserId">
-                <div class="form-group"><label>Имя</label><input type="text" id="editName" required></div>
-                <div class="form-group"><label>Фамилия</label><input type="text" id="editSurname" required></div>
-                <div class="form-group"><label>Email</label><input type="email" id="editEmail" required></div>
-                <div class="form-group"><label>Роль</label><select id="editRole"><option value="student">Студент</option><option value="teacher">Преподаватель</option><option value="admin">Админ</option></select></div>
-                <div class="form-group"><label>Пароль</label><input type="password" id="editPassword"></div>
-                <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
-            </form>
-        </div>
-    </div>
+    <div id="userModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal()">&times;</span><h3 id="modalTitle" style="font-size:1rem;">Добавить</h3><form id="userForm"><input type="hidden" id="editUserId"><div class="form-group"><label>Имя</label><input type="text" id="editName" required></div><div class="form-group"><label>Фамилия</label><input type="text" id="editSurname" required></div><div class="form-group"><label>Email</label><input type="email" id="editEmail" required></div><div class="form-group"><label>Роль</label><select id="editRole"><option value="student">Студент</option><option value="teacher">Преподаватель</option><option value="admin">Админ</option></select></div><div class="form-group"><label>Пароль</label><input type="password" id="editPassword" placeholder="Оставьте пустым"></div><button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button></form></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Загрузка тикетов
-async function loadTickets() {
-    const container = document.getElementById('adminTicketsList');
-    container.innerHTML = '<p class="loading">Загрузка...</p>';
-    
-    const { data: tickets, error } = await _supabase
-        .from('tickets')
-        .select('*')
-        .order('created_at', { ascending: false });
-    
-    if (error) {
-        container.innerHTML = `<p style="color:#dc3545;">Ошибка: ${error.message}</p>`;
-        return;
-    }
-    
-    if (!tickets || tickets.length === 0) {
-        container.innerHTML = '<div class="card"><p style="color:#666;text-align:center;padding:20px;">Нет обращений</p></div>';
-        updateTicketBadge();
-        return;
-    }
-    
-    // Получаем всех пользователей для отображения имён
-    const userIds = [...new Set(tickets.map(t => t.user_id))];
-    const { data: users } = await _supabase
-        .from('users')
-        .select('id, name, surname, role')
-        .in('id', userIds);
-    
-    const userMap = {};
-    (users || []).forEach(u => { userMap[u.id] = u; });
-    
-    container.innerHTML = tickets.map(ticket => {
-        const user = userMap[ticket.user_id];
-        const messages = ticket.messages || [];
-        const isOpen = ticket.status === 'open';
-        
-        return `
-            <div class="card" style="margin-bottom:15px;${isOpen ? 'border-left:4px solid #0f6e3f;' : 'border-left:4px solid #c62828;'}">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #e8edf5;">
-                    <div>
-                        <strong style="font-size:1.1rem;">${user ? user.surname + ' ' + user.name : 'Неизвестный'}</strong>
-                        <span style="margin-left:10px;color:#666;">(${user ? user.role : '?'})</span>
-                        <span style="margin-left:10px;color:${isOpen ? '#0f6e3f' : '#c62828'};font-weight:600;">
-                            ${isOpen ? 'Открыт' : 'Закрыт'}
-                        </span>
-                    </div>
-                    <small style="color:#666;">${new Date(ticket.created_at).toLocaleString('ru-RU')}</small>
-                </div>
-                
-                <div style="max-height:350px;overflow-y:auto;margin-bottom:15px;padding:10px;background:#f8fafc;border-radius:8px;">
-                    ${messages.map(msg => `
-                        <div style="margin-bottom:12px;display:flex;flex-direction:column;align-items:${msg.sender === 'admin' ? 'flex-end' : 'flex-start'};">
-                            <div style="padding:10px 14px;border-radius:12px;max-width:80%;background:${msg.sender === 'admin' ? '#0056a7' : '#f0f4fc'};color:${msg.sender === 'admin' ? 'white' : '#333'};">
-                                <p style="margin:0;">${msg.text}</p>
-                            </div>
-                            <small style="color:#666;margin-top:4px;font-size:0.75rem;">
-                                ${msg.sender === 'admin' ? 'Вы' : user?.name || 'Пользователь'} · ${new Date(msg.timestamp).toLocaleString('ru-RU')}
-                            </small>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                ${isOpen ? `
-                    <div style="display:flex;gap:10px;align-items:center;">
-                        <input type="text" id="adminReply_${ticket.id}" placeholder="Введите ответ..." 
-                               style="flex:1;padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
-                        <button class="btn btn-primary btn-sm" onclick="replyToTicket('${ticket.id}')">
-                            Ответить
-                        </button>
-                        <button class="btn btn-sm" onclick="closeTicket('${ticket.id}')" 
-                                style="background:#ffc107;color:#333;">
-                            Закрыть
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteTicket('${ticket.id}')">
-                            Удалить
-                        </button>
-                    </div>
-                ` : `
-                    <button class="btn btn-danger btn-sm" onclick="deleteTicket('${ticket.id}')">
-                        Удалить
-                    </button>
-                `}
-            </div>
-        `;
-    }).join('');
-    
-    updateTicketBadge();
-}
+        const _supabase = window.supabase.createClient('https://bimdjjmdxoygeucdzlmu.supabase.co','sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje');
+        let currentUser=null,currentFilter='all';
 
-// Ответ на тикет
-async function replyToTicket(ticketId) {
-    const input = document.getElementById('adminReply_' + ticketId);
-    const message = input?.value.trim();
-    
-    if (!message) {
-        alert('Введите ответ!');
-        return;
-    }
-    
-    // Получаем тикет
-    const { data: ticket } = await _supabase
-        .from('tickets')
-        .select('*')
-        .eq('id', ticketId)
-        .single();
-    
-    if (!ticket) return;
-    
-    // Добавляем сообщение
-    const messages = [...(ticket.messages || []), {
-        sender: 'admin',
-        text: message,
-        timestamp: new Date().toISOString()
-    }];
-    
-    const { error } = await _supabase
-        .from('tickets')
-        .update({ messages })
-        .eq('id', ticketId);
-    
-    if (error) {
-        console.error('Ошибка:', error);
-        return;
-    }
-    
-    // Уведомление пользователю
-    await sendNotification(
-        ticket.user_id,
-        'Администратор ответил на ваше обращение',
-        'support',
-        ticketId
-    );
-    
-    loadTickets();
-}
+        function checkAuth(){const s=sessionStorage.getItem('currentUser');if(!s){window.location.href='index.html';return null;}const u=JSON.parse(s);if(u.role!=='admin'){window.location.href='index.html';return null;}return u;}
+        function logout(){sessionStorage.removeItem('currentUser');window.location.href='index.html';}
+        function switchTab(n,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(n).classList.add('active');if(n==='users')loadUsers();if(n==='subjects')loadSubjects();if(n==='slots')loadSlots();if(n==='tickets')loadTickets();if(n==='requests')loadRequests();if(n==='stats')loadStats();}
 
-// Закрытие тикета
-async function closeTicket(ticketId) {
-    if (!confirm('Закрыть обращение?')) return;
-    
-    const { error } = await _supabase
-        .from('tickets')
-        .update({ status: 'closed' })
-        .eq('id', ticketId);
-    
-    if (error) {
-        console.error('Ошибка:', error);
-        return;
-    }
-    
-    loadTickets();
-}
-
-// Удаление тикета
-async function deleteTicket(ticketId) {
-    if (!confirm('Удалить обращение?')) return;
-    
-    const { error } = await _supabase
-        .from('tickets')
-        .delete()
-        .eq('id', ticketId);
-    
-    if (error) {
-        console.error('Ошибка:', error);
-        return;
-    }
-    
-    loadTickets();
-}
-
-// Обновление счетчика
-function updateTicketBadge() {
-    _supabase
-        .from('tickets')
-        .select('*', { count: 'exact' })
-        .eq('status', 'open')
-        .then(({ count }) => {
-            const badge = document.getElementById('ticketBadge');
-            if (badge) {
-                badge.textContent = count || 0;
-                badge.style.display = count > 0 ? 'inline' : 'none';
-            }
-        });
-}
-
-// Функция отправки уведомлений (добавь если нет)
-async function sendNotification(userId, message, type = 'info', relatedId = null) {
-    try {
-        await _supabase.from('notifications').insert({
-            id: 'n' + Date.now() + Math.random(),
-            user_id: userId,
-            related_slot_id: relatedId,
-            message: message,
-            type: type,
-            is_read: false,
-            created_at: new Date().toISOString()
-        });
-    } catch(e) {
-        console.error('Ошибка уведомления:', e);
-    }
-}
-        // ЕДИНСТВЕННОЕ объявление supabase
-        const _supabase = window.supabase.createClient(
-            'https://bimdjjmdxoygeucdzlmu.supabase.co',
-            'sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje'
-        );
-        
-        let currentUser = null;
-        let currentFilter = 'all';
-
-        function checkAuth() {
-            const saved = sessionStorage.getItem('currentUser');
-            if (!saved) { window.location.href = 'index.html'; return null; }
-            const user = JSON.parse(saved);
-            if (user.role !== 'admin') { window.location.href = 'index.html'; return null; }
-            return user;
+        async function loadUsers(){
+            const{data}=await _supabase.from('users').select('*').order('surname');
+            const search=(document.getElementById('userSearch')?.value||'').toLowerCase();
+            const users=(data||[]).filter(u=>!search||u.name.toLowerCase().includes(search)||u.surname.toLowerCase().includes(search));
+            document.getElementById('usersTable').innerHTML=`<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>${users.map(u=>`<tr><td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td><td>${u.role}</td><td><button class="btn btn-primary btn-sm" onclick="editUser('${u.id}')">Р</button> <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">У</button></td></tr>`).join('')}</tbody></table>`;
         }
 
-        function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+        async function editUser(id){const{data}=await _supabase.from('users').select('*').eq('id',id).single();if(!data)return;document.getElementById('modalTitle').textContent='Редактировать';document.getElementById('editUserId').value=data.id;document.getElementById('editName').value=data.name;document.getElementById('editSurname').value=data.surname;document.getElementById('editEmail').value=data.email;document.getElementById('editRole').value=data.role;document.getElementById('editPassword').value='';document.getElementById('userModal').classList.add('show');}
+        function openAddModal(){document.getElementById('modalTitle').textContent='Добавить';document.getElementById('userForm').reset();document.getElementById('editUserId').value='';document.getElementById('userModal').classList.add('show');}
+        function closeModal(){document.getElementById('userModal').classList.remove('show');}
+        async function saveUser(e){e.preventDefault();const id=document.getElementById('editUserId').value,d={name:document.getElementById('editName').value,surname:document.getElementById('editSurname').value,email:document.getElementById('editEmail').value,role:document.getElementById('editRole').value,active:true};if(id){const p=document.getElementById('editPassword').value;if(p)d.password=p;await _supabase.from('users').update(d).eq('id',id);}else{d.id='u'+Date.now();d.password=document.getElementById('editPassword').value||'123';await _supabase.from('users').insert(d);}closeModal();loadUsers();loadStats();}
+        async function deleteUser(id){if(!confirm('Удалить?'))return;await _supabase.from('users').delete().eq('id',id);loadUsers();loadStats();}
 
-        async function loadUsers() {
-            const { data } = await _supabase.from('users').select('*').order('surname');
-            const search = document.getElementById('userSearch')?.value.toLowerCase() || '';
-            const users = (data || []).filter(u => !search || u.name.toLowerCase().includes(search) || u.surname.toLowerCase().includes(search));
-            document.getElementById('usersTable').innerHTML = `<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th>Действия</th></tr></thead><tbody>${users.map(u => `<tr><td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td><td>${u.role}</td><td><button class="btn btn-primary btn-sm" onclick="editUser('${u.id}')">Ред.</button> <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Уд.</button></td></tr>`).join('')}</tbody></table>`;
+        async function loadSubjects(){const{data}=await _supabase.from('subjects').select('*').order('name');document.getElementById('subjectsList').innerHTML=(data||[]).map(s=>`<div style="display:flex;justify-content:space-between;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:4px;"><span>${s.name}</span><button class="btn btn-danger btn-sm" onclick="deleteSubject('${s.name}')">У</button></div>`).join('')||'<p style="color:#666;">Нет предметов</p>';}
+        async function addSubject(){const n=document.getElementById('newSubject').value.trim();if(!n)return;await _supabase.from('subjects').insert({name:n});document.getElementById('newSubject').value='';loadSubjects();}
+        async function deleteSubject(n){await _supabase.from('subjects').delete().eq('name',n);loadSubjects();}
+
+        async function loadSlots(){
+            let q=_supabase.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date',{ascending:false});
+            if(currentFilter!=='all')q=q.eq('status',currentFilter);
+            const{data}=await q,c=document.getElementById('slotsList');
+            if(!data?.length){c.innerHTML='<p style="color:#666;text-align:center;">Нет консультаций</p>';return;}
+            const a=data.filter(s=>s.status==='active'),cm=data.filter(s=>s.status==='completed'),cn=data.filter(s=>s.status==='cancelled');
+            let h='';
+            if(a.length)h+=`<div class="status-section status-active"><h3>Активные (${a.length})</h3>${a.map(renderSlot).join('')}</div>`;
+            if(cm.length)h+=`<div class="status-section status-completed"><h3>Завершённые (${cm.length})</h3>${cm.map(renderSlot).join('')}</div>`;
+            if(cn.length)h+=`<div class="status-section status-cancelled"><h3>Отменённые (${cn.length})</h3>${cn.map(renderSlot).join('')}</div>`;
+            c.innerHTML=h;
+            document.querySelectorAll('.cancel-slot-btn').forEach(b=>b.addEventListener('click',()=>cancelSlot(b.dataset.sid)));
+            document.querySelectorAll('.delete-slot-btn').forEach(b=>b.addEventListener('click',()=>deleteSlot(b.dataset.sid)));
+            document.querySelectorAll('.close-reg-btn').forEach(b=>b.addEventListener('click',()=>closeRegistration(b.dataset.sid)));
         }
 
-        async function editUser(id) {
-            const { data } = await _supabase.from('users').select('*').eq('id', id).single();
-            if (!data) return;
-            document.getElementById('modalTitle').textContent = 'Редактировать';
-            document.getElementById('editUserId').value = data.id;
-            document.getElementById('editName').value = data.name;
-            document.getElementById('editSurname').value = data.surname;
-            document.getElementById('editEmail').value = data.email;
-            document.getElementById('editRole').value = data.role;
-            document.getElementById('editPassword').value = '';
-            document.getElementById('userModal').classList.add('show');
-        }
+        function renderSlot(s){return`<div class="slot-card"><div style="display:flex;justify-content:space-between;"><strong>${s.subject}</strong><span class="badge-status badge-${s.status}">${s.status}</span></div><p style="color:#666;font-size:0.85rem;">${s.users?.surname||''} ${s.users?.name||''} | ${s.date} ${s.time_start}-${s.time_end}</p><p style="color:#666;font-size:0.85rem;">${s.format} ${s.room?'| '+s.room:''} | Мест: ${s.max_students}</p><div style="display:flex;gap:6px;margin-top:8px;">${s.status==='active'?`<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${s.id}">Закрыть</button><button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${s.id}">Отменить</button>`:''}<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="${s.id}">Удалить</button></div></div>`;}
 
-        function openAddModal() {
-            document.getElementById('modalTitle').textContent = 'Добавить';
-            document.getElementById('userForm').reset();
-            document.getElementById('editUserId').value = '';
-            document.getElementById('userModal').classList.add('show');
-        }
+        async function cancelSlot(id){if(!confirm('Отменить?'))return;await _supabase.from('slots').update({status:'cancelled'}).eq('id',id);await _supabase.from('bookings').update({status:'cancelled',cancelled_by:'admin'}).eq('slot_id',id).eq('status','active');loadSlots();}
+        async function deleteSlot(id){if(!confirm('Удалить?'))return;await _supabase.from('slots').delete().eq('id',id);loadSlots();}
+        async function closeRegistration(id){const{data:s}=await _supabase.from('slots').select('*').eq('id',id).single();const{count}=await _supabase.from('bookings').select('*',{count:'exact'}).eq('slot_id',id).eq('status','active');if(!confirm(`Закрыть? Записано: ${count}/${s.max_students}`))return;await _supabase.from('slots').update({max_students:count>0?count:1}).eq('id',id);loadSlots();}
 
-        function closeModal() { document.getElementById('userModal').classList.remove('show'); }
+        async function loadTickets(){
+            const{data:tickets}=await _supabase.from('tickets').select('*').order('created_at',{ascending:false});
+            const c=document.getElementById('ticketsList');
+            if(!tickets?.length){c.innerHTML='<p style="color:#666;text-align:center;">Нет тикетов</p>';updateTicketBadge();return;}
+            const uids=[...new Set(tickets.map(t=>t.user_id))];
+            const{data:users}=await _supabase.from('users').select('id,name,surname,role').in('id',uids);
+            const um={};(users||[]).forEach(u=>{um[u.id]=u;});
+            c.innerHTML=tickets.map(t=>{const u=um[t.user_id],ms=t.messages||[],open=t.status==='open';return`<div class="ticket-card"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div><strong>${u?u.surname+' '+u.name:'?'}</strong><span style="color:#666;margin-left:8px;">(${u?.role||'?'})</span><span style="margin-left:8px;color:${open?'#0f6e3f':'#c62828'};">${open?'Открыт':'Закрыт'}</span></div><small>${new Date(t.created_at).toLocaleString('ru-RU')}</small></div><div style="margin-bottom:8px;">${ms.map(m=>`<div class="chat-message ${m.sender}"><div class="chat-bubble ${m.sender}"><p style="margin:0;">${m.text}</p></div><div class="chat-meta">${m.sender==='admin'?'Вы':u?.name||'Пользователь'}</div></div>`).join('')}</div>${open?`<div style="display:flex;gap:6px;"><input type="text" id="adminReply_${t.id}" placeholder="Ответ..." style="flex:1;padding:8px;border:2px solid #e0e6ed;border-radius:8px;font-size:0.85rem;"><button class="btn btn-primary btn-sm" onclick="replyTicket('${t.id}')">Отв</button><button class="btn btn-sm" onclick="closeTicket('${t.id}')" style="background:#ffc107;">Закр</button></div>`:''}<button class="btn btn-danger btn-sm" onclick="deleteTicket('${t.id}')" style="margin-top:6px;">Удалить</button></div>`;}).join('');updateTicketBadge();}
 
-        async function saveUser(e) {
-            e.preventDefault();
-            const id = document.getElementById('editUserId').value;
-            const userData = {
-                name: document.getElementById('editName').value,
-                surname: document.getElementById('editSurname').value,
-                email: document.getElementById('editEmail').value,
-                role: document.getElementById('editRole').value,
-                active: true
-            };
-            if (id) {
-                const pass = document.getElementById('editPassword').value;
-                if (pass) userData.password = pass;
-                await _supabase.from('users').update(userData).eq('id', id);
-            } else {
-                userData.id = 'u' + Date.now();
-                userData.password = document.getElementById('editPassword').value || '123';
-                await _supabase.from('users').insert(userData);
-            }
-            closeModal(); loadUsers(); loadStats();
-        }
+        async function replyTicket(id){const i=document.getElementById('adminReply_'+id),msg=i?.value.trim();if(!msg)return;const{data:t}=await _supabase.from('tickets').select('*').eq('id',id).single();if(!t)return;const ms=[...(t.messages||[]),{sender:'admin',text:msg,timestamp:new Date().toISOString()}];await _supabase.from('tickets').update({messages:ms}).eq('id',id);await _supabase.from('notifications').insert({id:'n'+Date.now(),user_id:t.user_id,message:'Администратор ответил на обращение',type:'support',is_read:false});loadTickets();}
+        async function closeTicket(id){await _supabase.from('tickets').update({status:'closed'}).eq('id',id);loadTickets();}
+        async function deleteTicket(id){if(!confirm('Удалить?'))return;await _supabase.from('tickets').delete().eq('id',id);loadTickets();}
+        function updateTicketBadge(){_supabase.from('tickets').select('*',{count:'exact'}).eq('status','open').then(({count})=>{const b=document.getElementById('ticketBadge');if(b){b.textContent=count||0;b.style.display=count>0?'inline':'none';}});}
 
-        async function deleteUser(id) {
-            if (!confirm('Удалить?')) return;
-            await _supabase.from('users').delete().eq('id', id);
-            loadUsers(); loadStats();
-        }
+        async function loadRequests(){const{data}=await _supabase.from('notifications').select('*').eq('type','teacher_request').order('created_at',{ascending:false});document.getElementById('requestsList').innerHTML=data?.length?data.map(n=>`<div class="card" style="margin-bottom:8px;${n.is_read?'opacity:0.6;':'border-left:4px solid #ffc107;'}"><p style="font-size:0.9rem;">${n.message}</p><small>${new Date(n.created_at).toLocaleString('ru-RU')}</small></div>`).join(''):'<p style="color:#666;">Нет запросов</p>';}
 
-        async function loadSubjects() {
-    console.log('Загружаю предметы...');
-    
-    const { data, error } = await _supabase
-        .from('subjects')
-        .select('*')
-        .order('name');
-    
-    console.log('Результат:', data, 'Ошибка:', error);
-    
-    const container = document.getElementById('subjectsList');
-    
-    if (error) {
-        container.innerHTML = `<p style="color:#dc3545;">Ошибка: ${error.message}</p>`;
-        console.error('Ошибка загрузки:', error);
-        return;
-    }
-    
-    if (!data || data.length === 0) {
-        container.innerHTML = '<p style="color:#666;">Нет предметов</p>';
-        return;
-    }
-    
-    container.innerHTML = data.map(s => `
-        <div style="display:flex;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:5px;">
-            <span>${s.name}</span>
-            <button class="btn btn-danger btn-sm" onclick="deleteSubject('${s.name}')">Удалить</button>
-        </div>
-    `).join('');
-    
-    console.log('Предметы отображены:', data.length);
-}
+        async function loadStats(){const[{count:u},{count:s},{count:b}]=await Promise.all([_supabase.from('users').select('*',{count:'exact',head:true}),_supabase.from('slots').select('*',{count:'exact',head:true}),_supabase.from('bookings').select('*',{count:'exact',head:true})]);document.getElementById('totalUsers').textContent=u||0;document.getElementById('totalSlots').textContent=s||0;document.getElementById('totalBookings').textContent=b||0;}
 
-        async function addSubject() {
-    const name = document.getElementById('newSubject').value.trim();
-    if (!name) { alert('Введи название!'); return; }
-    
-    console.log('Пытаюсь добавить:', name);
-    
-    const { data, error } = await _supabase
-        .from('subjects')
-        .insert({ name: name })
-        .select();
-    
-    console.log('Результат добавления:', data, 'Ошибка:', error);
-    
-    if (error) {
-        alert('Ошибка: ' + error.message);
-        return;
-    }
-    
-    document.getElementById('newSubject').value = '';
-    loadSubjects();
-}
-
-        async function deleteSubject(name) {
-            await _supabase.from('subjects').delete().eq('name', name);
-            loadSubjects();
-        }
-
-        async function loadSlots() {
-            let query = _supabase.from('slots').select('*, users!slots_teacher_id_fkey(name, surname)').order('date', { ascending: false });
-            if (currentFilter !== 'all') query = query.eq('status', currentFilter);
-            const { data } = await query;
-            const container = document.getElementById('slotsList');
-            if (!data?.length) { container.innerHTML = '<p style="color:#666;text-align:center;">Нет консультаций</p>'; return; }
-            const active = data.filter(s => s.status === 'active');
-            const completed = data.filter(s => s.status === 'completed');
-            const cancelled = data.filter(s => s.status === 'cancelled');
-            let html = '';
-            if (active.length) html += `<div class="status-section status-active"><h3>Активные (${active.length})</h3>${active.map(renderSlot).join('')}</div>`;
-            if (completed.length) html += `<div class="status-section status-completed"><h3>Завершённые (${completed.length})</h3>${completed.map(renderSlot).join('')}</div>`;
-            if (cancelled.length) html += `<div class="status-section status-cancelled"><h3>Отменённые (${cancelled.length})</h3>${cancelled.map(renderSlot).join('')}</div>`;
-            container.innerHTML = html;
-            document.querySelectorAll('.cancel-slot-btn').forEach(b => b.addEventListener('click', () => cancelSlot(b.dataset.sid)));
-            document.querySelectorAll('.delete-slot-btn').forEach(b => b.addEventListener('click', () => deleteSlot(b.dataset.sid)));
-            document.querySelectorAll('.close-reg-btn').forEach(b => b.addEventListener('click', () => closeRegistration(b.dataset.sid)));
-        }
-
-        function renderSlot(slot) {
-            return `<div class="slot-card"><div style="display:flex;justify-content:space-between;"><strong>${slot.subject}</strong><span class="badge-status badge-${slot.status}">${slot.status}</span></div><p style="color:#666;">${slot.users?.surname||''} ${slot.users?.name||''} | ${slot.date} ${slot.time_start}-${slot.time_end}</p><p style="color:#666;">${slot.format} ${slot.room?'| Ауд. '+slot.room:''} | Мест: ${slot.max_students}</p><div style="display:flex;gap:10px;margin-top:10px;">${slot.status==='active'?`<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${slot.id}">Закрыть запись</button><button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${slot.id}">Отменить</button>`:''}<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="${slot.id}">Удалить</button></div></div>`;
-        }
-
-        async function cancelSlot(id) {
-            if (!confirm('Отменить?')) return;
-            await _supabase.from('slots').update({ status: 'cancelled' }).eq('id', id);
-            await _supabase.from('bookings').update({ status: 'cancelled', cancelled_by: 'admin' }).eq('slot_id', id).eq('status', 'active');
-            loadSlots();
-        }
-
-        async function deleteSlot(id) {
-            if (!confirm('Удалить?')) return;
-            await _supabase.from('slots').delete().eq('id', id);
-            loadSlots();
-        }
-
-        async function closeRegistration(id) {
-            const { data: slot } = await _supabase.from('slots').select('*').eq('id', id).single();
-            const { count } = await _supabase.from('bookings').select('*', { count: 'exact' }).eq('slot_id', id).eq('status', 'active');
-            if (!confirm(`Закрыть запись? Записано: ${count}/${slot.max_students}`)) return;
-            await _supabase.from('slots').update({ max_students: count > 0 ? count : 1 }).eq('id', id);
-            loadSlots();
-        }
-
-        async function loadStats() {
-            const { count: users } = await _supabase.from('users').select('*', { count: 'exact', head: true });
-            const { count: slots } = await _supabase.from('slots').select('*', { count: 'exact', head: true });
-            const { count: bookings } = await _supabase.from('bookings').select('*', { count: 'exact', head: true });
-            document.getElementById('totalUsers').textContent = users || 0;
-            document.getElementById('totalSlots').textContent = slots || 0;
-            document.getElementById('totalBookings').textContent = bookings || 0;
-        }
-
-        // Загрузка глобальных тем
-async function loadGlobalTopics() {
-    console.log('Загружаю глобальные темы...');
-    
-    const { data, error } = await _supabase
-        .from('global_topics')
-        .select('*')
-        .order('name');
-    
-    console.log('Темы:', data, 'Ошибка:', error);
-    
-    const container = document.getElementById('globalTopicsList');
-    
-    if (error) {
-        container.innerHTML = `<p style="color:#dc3545;">Ошибка: ${error.message}</p>`;
-        return;
-    }
-    
-    if (!data || data.length === 0) {
-        container.innerHTML = '<p style="color:#666;">Нет глобальных тем</p>';
-        return;
-    }
-    
-    container.innerHTML = data.map(t => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:5px;">
-            <div>
-                <strong>${t.name}</strong> (${t.duration} мин.)
-                <br><small style="color:#666;">Предмет: ${t.subject}</small>
-            </div>
-            <button class="btn btn-danger btn-sm" onclick="deleteGlobalTopic(${t.id})">Удалить</button>
-        </div>
-    `).join('');
-}
-
-// Добавление глобальной темы
-async function addGlobalTopic() {
-    const name = document.getElementById('newTopicName').value.trim();
-    const subject = document.getElementById('newTopicSubject').value.trim();
-    const duration = parseInt(document.getElementById('newTopicDuration').value);
-    
-    if (!name || !subject) {
-        alert('Заполни название и предмет!');
-        return;
-    }
-    
-    console.log('Добавляю тему:', { name, subject, duration });
-    
-    const { data, error } = await _supabase
-        .from('global_topics')
-        .insert({ name, subject, duration })
-        .select();
-    
-    console.log('Результат:', data, 'Ошибка:', error);
-    
-    if (error) {
-        alert('Ошибка: ' + error.message);
-        return;
-    }
-    
-    document.getElementById('newTopicName').value = '';
-    document.getElementById('newTopicSubject').value = '';
-    loadGlobalTopics();
-    alert('Тема добавлена!');
-}
-
-// Удаление глобальной темы
-async function deleteGlobalTopic(id) {
-    if (!confirm('Удалить тему?')) return;
-    
-    const { error } = await _supabase
-        .from('global_topics')
-        .delete()
-        .eq('id', id);
-    
-    if (error) {
-        alert('Ошибка: ' + error.message);
-        return;
-    }
-    
-    loadGlobalTopics();
-}
-
-        function switchTab(name, el) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            if (name === 'tickets') loadTickets();
-            if (name === 'topics') loadGlobalTopics();
-            if (el) el.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(name).classList.add('active');
-            if (name === 'users') loadUsers();
-            if (name === 'subjects') loadSubjects();
-            if (name === 'slots') loadSlots();
-            if (name === 'stats') loadStats();
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            currentUser = checkAuth();
-            if (!currentUser) return;
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-            document.getElementById('addGlobalTopicBtn').addEventListener('click', addGlobalTopic);
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.addEventListener('click', function() { switchTab(this.dataset.tab, this); }));
-            document.querySelectorAll('.status-filter-btn').forEach(btn => btn.addEventListener('click', function() { document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); currentFilter = this.dataset.filter; loadSlots(); }));
-            document.getElementById('addUserBtn').addEventListener('click', openAddModal);
-            document.getElementById('userForm').addEventListener('submit', saveUser);
-            document.getElementById('addSubjectBtn').addEventListener('click', addSubject);
-            document.getElementById('userSearch').addEventListener('input', loadUsers);
-            loadUsers(); loadSubjects(); loadSlots(); loadStats();loadTickets();updateTicketBadge();
+        document.addEventListener('DOMContentLoaded',async()=>{
+            currentUser=checkAuth();if(!currentUser)return;
+            document.getElementById('logoutBtn').addEventListener('click',logout);
+            document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',function(){switchTab(this.dataset.tab,this);}));
+            document.querySelectorAll('.status-filter-btn').forEach(btn=>btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');currentFilter=this.dataset.filter;loadSlots();}));
+            document.getElementById('addUserBtn').addEventListener('click',openAddModal);
+            document.getElementById('userForm').addEventListener('submit',saveUser);
+            document.getElementById('addSubjectBtn').addEventListener('click',addSubject);
+            document.getElementById('userSearch').addEventListener('input',loadUsers);
+            await Promise.all([loadUsers(),loadSubjects(),loadSlots(),loadStats()]);
         });
     </script>
 </body>
