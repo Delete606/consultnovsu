@@ -183,8 +183,57 @@ function RS(s, allB) {
         async function CR(id){const{data:s}=await _s.from('slots').select('*').eq('id',id).single();const{count}=await _s.from('bookings').select('*',{count:'exact'}).eq('slot_id',id).eq('status','active');if(!confirm(`Закрыть? Записано: ${count}/${s.max_students}`))return;await _s.from('slots').update({max_students:count>0?count:1}).eq('id',id);slotsCache=null;LSL(sp,true);}
 
         // ТИКЕТЫ
-        async function LT(p=1){tp=p;const c=document.getElementById('ticketsList');c.innerHTML='<p class="loading">Загрузка...</p>';const from=(p-1)*PER,to=from+PER-1;const{data,count}=await _s.from('tickets').select('*',{count:'exact'}).order('created_at',{ascending:false}).range(from,to);if(!data?.length){c.innerHTML='<p style="color:#666;">Нет тикетов</p>';UTB();return;}const uids=[...new Set(data.map(t=>t.user_id))];const{data:users}=await _s.from('users').select('id,name,surname,role').in('id',uids);const um={};(users||[]).forEach(u=>{um[u.id]=u;});c.innerHTML=data.map(t=>{const u=um[t.user_id],ms=t.messages||[],open=t.status==='open';return`<div class="ticket-card"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div><strong>${u?u.surname+' '+u.name:'?'}</strong><span style="color:#666;margin-left:8px;">(${u?.role||'?'})</span><span style="margin-left:8px;color:${open?'#0f6e3f':'#c62828'};">${open?'Открыт':'Закрыт'}</span></div><small>${new Date(t.created_at).toLocaleString('ru-RU')}</small></div><div style="margin-bottom:8px;">${ms.map(m=>`<div class="chat-message ${m.sender}"><div class="chat-bubble ${m.sender}">${m.text}</div></div>`).join('')}</div>${open?`<div style="display:flex;gap:6px;"><input type="text" id="AR_${t.id}" placeholder="Ответ..." style="flex:1;padding:8px;border:2px solid #e0e6ed;border-radius:8px;"><button class="btn btn-primary btn-sm" onclick="RT('${t.id}')">Отв</button><button class="btn btn-sm" onclick="CT('${t.id}')" style="background:#ffc107;">Закр</button></div>`:''}<button class="btn btn-danger btn-sm" onclick="DT('${t.id}')" style="margin-top:6px;">Удалить</button></div>`;}).join('');RP(document.getElementById('ticketsPagination'),p,count||0,'LT');UTB();}
-        async function RT(id){const i=document.getElementById('AR_'+id),msg=i?.value.trim();if(!msg)return;const{data:t}=await _s.from('tickets').select('messages,user_id').eq('id',id).single();if(!t)return;const ms=[...(t.messages||[]),{sender:'admin',text:msg,timestamp:new Date().toISOString()}];await _s.from('tickets').update({messages:ms}).eq('id',id);await _s.from('notifications').insert({id:'n'+Date.now(),user_id:t.user_id,message:'Администратор ответил на обращение',type:'support',is_read:false});LT(tp);}
+        async function LT(p=1){
+    tp=p;
+    const c=document.getElementById('ticketsList');
+    c.innerHTML='<p class="loading">Загрузка...</p>';
+    const from=(p-1)*PER,to=from+PER-1;
+    const{data,count}=await _s.from('tickets').select('*',{count:'exact'}).order('created_at',{ascending:false}).range(from,to);
+    if(!data?.length){c.innerHTML='<p style="color:#666;">Нет тикетов</p>';RP(document.getElementById('ticketsPagination'),p,count||0,'LT');UTB();return;}
+    
+    const uids=[...new Set(data.map(t=>t.user_id))];
+    const{data:users}=await _s.from('users').select('id,name,surname,role').in('id',uids);
+    const um={};(users||[]).forEach(u=>{um[u.id]=u;});
+    
+    c.innerHTML=data.map(t=>{
+        const u=um[t.user_id],ms=t.messages||[],open=t.status==='open';
+        return `<div class="ticket-card" style="border-left:4px solid ${open?'#0f6e3f':'#c62828'};">
+            <div class="ticket-header">
+                <div>
+                    <strong style="font-size:1rem;">${u?u.surname+' '+u.name:'Неизвестный'}</strong>
+                    <span style="color:#666;margin-left:8px;font-size:0.85rem;">(${u?.role||'?'})</span>
+                    <span style="margin-left:8px;color:${open?'#0f6e3f':'#c62828'};font-weight:600;font-size:0.85rem;">${open?'Открыт':'Закрыт'}</span>
+                </div>
+                <small style="color:#666;">${new Date(t.created_at).toLocaleString('ru-RU')}</small>
+            </div>
+            <div class="ticket-body">
+                ${ms.map(m=>`<div class="chat-message ${m.sender}">
+                    <div class="chat-bubble ${m.sender}"><p style="margin:0;">${m.text}</p></div>
+                    <div class="chat-meta">${m.sender==='admin'?'Администратор':u?.name||'Пользователь'}</div>
+                </div>`).join('')}
+            </div>
+            ${open?`<div class="ticket-actions">
+                <input type="text" id="AR_${t.id}" placeholder="Введите ответ...">
+                <button class="btn btn-primary btn-sm" onclick="RT('${t.id}')">Ответить</button>
+                <button class="btn btn-sm" onclick="CT('${t.id}')" style="background:#ffc107;color:#333;">Закрыть</button>
+                <button class="btn btn-danger btn-sm" onclick="DT('${t.id}')">Удалить</button>
+            </div>`:`<button class="btn btn-danger btn-sm" onclick="DT('${t.id}')" style="margin-top:6px;">Удалить</button>`}
+        </div>`;
+    }).join('');
+    
+    RP(document.getElementById('ticketsPagination'),p,count||0,'LT');
+    UTB();
+}
+       async function RT(id){
+    const i=document.getElementById('AR_'+id),msg=i?.value.trim();
+    if(!msg) return;
+    const{data:t}=await _s.from('tickets').select('messages,user_id').eq('id',id).single();
+    if(!t) return;
+    const ms=[...(t.messages||[]),{sender:'admin',text:msg,timestamp:new Date().toISOString()}];
+    await _s.from('tickets').update({messages:ms}).eq('id',id);
+    await _s.from('notifications').insert({id:'n'+Date.now(),user_id:t.user_id,message:'Администратор ответил на ваше обращение',type:'support',is_read:false});
+    LT(tp);
+}
         async function CT(id){await _s.from('tickets').update({status:'closed'}).eq('id',id);LT(tp);}
         async function DT(id){if(!confirm('Удалить?'))return;await _s.from('tickets').delete().eq('id',id);LT(tp);}
         async function UTB(){const{count}=await _s.from('tickets').select('*',{count:'exact',head:true}).eq('status','open');const b=document.getElementById('ticketBadge');if(b){b.textContent=count||0;b.style.display=count>0?'inline':'none';}}
