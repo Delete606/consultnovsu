@@ -401,7 +401,21 @@
             const { error } = await _supabase.from('bookings').insert({ id: 'b'+Date.now(), slot_id: slotId, student_id: currentUser.id, topic, status: 'active' });
             if (error) { alert('Ошибка записи'); return; }
             
-            await _supabase.from('notifications').insert({ id: 'n'+Date.now(), user_id: slot.teacher_id, related_slot_id: slotId, message: `Студент ${currentUser.surname} ${currentUser.name} записался на "${slot.subject}". Тема: "${topic}"`, type: 'new_booking' });
+            // После успешной записи
+await sendNotification(
+    slot.teacher_id, 
+    `Студент ${currentUser.surname} ${currentUser.name} записался на "${slot.subject}" ${formatDate(slot.date)}. Тема: "${topic}"`,
+    'new_booking',
+    slotId
+);
+
+// И себе тоже
+await sendNotification(
+    currentUser.id,
+    `Вы записаны на "${slot.subject}" ${formatDate(slot.date)} в ${slot.time_start}. Тема: "${topic}"`,
+    'booking',
+    slotId
+);
             
             alert('Вы успешно записаны!');
             loadConsultations();
@@ -491,10 +505,32 @@
         }
 
         async function cancelBooking(bookingId) {
-            if (!confirm('Отменить запись?')) return;
-            await _supabase.from('bookings').update({ status: 'cancelled', cancelled_by: 'student' }).eq('id', bookingId);
-            loadMyBookings();
-        }
+    if (!confirm('Отменить запись?')) return;
+    
+    // Получаем данные о записи
+    const { data: booking } = await _supabase
+        .from('bookings')
+        .select('*, slots(*)')
+        .eq('id', bookingId)
+        .single();
+    
+    await _supabase
+        .from('bookings')
+        .update({ status: 'cancelled', cancelled_by: 'student' })
+        .eq('id', bookingId);
+    
+    // Уведомление преподавателю
+    if (booking?.slots) {
+        await sendNotification(
+            booking.slots.teacher_id,
+            `Студент ${currentUser.surname} ${currentUser.name} отменил запись на "${booking.slots.subject}" ${formatDate(booking.slots.date)}`,
+            'cancellation',
+            booking.slot_id
+        );
+    }
+    
+    loadMyBookings();
+}
 
         async function loadFilters() {
             const { data: subjects } = await _supabase.from('subjects').select('name').order('name');
