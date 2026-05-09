@@ -43,116 +43,117 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const _s = window.supabase.createClient('https://bimdjjmdxoygeucdzlmu.supabase.co','sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje');
-        let U=null,FF='all',up=1,sp=1,tp=1;
-        const PER=5;
-        let slotsCache=null,bookingsCache=null,allUsersCache=null;
+    const _s = window.supabase.createClient('https://bimdjjmdxoygeucdzlmu.supabase.co','sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje');
+    let U=null,FF='all',up=1,sp=1,tp=1;
+    const PER=5;
+    let slotsCache=null,bookingsCache=null,allUsersCache=null;
 
-        function A(){const s=sessionStorage.getItem('currentUser');if(!s){location.href='index.html';return null;}const u=JSON.parse(s);if(u.role!=='admin'){location.href='index.html';return null;}return u;}
-        function L(){sessionStorage.removeItem('currentUser');location.href='index.html';}
-        function ST(n,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(n).classList.add('active');if(n==='users')LU(up);if(n==='subjects')LSB();if(n==='slots')LSL(sp);if(n==='tickets')LT(tp);if(n==='requests')LR();if(n==='stats')LST();}
+    function A(){const s=sessionStorage.getItem('currentUser');if(!s){location.href='index.html';return null;}const u=JSON.parse(s);if(u.role!=='admin'){location.href='index.html';return null;}return u;}
+    function L(){sessionStorage.removeItem('currentUser');location.href='index.html';}
+    function ST(n,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(n).classList.add('active');if(n==='users')LU(up);if(n==='subjects')LSB();if(n==='slots')LSL(sp);if(n==='tickets')LT(tp);if(n==='requests')LR();if(n==='stats')LST();}
 
-        // Универсальная функция создания пагинации
-        // Универсальная функция создания пагинации (ИСПРАВЛЕНО)
-function makePagination(containerId, page, total, funcName) {
-    var c = document.getElementById(containerId);
-    if (!c) return;
-    if (total <= PER) { c.innerHTML = ''; return; }
-    var pages = Math.ceil(total / PER);
-    var h = '';
-    
-    // Кнопка Назад
-    if (page > 1) {
-        h += '<button class="page-btn" onclick="window.' + funcName + '(' + (page - 1) + ')">&lt;</button>';
-    } else {
-        h += '<button class="page-btn" disabled>&lt;</button>';
-    }
-    
-    // Номера страниц
-    for (var i = 1; i <= pages; i++) {
-        if (i === page) {
-            h += '<button class="page-btn active">' + i + '</button>';
+    // Универсальная функция создания пагинации
+    function makePagination(containerId, page, total, funcName) {
+        var c = document.getElementById(containerId);
+        if (!c) return;
+        if (total <= PER) { c.innerHTML = ''; return; }
+        var pages = Math.ceil(total / PER);
+        var h = '';
+        
+        if (page > 1) {
+            h += '<button class="page-btn" onclick="' + funcName + '(' + (page - 1) + ')">&lt;</button>';
         } else {
-            h += '<button class="page-btn" onclick="window.' + funcName + '(' + i + ')">' + i + '</button>';
+            h += '<button class="page-btn" disabled>&lt;</button>';
+        }
+        
+        for (var i = 1; i <= pages; i++) {
+            if (i === page) {
+                h += '<button class="page-btn active">' + i + '</button>';
+            } else {
+                h += '<button class="page-btn" onclick="' + funcName + '(' + i + ')">' + i + '</button>';
+            }
+        }
+        
+        if (page < pages) {
+            h += '<button class="page-btn" onclick="' + funcName + '(' + (page + 1) + ')">&gt;</button>';
+        } else {
+            h += '<button class="page-btn" disabled>&gt;</button>';
+        }
+        
+        h += '<span style="margin-left:10px;color:#666;font-size:0.8rem;">' + ((page-1)*PER+1) + '-' + Math.min(page*PER,total) + ' из ' + total + '</span>';
+        c.innerHTML = h;
+    }
+
+    // ПОЛЬЗОВАТЕЛИ
+    function LU(p) {
+        if (!p) p = up;
+        up = p;
+        
+        console.log('LU вызвана с p=' + p);
+        
+        var c = document.getElementById('usersTable');
+        c.innerHTML = '<p class="loading">Загрузка...</p>';
+        
+        if (!allUsersCache) {
+            _s.from('users').select('*').order('surname').then(function(r) {
+                allUsersCache = r.data || [];
+                renderUsers(p);
+            });
+        } else {
+            renderUsers(p);
         }
     }
     
-    // Кнопка Вперед
-    if (page < pages) {
-        h += '<button class="page-btn" onclick="window.' + funcName + '(' + (page + 1) + ')">&gt;</button>';
-    } else {
-        h += '<button class="page-btn" disabled>&gt;</button>';
-    }
-    
-    h += '<span style="margin-left:10px;color:#666;font-size:0.8rem;">' + ((page - 1) * PER + 1) + '-' + Math.min(page * PER, total) + ' из ' + total + '</span>';
-    c.innerHTML = h;
-}
-
-// ПОЛЬЗОВАТЕЛИ (ИСПРАВЛЕНО)
-async function LU(p) {
-    // Если p не передан, используем сохраненное значение
-    if (typeof p === 'undefined' || p === null) p = up;
-    up = p;
-    
-    var c = document.getElementById('usersTable');
-    c.innerHTML = '<p class="loading">Загрузка...</p>';
-    
-    if (!allUsersCache) {
-        var r = await _s.from('users').select('*').order('surname');
-        allUsersCache = r.data || [];
-    }
-    
-    var search = (document.getElementById('userSearch')?.value || '').toLowerCase();
-    var f = allUsersCache;
-    
-    if (search) {
-        f = allUsersCache.filter(function(u) {
-            return (u.name && u.name.toLowerCase().includes(search)) || 
-                   (u.surname && u.surname.toLowerCase().includes(search)) || 
-                   (u.email && u.email.toLowerCase().includes(search));
+    function renderUsers(p) {
+        var search = (document.getElementById('userSearch')?.value || '').toLowerCase();
+        var f = allUsersCache;
+        
+        if (search) {
+            f = allUsersCache.filter(function(u) {
+                return (u.name && u.name.toLowerCase().includes(search)) || 
+                       (u.surname && u.surname.toLowerCase().includes(search)) || 
+                       (u.email && u.email.toLowerCase().includes(search));
+            });
+        }
+        
+        var total = f.length;
+        
+        if ((p - 1) * PER >= total && total > 0) {
+            p = 1;
+            up = 1;
+        }
+        
+        var from = (p - 1) * PER;
+        var pu = f.slice(from, from + PER);
+        var c = document.getElementById('usersTable');
+        
+        if (!pu.length) {
+            c.innerHTML = '<p style="color:#666;text-align:center;">Нет пользователей</p>';
+            makePagination('usersPagination', p, total, 'LU');
+            return;
+        }
+        
+        var h = '<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>';
+        
+        pu.forEach(function(u) {
+            h += '<tr>' +
+                '<td>' + u.id + '</td>' +
+                '<td>' + u.surname + ' ' + u.name + '</td>' +
+                '<td>' + u.email + '</td>' +
+                '<td>' + (u.role === 'student' ? 'Студент' : u.role === 'teacher' ? 'Преподаватель' : 'Админ') + '</td>' +
+                '<td>' +
+                    '<button class="btn btn-primary btn-sm" onclick="EU(\'' + u.id + '\')">Р</button> ' +
+                    '<button class="btn btn-danger btn-sm" onclick="DU(\'' + u.id + '\')">У</button>' +
+                '</td>' +
+            '</tr>';
         });
-    }
-    
-    var total = f.length;
-    
-    // Если страница больше чем нужно, сбрасываем на 1
-    if ((p - 1) * PER >= total && total > 0) {
-        p = 1;
-        up = 1;
-    }
-    
-    var from = (p - 1) * PER;
-    var pu = f.slice(from, from + PER);
-    
-    if (!pu.length) {
-        c.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Нет пользователей</p>';
+        
+        h += '</tbody></table>';
+        c.innerHTML = h;
         makePagination('usersPagination', p, total, 'LU');
-        return;
+        
+        console.log('Страница ' + p + ' из ' + Math.ceil(total / PER) + ', пользователей: ' + pu.length);
     }
-    
-    var h = '<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>';
-    
-    pu.forEach(function(u) {
-        h += '<tr>' +
-            '<td>' + u.id + '</td>' +
-            '<td>' + u.surname + ' ' + u.name + '</td>' +
-            '<td>' + u.email + '</td>' +
-            '<td>' + (u.role === 'student' ? 'Студент' : u.role === 'teacher' ? 'Преподаватель' : 'Админ') + '</td>' +
-            '<td style="white-space:nowrap;">' +
-                '<button class="btn btn-primary btn-sm" onclick="window.EU(\'' + u.id + '\')">Р</button> ' +
-                '<button class="btn btn-danger btn-sm" onclick="window.DU(\'' + u.id + '\')">У</button>' +
-            '</td>' +
-        '</tr>';
-    });
-    
-    h += '</tbody></table>';
-    c.innerHTML = h;
-    
-    // Создаем пагинацию
-    makePagination('usersPagination', p, total, 'LU');
-    
-    console.log('Страница ' + p + ' из ' + Math.ceil(total / PER) + ', показано ' + pu.length + ' пользователей');
-}
         async function EU(id){var r=await _s.from('users').select('*').eq('id',id).single();if(!r.data)return;var u=r.data;document.getElementById('modalTitle').textContent='Редактировать';document.getElementById('editUserId').value=u.id;document.getElementById('editName').value=u.name;document.getElementById('editSurname').value=u.surname;document.getElementById('editEmail').value=u.email;document.getElementById('editRole').value=u.role;document.getElementById('editPassword').value='';document.getElementById('userModal').classList.add('show');}
         function openAddModal(){document.getElementById('modalTitle').textContent='Добавить';document.getElementById('userForm').reset();document.getElementById('editUserId').value='';document.getElementById('userModal').classList.add('show');}
         function closeModal(){document.getElementById('userModal').classList.remove('show');}
@@ -201,7 +202,20 @@ async function LU(p) {
 
         // ИНИЦИАЛИЗАЦИЯ
         document.addEventListener('DOMContentLoaded',async function(){U=A();if(!U)return;document.getElementById('logoutBtn').addEventListener('click',L);document.querySelectorAll('.nav-tab').forEach(function(tab){tab.addEventListener('click',function(){ST(this.dataset.tab,this);});});document.querySelectorAll('.status-filter-btn').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(function(b){b.classList.remove('active');});this.classList.add('active');FF=this.dataset.filter;sp=1;LSL(1,true);});});document.getElementById('addUserBtn').addEventListener('click',openAddModal);document.getElementById('userForm').addEventListener('submit',SU);document.getElementById('addSubjectBtn').addEventListener('click',AS);document.getElementById('userSearch').addEventListener('input',function(){up=1;LU(1);});await Promise.all([LU(1),LSB(),LSL(1,true),LT(1),LST()]);UTB();});
-        window.LU = LU;window.EU=EU;window.DU=DU;window.DS=DS;window.RT=RT;window.CT=CT;window.DT=DT;window.SI=SI;window.toggleTicket=toggleTicket;window.closeInfoModal=closeInfoModal;window.openAddModal=openAddModal;window.closeModal=closeModal;
+        window.LU = LU;
+    window.LSL = LSL;
+    window.LT = LT;
+    window.EU = EU;
+    window.DU = DU;
+    window.DS = DS;
+    window.RT = RT;
+    window.CT = CT;
+    window.DT = DT;
+    window.SI = SI;
+    window.toggleTicket = toggleTicket;
+    window.closeInfoModal = closeInfoModal;
+    window.openAddModal = openAddModal;
+    window.closeModal = closeModal;
     </script>
 </body>
 </html>
