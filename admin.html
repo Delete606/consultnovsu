@@ -172,7 +172,7 @@ async function LSL(p=1, force=false) {
     
     if (!pageSlots.length) {
         c.innerHTML = '<p style="color:#666;">Нет консультаций</p>';
-        RP(document.getElementById('slotsPagination'), p, total, 'LSL');
+        renderPagination(document.getElementById('slotsPagination'), p, total, 'LSL');
         return;
     }
     
@@ -324,7 +324,7 @@ function RS(s, allB) {
         </div>`;
     }).join('');
     
-    RP(document.getElementById('ticketsPagination'),p,count||0,'LT');
+    renderPagination(document.getElementById('ticketsPagination'), p, count || 0, 'LT');
     UTB();
 }
        async function RT(id){
