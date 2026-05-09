@@ -35,10 +35,93 @@
         function A(){const s=sessionStorage.getItem('currentUser');if(!s){location.href='index.html';return null;}const u=JSON.parse(s);if(u.role!=='admin'){location.href='index.html';return null;}return u;}
         function L(){sessionStorage.removeItem('currentUser');location.href='index.html';}
         function ST(n,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(n).classList.add('active');if(n==='users')LU();if(n==='subjects')LSB();if(n==='slots')LSL();if(n==='tickets')LT();if(n==='requests')LR();if(n==='stats')LST();}
-        function RP(c,page,total,fn){if(total<=PER){c.innerHTML='';return;}const pages=Math.ceil(total/PER);let h='';h+=`<button class="page-btn" onclick="${fn}(${page-1})" ${page<=1?'disabled':''}>&lt;</button>`;for(let i=1;i<=pages;i++)h+=`<button class="page-btn ${i===page?'active':''}" onclick="${fn}(${i})">${i}</button>`;h+=`<button class="page-btn" onclick="${fn}(${page+1})" ${page>=pages?'disabled':''}>&gt;</button>`;c.innerHTML=h;}
-
+        function renderPagination(container, page, total, callbackName) {
+    if (total <= PER) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    const pages = Math.ceil(total / PER);
+    let html = '';
+    
+    // Кнопка "Назад"
+    html += `<button class="page-btn" onclick="${callbackName}(${page - 1})" ${page <= 1 ? 'disabled' : ''}>&lt;</button>`;
+    
+    // Номера страниц
+    for (let i = 1; i <= pages; i++) {
+        if (i === 1 || i === pages || (i >= page - 1 && i <= page + 1)) {
+            html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="${callbackName}(${i})">${i}</button>`;
+        } else if (i === page - 2 || i === page + 2) {
+            html += '<span class="page-btn" style="border:none;cursor:default;">...</span>';
+        }
+    }
+    
+    // Кнопка "Вперед"
+    html += `<button class="page-btn" onclick="${callbackName}(${page + 1})" ${page >= pages ? 'disabled' : ''}>&gt;</button>`;
+    
+    // Информация о количестве
+    html += `<span style="margin-left:10px;color:#666;font-size:0.8rem;align-self:center;">${(page-1)*PER+1}-${Math.min(page*PER,total)} из ${total}</span>`;
+    
+    container.innerHTML = html;
+}
         // ПОЛЬЗОВАТЕЛИ
-        async function LU(p=1){up=p;const c=document.getElementById('usersTable');c.innerHTML='<p class="loading">Загрузка...</p>';const search=(document.getElementById('userSearch')?.value||'').toLowerCase();let q=_s.from('users').select('*',{count:'exact'}).order('surname');if(search)q=q.or(`name.ilike.%${search}%,surname.ilike.%${search}%`);const from=(p-1)*PER,to=from+PER-1;const{data,count}=await q.range(from,to);if(!data?.length){c.innerHTML='<p style="color:#666;">Нет пользователей</p>';return;}c.innerHTML=`<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>${data.map(u=>`<tr><td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td><td>${u.role}</td><td><button class="btn btn-primary btn-sm" onclick="EU('${u.id}')">Р</button> <button class="btn btn-danger btn-sm" onclick="DU('${u.id}')">У</button></td></tr>`).join('')}</tbody></table>`;RP(document.getElementById('usersPagination'),p,count||0,'LU');}
+        async function LU(p=1) {
+    up = p;
+    const c = document.getElementById('usersTable');
+    c.innerHTML = '<p class="loading">Загрузка...</p>';
+    
+    const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
+    
+    // Получаем ВСЕХ пользователей (или фильтруем по поиску)
+    let query = _s.from('users').select('*').order('surname');
+    
+    const { data: allUsers } = await query;
+    
+    if (!allUsers) {
+        c.innerHTML = '<p style="color:#dc3545;">Ошибка загрузки</p>';
+        return;
+    }
+    
+    // Фильтруем по поиску если нужно
+    let filteredUsers = allUsers;
+    if (search) {
+        filteredUsers = allUsers.filter(u => 
+            (u.name && u.name.toLowerCase().includes(search)) || 
+            (u.surname && u.surname.toLowerCase().includes(search)) ||
+            (u.email && u.email.toLowerCase().includes(search))
+        );
+    }
+    
+    const total = filteredUsers.length;
+    const from = (p - 1) * PER;
+    const pageUsers = filteredUsers.slice(from, from + PER);
+    
+    if (!pageUsers.length) {
+        c.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Нет пользователей</p>';
+        document.getElementById('usersPagination').innerHTML = '';
+        return;
+    }
+    
+    // Рендерим таблицу
+    let html = '<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>';
+    
+    pageUsers.forEach(u => {
+        html += `<tr>
+            <td>${u.id}</td>
+            <td>${u.surname} ${u.name}</td>
+            <td>${u.email}</td>
+            <td>${u.role === 'student' ? 'Студент' : u.role === 'teacher' ? 'Преподаватель' : 'Админ'}</td>
+            <td style="white-space:nowrap;">
+                <button class="btn btn-primary btn-sm" onclick="EU('${u.id}')">Ред.</button>
+                <button class="btn btn-danger btn-sm" onclick="DU('${u.id}')">Уд.</button>
+            </td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    c.innerHTML = html;
+    renderPagination(document.getElementById('usersPagination'), p, total, 'LU');
+}
         async function EU(id){const{data}=await _s.from('users').select('*').eq('id',id).single();if(!data)return;document.getElementById('modalTitle').textContent='Редактировать';document.getElementById('editUserId').value=data.id;document.getElementById('editName').value=data.name;document.getElementById('editSurname').value=data.surname;document.getElementById('editEmail').value=data.email;document.getElementById('editRole').value=data.role;document.getElementById('editPassword').value='';document.getElementById('userModal').classList.add('show');}
         function OA(){document.getElementById('modalTitle').textContent='Добавить';document.getElementById('userForm').reset();document.getElementById('editUserId').value='';document.getElementById('userModal').classList.add('show');}
         function CM(){document.getElementById('userModal').classList.remove('show');}
