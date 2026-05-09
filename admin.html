@@ -40,7 +40,100 @@
         function renderPagination(c,page,total,fn){if(total<=PER){c.innerHTML='';return;}const pages=Math.ceil(total/PER);let h='';h+=`<button class="page-btn" onclick="${fn}(${page-1})" ${page<=1?'disabled':''}>&lt;</button>`;for(let i=1;i<=pages;i++){if(i===1||i===pages||(i>=page-1&&i<=page+1)){h+=`<button class="page-btn ${i===page?'active':''}" onclick="${fn}(${i})">${i}</button>`;}else if(i===page-2||i===page+2){h+='<span class="page-btn" style="border:none;cursor:default;">...</span>';}}h+=`<button class="page-btn" onclick="${fn}(${page+1})" ${page>=pages?'disabled':''}>&gt;</button>`;h+=`<span style="margin-left:10px;color:#666;font-size:0.8rem;">${(page-1)*PER+1}-${Math.min(page*PER,total)} из ${total}</span>`;c.innerHTML=h;}
 
         // ПОЛЬЗОВАТЕЛИ
-        async function LU(p=1){up=p;const c=document.getElementById('usersTable');c.innerHTML='<p class="loading">Загрузка...</p>';const search=(document.getElementById('userSearch')?.value||'').toLowerCase();const{data:all}=await _s.from('users').select('*').order('surname');if(!all){c.innerHTML='<p style="color:#dc3545;">Ошибка</p>';return;}let f=all;if(search)f=all.filter(u=>(u.name&&u.name.toLowerCase().includes(search))||(u.surname&&u.surname.toLowerCase().includes(search))||(u.email&&u.email.toLowerCase().includes(search)));const total=f.length;const from=(p-1)*PER;const pu=f.slice(from,from+PER);if(!pu.length){c.innerHTML='<p style="color:#666;">Нет пользователей</p>';renderPagination(document.getElementById('usersPagination'),p,total,'LU');return;}c.innerHTML=`<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>${pu.map(u=>`<tr><td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td><td>${u.role==='student'?'Студент':u.role==='teacher'?'Преподаватель':'Админ'}</td><td style="white-space:nowrap;"><button class="btn btn-primary btn-sm" onclick="EU('${u.id}')">Ред.</button> <button class="btn btn-danger btn-sm" onclick="DU('${u.id}')">Уд.</button></td></tr>`).join('')}</tbody></table>`;renderPagination(document.getElementById('usersPagination'),p,total,'LU');}
+        // ПОЛЬЗОВАТЕЛИ (исправленная пагинация)
+async function LU(p=1) {
+    up = p;
+    const c = document.getElementById('usersTable');
+    c.innerHTML = '<p class="loading">Загрузка...</p>';
+    
+    const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
+    const { data: all } = await _s.from('users').select('*').order('surname');
+    
+    if (!all) {
+        c.innerHTML = '<p style="color:#dc3545;">Ошибка загрузки</p>';
+        return;
+    }
+    
+    // Фильтруем
+    let filtered = all;
+    if (search) {
+        filtered = all.filter(function(u) {
+            return (u.name && u.name.toLowerCase().includes(search)) || 
+                   (u.surname && u.surname.toLowerCase().includes(search)) ||
+                   (u.email && u.email.toLowerCase().includes(search));
+        });
+    }
+    
+    const total = filtered.length;
+    
+    // Если нет результатов
+    if (total === 0) {
+        c.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Нет пользователей</p>';
+        document.getElementById('usersPagination').innerHTML = '';
+        return;
+    }
+    
+    // Вычисляем страницы
+    const from = (p - 1) * PER;
+    const pageUsers = filtered.slice(from, from + PER);
+    
+    // Рендерим таблицу
+    let html = '<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>';
+    
+    pageUsers.forEach(function(u) {
+        html += '<tr>' +
+            '<td>' + u.id + '</td>' +
+            '<td>' + u.surname + ' ' + u.name + '</td>' +
+            '<td>' + u.email + '</td>' +
+            '<td>' + (u.role === 'student' ? 'Студент' : u.role === 'teacher' ? 'Преподаватель' : 'Админ') + '</td>' +
+            '<td style="white-space:nowrap;">' +
+                '<button class="btn btn-primary btn-sm" onclick="EU(\'' + u.id + '\')">Ред.</button> ' +
+                '<button class="btn btn-danger btn-sm" onclick="DU(\'' + u.id + '\')">Уд.</button>' +
+            '</td>' +
+        '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    c.innerHTML = html;
+    
+    // Рендерим пагинацию
+    renderPaginationUsers(p, total);
+}
+
+// Отдельная функция пагинации для пользователей
+function renderPaginationUsers(page, total) {
+    var container = document.getElementById('usersPagination');
+    
+    if (total <= PER) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    var pages = Math.ceil(total / PER);
+    var html = '';
+    
+    // Кнопка Назад
+    html += '<button class="page-btn" onclick="LU(' + (page - 1) + ')" ' + (page <= 1 ? 'disabled' : '') + '>&lt;</button>';
+    
+    // Номера страниц
+    for (var i = 1; i <= pages; i++) {
+        if (i === 1 || i === pages || (i >= page - 1 && i <= page + 1)) {
+            html += '<button class="page-btn ' + (i === page ? 'active' : '') + '" onclick="LU(' + i + ')">' + i + '</button>';
+        } else if (i === page - 2 || i === page + 2) {
+            html += '<span style="padding:6px 8px;color:#999;">...</span>';
+        }
+    }
+    
+    // Кнопка Вперед
+    html += '<button class="page-btn" onclick="LU(' + (page + 1) + ')" ' + (page >= pages ? 'disabled' : '') + '>&gt;</button>';
+    
+    // Счетчик
+    var start = (page - 1) * PER + 1;
+    var end = Math.min(page * PER, total);
+    html += '<span style="margin-left:10px;color:#666;font-size:0.8rem;">' + start + '-' + end + ' из ' + total + '</span>';
+    
+    container.innerHTML = html;
+}
         async function EU(id){const{data}=await _s.from('users').select('*').eq('id',id).single();if(!data)return;document.getElementById('modalTitle').textContent='Редактировать';document.getElementById('editUserId').value=data.id;document.getElementById('editName').value=data.name;document.getElementById('editSurname').value=data.surname;document.getElementById('editEmail').value=data.email;document.getElementById('editRole').value=data.role;document.getElementById('editPassword').value='';document.getElementById('userModal').classList.add('show');}
         function openAddModal(){document.getElementById('modalTitle').textContent='Добавить';document.getElementById('userForm').reset();document.getElementById('editUserId').value='';document.getElementById('userModal').classList.add('show');}
         function closeModal(){document.getElementById('userModal').classList.remove('show');}
