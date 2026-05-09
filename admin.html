@@ -53,7 +53,60 @@
         async function DS(n){await _s.from('subjects').delete().eq('name',n);LSB();}
 
         // СЛОТЫ
-        async function LSL(p=1,force=false){sp=p;const c=document.getElementById('slotsList');c.innerHTML='<p class="loading">Загрузка...</p>';if(!slotsCache||force){const{data:sd}=await _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date',{ascending:false});const{data:bd}=await _s.from('bookings').select('*,users!bookings_student_id_fkey(name,surname)');slotsCache=sd||[];bookingsCache=bd||[];}let slots=slotsCache;if(FF!=='all')slots=slotsCache.filter(s=>s.status===FF);if(!Array.isArray(slots)){c.innerHTML='<p style="color:#dc3545;">Ошибка данных</p>';return;}const total=slots.length;const from=(p-1)*PER;const ps=slots.slice(from,from+PER);if(!ps.length){c.innerHTML='<p style="color:#666;">Нет консультаций</p>';renderPagination(document.getElementById('slotsPagination'),p,total,'LSL');return;}const a=ps.filter(s=>s.status==='active'),cm=ps.filter(s=>s.status==='completed'),cn=ps.filter(s=>s.status==='cancelled');let h='';if(a.length)h+=`<div class="status-section status-active"><h3>Активные (${slots.filter(s=>s.status==='active').length})</h3>${a.map(s=>RS(s)).join('')}</div>`;if(cm.length)h+=`<div class="status-section status-completed"><h3>Завершённые</h3>${cm.map(s=>RS(s)).join('')}</div>`;if(cn.length)h+=`<div class="status-section status-cancelled"><h3>Отменённые</h3>${cn.map(s=>RS(s)).join('')}</div>`;c.innerHTML=h;renderPagination(document.getElementById('slotsPagination'),p,total,'LSL');c.onclick=function(e){const t=e.target;if(t.classList.contains('cancel-slot-btn'))CSL(t.dataset.sid);if(t.classList.contains('delete-slot-btn'))DSL(t.dataset.sid);if(t.classList.contains('close-reg-btn'))CR(t.dataset.sid);if(t.classList.contains('info-btn'))SI(t.dataset.sid);};}
+        // СЛОТЫ (полностью исправленная)
+async function LSL(p=1, force=false) {
+    sp = p;
+    const c = document.getElementById('slotsList');
+    c.innerHTML = '<p class="loading">Загрузка...</p>';
+    
+    if (!slotsCache || force) {
+        const { data: sd } = await _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date', { ascending: false });
+        const { data: bd } = await _s.from('bookings').select('*,users!bookings_student_id_fkey(name,surname)');
+        slotsCache = sd || [];
+        bookingsCache = bd || [];
+    }
+    
+    let slots = slotsCache;
+    if (FF !== 'all') slots = slotsCache.filter(function(s) { return s.status === FF; });
+    
+    if (!Array.isArray(slots)) {
+        c.innerHTML = '<p style="color:#dc3545;">Ошибка данных</p>';
+        return;
+    }
+    
+    const total = slots.length;
+    const from = (p - 1) * PER;
+    const ps = slots.slice(from, from + PER);
+    
+    if (!ps.length) {
+        c.innerHTML = '<p style="color:#666;text-align:center;">Нет консультаций</p>';
+        // ВОТ ЗДЕСЬ БЫЛА ОШИБКА - RP вместо renderPagination
+        renderPagination(document.getElementById('slotsPagination'), p, total, 'LSL');
+        return;
+    }
+    
+    const a = ps.filter(function(s) { return s.status === 'active'; });
+    const cm = ps.filter(function(s) { return s.status === 'completed'; });
+    const cn = ps.filter(function(s) { return s.status === 'cancelled'; });
+    
+    let h = '';
+    if (a.length) h += '<div class="status-section status-active"><h3>Активные (' + slots.filter(function(s) { return s.status === 'active'; }).length + ')</h3>' + a.map(function(s) { return RS(s); }).join('') + '</div>';
+    if (cm.length) h += '<div class="status-section status-completed"><h3>Завершённые</h3>' + cm.map(function(s) { return RS(s); }).join('') + '</div>';
+    if (cn.length) h += '<div class="status-section status-cancelled"><h3>Отменённые</h3>' + cn.map(function(s) { return RS(s); }).join('') + '</div>';
+    
+    c.innerHTML = h;
+    
+    // И ЗДЕСЬ ТОЖЕ renderPagination
+    renderPagination(document.getElementById('slotsPagination'), p, total, 'LSL');
+    
+    c.onclick = function(e) {
+        var t = e.target;
+        if (t.classList.contains('cancel-slot-btn')) CSL(t.dataset.sid);
+        if (t.classList.contains('delete-slot-btn')) DSL(t.dataset.sid);
+        if (t.classList.contains('close-reg-btn')) CR(t.dataset.sid);
+        if (t.classList.contains('info-btn')) SI(t.dataset.sid);
+    };
+}
         function RS(s){const sb=(bookingsCache||[]).filter(b=>b.slot_id===s.id),ab=sb.filter(b=>b.status==='active');return`<div class="slot-card"><div class="slot-header"><div><strong style="font-size:1.05rem;">${s.subject}</strong><p style="color:#666;font-size:0.85rem;margin-top:2px;">${s.date} | ${s.time_start}-${s.time_end}</p></div><span class="badge-status badge-${s.status}">${s.status==='active'?'Активна':s.status==='completed'?'Завершена':'Отменена'}</span></div><div class="slot-info"><span><strong>Преподаватель:</strong> ${s.users?.surname||''} ${s.users?.name||''}</span><span><strong>Формат:</strong> ${s.format} ${s.room?'| Ауд. '+s.room:''}</span><span><strong>Записано:</strong> <span style="color:#0056a7;font-weight:700;">${ab.length}</span>/${s.max_students}</span></div><div class="slot-actions"><button class="btn btn-outline btn-sm info-btn" data-sid="${s.id}">Инфо</button>${s.status==='active'?`<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${s.id}">Закрыть</button><button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${s.id}">Отменить</button>`:''}<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="${s.id}">Удалить</button></div></div>`;}
         async function SI(sid){const slot=slotsCache.find(s=>s.id===sid);if(!slot)return;const sb=(bookingsCache||[]).filter(b=>b.slot_id===sid);const ab=sb.filter(b=>b.status==='active');const tp=slot.topics||[];let h=`<div class="info-row"><span class="info-label">Предмет</span><span class="info-value">${slot.subject}</span></div>`;h+=`<div class="info-row"><span class="info-label">Преподаватель</span><span class="info-value">${slot.users?.surname||''} ${slot.users?.name||''}</span></div>`;h+=`<div class="info-row"><span class="info-label">Дата и время</span><span class="info-value">${slot.date} ${slot.time_start}-${slot.time_end}</span></div>`;h+=`<div class="info-row"><span class="info-label">Формат</span><span class="info-value">${slot.format} ${slot.room?'| Ауд. '+slot.room:''}</span></div>`;h+=`<div class="info-row"><span class="info-label">Записано</span><span class="info-value">${ab.length}/${slot.max_students}</span></div>`;h+=`<div class="info-row"><span class="info-label">Статус</span><span class="info-value">${slot.status==='active'?'Активна':slot.status==='completed'?'Завершена':'Отменена'}</span></div>`;if(slot.description)h+=`<div class="info-row"><span class="info-label">Описание</span><span class="info-value">${slot.description}</span></div>`;if(tp.length){h+=`<div style="margin-top:12px;"><strong>Темы:</strong><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">${tp.map(t=>`<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration||'?'} мин</span></span>`).join('')}</div></div>`;}if(sb.length){h+=`<div style="margin-top:12px;"><strong>Студенты (${ab.length} активных):</strong>${sb.map(b=>`<div class="student-list-item"><div class="student-avatar">${(b.users?.name||'?')[0]}${(b.users?.surname||'?')[0]}</div><div><strong>${b.users?.surname||''} ${b.users?.name||''}</strong><br><small style="color:#0056a7;">Тема: ${b.topic||'Не указана'}</small><br><small style="color:${b.status==='active'?'#0f6e3f':'#c62828'};">${b.status==='active'?'Активна':b.cancelled_by==='admin'?'Отменена админом':b.cancelled_by==='teacher'?'Отменена преподавателем':'Отменена студентом'}</small></div></div>`).join('')}</div>`;}document.getElementById('infoContent').innerHTML=h;document.getElementById('infoModal').classList.add('show');}
         function closeInfoModal(){document.getElementById('infoModal').classList.remove('show');}
