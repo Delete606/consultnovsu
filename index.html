@@ -2,142 +2,54 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>НовГУ - Вход в систему консультаций</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; }
-        
-        .auth-body {
-            background: linear-gradient(135deg, #003d7c 0%, #0056a7 50%, #0066cc 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .auth-container { max-width: 480px; width: 100%; }
-        
-        .auth-header { text-align: center; margin-bottom: 30px; }
-        .auth-logo { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; }
-        .auth-logo img { width: 64px; height: 64px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .auth-header h1 { color: white; font-size: 1.5rem; margin-bottom: 5px; }
-        .auth-header p { color: rgba(255,255,255,0.9); font-size: 0.95rem; }
-        
-        .auth-card {
-            background: white;
-            border-radius: 20px;
-            padding: 35px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-        
-        .role-selector {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 25px;
-            background: #f0f4fc;
-            padding: 6px;
-            border-radius: 12px;
-        }
-        
-        .role-btn {
-            padding: 12px 8px;
-            border: none;
-            background: transparent;
-            border-radius: 9px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            color: #666;
-        }
-        
+        body { font-family: 'Segoe UI', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .auth-body { background: linear-gradient(135deg, #003d7c 0%, #0056a7 50%, #0066cc 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-container { max-width: 420px; width: 100%; }
+        .auth-header { text-align: center; margin-bottom: 25px; }
+        .auth-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px; }
+        .auth-logo img { width: 56px; height: 56px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .auth-header h1 { color: white; font-size: 1.3rem; margin-bottom: 4px; }
+        .auth-header p { color: rgba(255,255,255,0.9); font-size: 0.9rem; }
+        .auth-card { background: white; border-radius: 18px; padding: 28px 22px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+        .role-selector { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 22px; background: #f0f4fc; padding: 5px; border-radius: 12px; }
+        .role-btn { padding: 10px 6px; border: none; background: transparent; border-radius: 9px; cursor: pointer; font-weight: 500; font-size: 0.8rem; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #666; }
         .role-btn:hover { background: rgba(0,86,167,0.05); color: #0056a7; }
         .role-btn.active { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: #0056a7; font-weight: 600; }
-        .role-icon { font-size: 1.5rem; }
-        
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #333; }
-        .form-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #dce3f0;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-        .form-group input:focus { outline: none; border-color: #0056a7; box-shadow: 0 0 0 3px rgba(0,86,167,0.1); }
+        .role-icon { font-size: 1.3rem; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: #333; font-size: 0.9rem; }
+        .form-group input { width: 100%; padding: 11px 14px; border: 2px solid #dce3f0; border-radius: 10px; font-size: 0.95rem; transition: all 0.3s; background: #fafbfc; }
+        .form-group input:focus { outline: none; border-color: #0056a7; background: white; box-shadow: 0 0 0 3px rgba(0,86,167,0.1); }
         .form-group input.error { border-color: #dc3545; background: #fff5f5; }
-        
-        .error-message {
-            color: #dc3545;
-            background: #fff0f0;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            display: none;
-            border-left: 4px solid #dc3545;
-        }
+        .error-message { color: #dc3545; background: #fff0f0; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; font-size: 0.85rem; display: none; border-left: 4px solid #dc3545; }
         .error-message.show { display: block; animation: slideIn 0.3s ease; }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-block;
-        }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; display: inline-block; }
         .btn-primary { background: #0056a7; color: white; }
         .btn-primary:hover { background: #003d7c; }
         .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-        .btn-full { width: 100%; padding: 14px; font-size: 1.1rem; margin-top: 10px; border-radius: 10px; }
-        
-        .demo-section { margin-top: 25px; padding-top: 25px; border-top: 1px solid #e0e6ed; }
-        .demo-section h4 { color: #666; margin-bottom: 15px; font-size: 0.9rem; }
-        .demo-credentials { display: flex; flex-direction: column; gap: 10px; }
-        
-        .demo-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 1px solid transparent;
-        }
-        .demo-item:hover { background: #e8f0fe; border-color: #0056a7; transform: translateX(5px); }
+        .btn-full { width: 100%; padding: 13px; font-size: 1rem; margin-top: 8px; border-radius: 10px; }
+        .demo-section { margin-top: 22px; padding-top: 20px; border-top: 1px solid #e0e6ed; }
+        .demo-section h4 { color: #666; margin-bottom: 12px; font-size: 0.85rem; }
+        .demo-credentials { display: flex; flex-direction: column; gap: 8px; }
+        .demo-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8f9fa; border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; font-size: 0.85rem; }
+        .demo-item:hover { background: #e8f0fe; border-color: #0056a7; }
         .demo-item:active { transform: scale(0.98); }
         .demo-role { font-weight: 600; color: #0056a7; }
-        .demo-login { color: #666; font-size: 0.85rem; }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
+        .demo-login { color: #666; font-size: 0.8rem; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
         .shake { animation: shake 0.5s; }
-        
-        @media (max-width: 500px) {
-            .auth-card { padding: 25px 20px; }
-            .role-btn { font-size: 0.8rem; padding: 10px 5px; }
+        @media (max-width: 400px) {
+            .auth-card { padding: 22px 16px; border-radius: 14px; }
+            .role-btn { font-size: 0.75rem; padding: 8px 4px; }
+            .role-icon { font-size: 1.1rem; }
+            .auth-header h1 { font-size: 1.1rem; }
+            .auth-logo img { width: 48px; height: 48px; }
         }
     </style>
 </head>
@@ -145,61 +57,29 @@
     <div class="auth-container">
         <div class="auth-header">
             <div class="auth-logo">
-                <img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22%3E%3Crect fill=%22%23ffd700%22 width=%2264%22 height=%2264%22 rx=%2212%22/%3E%3Ctext fill=%22%23003d7c%22 x=%2250%25%22 y=%2255%25%22 font-size=%2228%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'">
+                <img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22%3E%3Crect fill=%22%23ffd700%22 width=%2256%22 height=%2256%22 rx=%2212%22/%3E%3Ctext fill=%22%23003d7c%22 x=%2250%25%22 y=%2255%25%22 font-size=%2224%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'">
             </div>
             <h1>Новгородский государственный университет</h1>
             <p>Система записи на консультации</p>
         </div>
-
         <div class="auth-card">
             <div class="role-selector" id="roleSelector">
-                <button class="role-btn active" data-role="student">
-                    
-                    <span>Студент</span>
-                </button>
-                <button class="role-btn" data-role="teacher">
-                   
-                    <span>Преподаватель</span>
-                </button>
-                <button class="role-btn" data-role="admin">
-                    
-                    <span>Админ</span>
-                </button>
+                <button class="role-btn active" data-role="student"><span class="role-icon">S</span><span>Студент</span></button>
+                <button class="role-btn" data-role="teacher"><span class="role-icon">P</span><span>Преподаватель</span></button>
+                <button class="role-btn" data-role="admin"><span class="role-icon">A</span><span>Админ</span></button>
             </div>
-
             <form id="loginForm">
-                <div class="form-group">
-                    <label for="loginEmail">Email</label>
-                    <input type="email" id="loginEmail" required placeholder="ivan@student.novsu.ru" value="student@novsu.ru">
-                </div>
-                
-                <div class="form-group">
-                    <label for="loginPassword">Пароль</label>
-                    <input type="password" id="loginPassword" required placeholder="Введите пароль" value="123">
-                </div>
-                
+                <div class="form-group"><label for="loginEmail">Email</label><input type="email" id="loginEmail" required placeholder="ivan@student.novsu.ru" value="student@novsu.ru"></div>
+                <div class="form-group"><label for="loginPassword">Пароль</label><input type="password" id="loginPassword" required placeholder="Введите пароль" value="123"></div>
                 <div id="loginError" class="error-message"></div>
-                
-                <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
-                    Войти в систему
-                </button>
+                <button type="submit" class="btn btn-primary btn-full" id="loginBtn">Войти в систему</button>
             </form>
-
             <div class="demo-section">
                 <h4>Демо-доступы (нажмите для автозаполнения):</h4>
                 <div class="demo-credentials">
-                    <div class="demo-item" data-email="student@novsu.ru" data-password="123" data-role="student">
-                        <span class="demo-role">Студент</span>
-                        <span class="demo-login">student@novsu.ru / 123</span>
-                    </div>
-                    <div class="demo-item" data-email="teacher@novsu.ru" data-password="123" data-role="teacher">
-                        <span class="demo-role">Преподаватель</span>
-                        <span class="demo-login">teacher@novsu.ru / 123</span>
-                    </div>
-                    <div class="demo-item" data-email="admin@novsu.ru" data-password="admin" data-role="admin">
-                        <span class="demo-role">Администратор</span>
-                        <span class="demo-login">admin@novsu.ru / admin</span>
-                    </div>
+                    <div class="demo-item" data-email="student@novsu.ru" data-password="123" data-role="student"><span class="demo-role">Студент</span><span class="demo-login">student@novsu.ru / 123</span></div>
+                    <div class="demo-item" data-email="teacher@novsu.ru" data-password="123" data-role="teacher"><span class="demo-role">Преподаватель</span><span class="demo-login">teacher@novsu.ru / 123</span></div>
+                    <div class="demo-item" data-email="admin@novsu.ru" data-password="admin" data-role="admin"><span class="demo-role">Администратор</span><span class="demo-login">admin@novsu.ru / admin</span></div>
                 </div>
             </div>
         </div>
@@ -207,173 +87,48 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // ЕДИНСТВЕННОЕ объявление
-        const _supabase = window.supabase.createClient(
-            'https://bimdjjmdxoygeucdzlmu.supabase.co',
-            'sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje'
-        );
-        
-        let selectedRole = 'student';
+        const _supabase = window.supabase.createClient('https://bimdjjmdxoygeucdzlmu.supabase.co','sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje');
+        let selectedRole='student';
 
-        // Проверяем, не авторизован ли уже пользователь
-        (function() {
-            const saved = sessionStorage.getItem('currentUser');
-            if (saved) {
-                try {
-                    const user = JSON.parse(saved);
-                    if (user && user.role) {
-                        redirectByRole(user.role);
-                    }
-                } catch(e) {}
-            }
-        })();
+        (function(){const s=sessionStorage.getItem('currentUser');if(s){try{const u=JSON.parse(s);if(u&&u.role)redirectByRole(u.role);}catch(e){}}})();
 
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('loginEmail').value = 'student@novsu.ru';
-            document.getElementById('loginPassword').value = '123';
-            
-            document.querySelectorAll('.role-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    selectedRole = this.dataset.role;
-                    
-                    const emailInput = document.getElementById('loginEmail');
-                    const passInput = document.getElementById('loginPassword');
-                    
-                    switch(selectedRole) {
-                        case 'student': emailInput.value = 'student@novsu.ru'; passInput.value = '123'; break;
-                        case 'teacher': emailInput.value = 'teacher@novsu.ru'; passInput.value = '123'; break;
-                        case 'admin': emailInput.value = 'admin@novsu.ru'; passInput.value = 'admin'; break;
-                    }
-                    
-                    hideError();
-                    clearInputErrors();
-                });
-            });
-            
-            document.querySelectorAll('.demo-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    document.getElementById('loginEmail').value = this.dataset.email;
-                    document.getElementById('loginPassword').value = this.dataset.password;
-                    
-                    document.querySelectorAll('.role-btn').forEach(btn => {
-                        btn.classList.remove('active');
-                        if (btn.dataset.role === this.dataset.role) btn.classList.add('active');
-                    });
-                    selectedRole = this.dataset.role;
-                    
-                    hideError();
-                    clearInputErrors();
-                    
-                    this.style.backgroundColor = '#e8f0fe';
-                    setTimeout(() => { this.style.backgroundColor = ''; }, 300);
-                });
-            });
-            
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
-            
-            document.getElementById('loginEmail').addEventListener('input', function() {
-                this.classList.remove('error');
-                hideError();
-            });
-            
-            document.getElementById('loginPassword').addEventListener('input', function() {
-                this.classList.remove('error');
-                hideError();
-            });
+        document.addEventListener('DOMContentLoaded',function(){
+            document.getElementById('loginEmail').value='student@novsu.ru';
+            document.getElementById('loginPassword').value='123';
+            document.querySelectorAll('.role-btn').forEach(btn=>{btn.addEventListener('click',function(){document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');selectedRole=this.dataset.role;const ei=document.getElementById('loginEmail'),pi=document.getElementById('loginPassword');switch(selectedRole){case'student':ei.value='student@novsu.ru';pi.value='123';break;case'teacher':ei.value='teacher@novsu.ru';pi.value='123';break;case'admin':ei.value='admin@novsu.ru';pi.value='admin';break;}hideError();clearErrors();});});
+            document.querySelectorAll('.demo-item').forEach(item=>{item.addEventListener('click',function(){document.getElementById('loginEmail').value=this.dataset.email;document.getElementById('loginPassword').value=this.dataset.password;document.querySelectorAll('.role-btn').forEach(btn=>{btn.classList.remove('active');if(btn.dataset.role===this.dataset.role)btn.classList.add('active');});selectedRole=this.dataset.role;hideError();clearErrors();this.style.backgroundColor='#e8f0fe';setTimeout(()=>{this.style.backgroundColor='';},300);});});
+            document.getElementById('loginForm').addEventListener('submit',handleLogin);
+            document.getElementById('loginEmail').addEventListener('input',function(){this.classList.remove('error');hideError();});
+            document.getElementById('loginPassword').addEventListener('input',function(){this.classList.remove('error');hideError();});
         });
 
-        async function handleLogin(e) {
+        async function handleLogin(e){
             e.preventDefault();
-            
-            const emailInput = document.getElementById('loginEmail');
-            const passwordInput = document.getElementById('loginPassword');
-            const loginBtn = document.getElementById('loginBtn');
-            
-            const email = emailInput.value.trim();
-            const password = passwordInput.value.trim();
-            
-            hideError();
-            clearInputErrors();
-            
-            if (!email) { emailInput.classList.add('error'); showError('Введите email'); return; }
-            if (!password) { passwordInput.classList.add('error'); showError('Введите пароль'); return; }
-            
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'Проверка...';
-            
-            try {
-                const { data, error } = await _supabase
-                    .from('users')
-                    .select('*')
-                    .eq('email', email)
-                    .eq('password', password)
-                    .eq('role', selectedRole)
-                    .eq('active', true)
-                    .single();
-                
-                if (error || !data) {
-                    const { data: userByEmail } = await _supabase.from('users').select('role').eq('email', email).single();
-                    
-                    if (!userByEmail) {
-                        showError('Пользователь с таким email не найден');
-                    } else if (userByEmail.role !== selectedRole) {
-                        const roleNames = { student: 'Студент', teacher: 'Преподаватель', admin: 'Администратор' };
-                        showError(`Этот email принадлежит роли "${roleNames[userByEmail.role] || userByEmail.role}"`);
-                    } else {
-                        showError('Неверный пароль');
-                    }
-                    
-                    emailInput.classList.add('error');
-                    passwordInput.classList.add('error');
-                    document.getElementById('loginForm').classList.add('shake');
-                    setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 500);
-                    
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = 'Войти в систему';
-                    return;
+            const ei=document.getElementById('loginEmail'),pi=document.getElementById('loginPassword'),btn=document.getElementById('loginBtn');
+            const email=ei.value.trim(),password=pi.value.trim();
+            hideError();clearErrors();
+            if(!email){ei.classList.add('error');showError('Введите email');return;}
+            if(!password){pi.classList.add('error');showError('Введите пароль');return;}
+            btn.disabled=true;btn.textContent='Проверка...';
+            try{
+                const{data,error}=await _supabase.from('users').select('*').eq('email',email).eq('password',password).eq('role',selectedRole).eq('active',true).single();
+                if(error||!data){
+                    const{data:ube}=await _supabase.from('users').select('role').eq('email',email).single();
+                    if(!ube)showError('Пользователь не найден');
+                    else if(ube.role!==selectedRole){const rn={student:'Студент',teacher:'Преподаватель',admin:'Администратор'};showError(`Этот email принадлежит роли "${rn[ube.role]||ube.role}"`);}
+                    else showError('Неверный пароль');
+                    ei.classList.add('error');pi.classList.add('error');document.getElementById('loginForm').classList.add('shake');setTimeout(()=>document.getElementById('loginForm').classList.remove('shake'),500);
+                    btn.disabled=false;btn.textContent='Войти в систему';return;
                 }
-                
-                const sessionUser = {
-                    id: data.id, name: data.name, surname: data.surname,
-                    email: data.email, role: data.role, phone: data.phone || ''
-                };
-                
-                sessionStorage.setItem('currentUser', JSON.stringify(sessionUser));
+                sessionStorage.setItem('currentUser',JSON.stringify({id:data.id,name:data.name,surname:data.surname,email:data.email,role:data.role,phone:data.phone||''}));
                 redirectByRole(data.role);
-                
-            } catch(err) {
-                showError('Ошибка соединения с сервером');
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Войти в систему';
-            }
+            }catch(err){showError('Ошибка соединения');btn.disabled=false;btn.textContent='Войти в систему';}
         }
 
-        function showError(message) {
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = message;
-            errorDiv.classList.add('show');
-        }
-
-        function hideError() {
-            document.getElementById('loginError').classList.remove('show');
-        }
-
-        function clearInputErrors() {
-            document.getElementById('loginEmail').classList.remove('error');
-            document.getElementById('loginPassword').classList.remove('error');
-        }
-
-        function redirectByRole(role) {
-            const basePath = window.location.pathname.replace(/[^/]*$/, '');
-            switch(role) {
-                case 'student': window.location.href = basePath + 'student.html'; break;
-                case 'teacher': window.location.href = basePath + 'teacher.html'; break;
-                case 'admin': window.location.href = basePath + 'admin.html'; break;
-                default: window.location.href = basePath + 'index.html';
-            }
-        }
+        function showError(m){const d=document.getElementById('loginError');d.textContent=m;d.classList.add('show');}
+        function hideError(){document.getElementById('loginError').classList.remove('show');}
+        function clearErrors(){document.getElementById('loginEmail').classList.remove('error');document.getElementById('loginPassword').classList.remove('error');}
+        function redirectByRole(r){const bp=window.location.pathname.replace(/[^/]*$/,'');switch(r){case'student':window.location.href=bp+'student.html';break;case'teacher':window.location.href=bp+'teacher.html';break;case'admin':window.location.href=bp+'admin.html';break;default:window.location.href=bp+'index.html';}}
     </script>
 </body>
 </html>
