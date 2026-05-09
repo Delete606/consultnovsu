@@ -676,6 +676,223 @@ async function createSimpleRepeatingSlots(baseSlot, repeatType) {
     loadDashboard();
     loadTeacherSlots();
 }
+        // Загрузка чата поддержки
+async function loadTeacherSupport() {
+    const container = document.getElementById('supportChat');
+    
+    if (!currentUser) {
+        container.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Пользователь не авторизован</p>';
+        return;
+    }
+    
+    // Загружаем тикеты преподавателя
+    const { data: tickets, error } = await _supabase
+        .from('tickets')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+    
+    if (error) {
+        console.error('Ошибка загрузки тикетов:', error);
+        container.innerHTML = '<p style="color:#dc3545;">Ошибка загрузки сообщений</p>';
+        return;
+    }
+    
+    if (!tickets || tickets.length === 0) {
+        container.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Нет обращений. Напишите нам, и мы поможем!</p>';
+        return;
+    }
+    
+    container.innerHTML = tickets.map(ticket => {
+        const messages = ticket.messages || [];
+        const isOpen = ticket.status === 'open';
+        
+        return `
+            <div style="margin-bottom:20px;border:1px solid #e8edf5;border-radius:12px;padding:15px;background:white;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #e8edf5;">
+                    <div>
+                        <strong style="color:#0056a7;">Обращение #${ticket.id.slice(-6)}</strong>
+                        <span style="margin-left:10px;color:${isOpen ? '#0f6e3f' : '#666'};font-weight:600;">
+                            ${isOpen ? 'Открыто' : 'Закрыто'}
+                        </span>
+                    </div>
+                    <small style="color:#666;">${new Date(ticket.created_at).toLocaleString('ru-RU')}</small>
+                </div>
+                
+                <div style="max-height:300px;overflow-y:auto;margin-bottom:15px;">
+                    ${messages.map(msg => `
+                        <div style="margin-bottom:10px;display:flex;flex-direction:column;align-items:${msg.sender === 'admin' ? 'flex-start' : 'flex-end'};">
+                            <div style="padding:10px 14px;border-radius:12px;max-width:80%;background:${msg.sender === 'admin' ? '#f0f4fc' : '#0056a7'};color:${msg.sender === 'admin' ? '#333' : 'white'};">
+                                <p style="margin:0;">${msg.text}</p>
+                            </div>
+                            <small style="color:#666;margin-top:4px;font-size:0.75rem;">
+                                ${msg.sender === 'admin' ? 'Администратор' : 'Вы'} · ${new Date(msg.timestamp).toLocaleString('ru-RU')}
+                            </small>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${isOpen ? `
+                    <div style="display:flex;gap:10px;">
+                        <input type="text" id="teacherReply_${ticket.id}" placeholder="Введите ответ..." 
+                               style="flex:1;padding:10px;border:2px solid #e0e6ed;border-radius:10px;">
+                        <button class="btn btn-primary btn-sm" onclick="replyTeacherTicket('${ticket.id}')">
+                            Отправить
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+    
+    console.log('Загружено тикетов:', tickets.length);
+}
+
+// Отправка сообщения в поддержку
+async function sendTeacherSupport() {
+    const messageInput = document.getElementById('teacherSupportMsg');
+    const message = messageInput?.value.trim();
+    
+    if (!message) {
+        alert('Введите сообщение!');
+        return;
+    }
+    
+    // Ищем открытый тикет
+    const { data: existingTickets } = await _supabase
+        .from('tickets')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .eq('status', 'open')
+        .limit(1);
+    
+    let ticket;
+    
+    if (existingTickets && existingTickets.length > 0) {
+        // Добавляем сообщение в существующий тикет
+        ticket = existingTickets[0];
+        const messages = [...(ticket.messages || []), {
+            sender: 'user',
+            text: message,
+            timestamp: new Date().toISOString()
+        }];
+        
+        const { error } = await _supabase
+            .from('tickets')
+            .update({ messages })
+            .eq('id', ticket.id);
+        
+        if (error) {
+            console.error('Ошибка обновления тикета:', error);
+            alert('Ошибка отправки');
+            return;
+        }
+    } else {
+        // Создаем новый тикет
+        const { data, error } = await _supabase
+            .from('tickets')
+            .insert({
+                id: 't' + Date.now(),
+                user_id: currentUser.id,
+                status: 'open',
+                messages: [{
+                    sender: 'user',
+                    text: message,
+                    timestamp: new Date().toISOString()
+                }],
+                created_at: new Date().toISOString()
+            })
+            .select();
+        
+        if (error) {
+            console.error('Ошибка создания тикета:', error);
+            alert('Ошибка отправки');
+            return;
+        }
+        
+        // Уведомляем админов
+        const { data: admins } = await _supabase
+            .from('users')
+            .select('id')
+            .eq('role', 'admin');
+        
+        if (admins) {
+            for (const admin of admins) {
+                await sendNotification(
+                    admin.id,
+                    `Новое обращение от преподавателя ${currentUser.surname} ${currentUser.name}`,
+                    'support',
+                    data?.[0]?.id
+                );
+            }
+        }
+    }
+    
+    // Очищаем поле
+    messageInput.value = '';
+    
+    // Обновляем чат
+    await loadTeacherSupport();
+    
+    console.log('Сообщение отправлено');
+}
+
+// Ответ в тикете
+async function replyTeacherTicket(ticketId) {
+    const input = document.getElementById('teacherReply_' + ticketId);
+    const message = input?.value.trim();
+    
+    if (!message) {
+        alert('Введите сообщение!');
+        return;
+    }
+    
+    // Получаем текущий тикет
+    const { data: ticket } = await _supabase
+        .from('tickets')
+        .select('*')
+        .eq('id', ticketId)
+        .single();
+    
+    if (!ticket) return;
+    
+    // Добавляем сообщение
+    const messages = [...(ticket.messages || []), {
+        sender: 'user',
+        text: message,
+        timestamp: new Date().toISOString()
+    }];
+    
+    const { error } = await _supabase
+        .from('tickets')
+        .update({ messages })
+        .eq('id', ticketId);
+    
+    if (error) {
+        console.error('Ошибка:', error);
+        return;
+    }
+    
+    // Уведомляем админов
+    const { data: admins } = await _supabase
+        .from('users')
+        .select('id')
+        .eq('role', 'admin');
+    
+    if (admins) {
+        for (const admin of admins) {
+            await sendNotification(
+                admin.id,
+                `Новый ответ от преподавателя ${currentUser.surname} ${currentUser.name}`,
+                'support',
+                ticketId
+            );
+        }
+    }
+    
+    await loadTeacherSupport();
+    console.log('Ответ отправлен');
+}
         async function loadTopics() {
     console.log('Загружаю темы...');
     
