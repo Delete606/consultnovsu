@@ -6,12 +6,6 @@
     <title>Админ-панель - Консультации НовГУ</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .pagination { display: flex; gap: 6px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
-        .page-btn { padding: 6px 12px; border: 2px solid #e0e6ed; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: #666; }
-        .page-btn.active { background: #0056a7; color: white; border-color: #0056a7; }
-        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    </style>
 </head>
 <body>
     <div class="header"><div class="container header-content"><div class="logo"><img src="images.png" alt="НовГУ" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2238%22 height=%2238%22%3E%3Crect fill=%22%23003d7c%22 width=%2238%22 height=%2238%22 rx=%228%22/%3E%3Ctext fill=%22white%22 x=%2250%25%22 y=%2255%25%22 font-size=%2216%22 text-anchor=%22middle%22 dy=%22.3em%22 font-weight=%22bold%22%3EНовГУ%3C/text%3E%3C/svg%3E'"><div class="logo-text"><h2>Администрирование</h2><span>управление системой</span></div></div><div class="user-info"><span class="badge">Администратор</span><button id="logoutBtn" class="btn btn-outline btn-sm">Выйти</button></div></div></div>
@@ -24,24 +18,27 @@
         <div id="requests" class="tab-content"><h2>Запросы</h2><div id="requestsList"><p class="loading">Загрузка...</p></div></div>
         <div id="stats" class="tab-content"><div class="stats"><div class="stat-card"><h3>Пользователей</h3><p id="totalUsers" class="stat-number">0</p></div><div class="stat-card"><h3>Консультаций</h3><p id="totalSlots" class="stat-number">0</p></div><div class="stat-card"><h3>Записей</h3><p id="totalBookings" class="stat-number">0</p></div></div></div>
     </main>
+
+    <!-- Модалка пользователя -->
     <div id="userModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="CM()">&times;</span><h3 id="modalTitle">Добавить</h3><form id="userForm"><input type="hidden" id="editUserId"><div class="form-group"><label>Имя</label><input type="text" id="editName" required></div><div class="form-group"><label>Фамилия</label><input type="text" id="editSurname" required></div><div class="form-group"><label>Email</label><input type="email" id="editEmail" required></div><div class="form-group"><label>Роль</label><select id="editRole"><option value="student">Студент</option><option value="teacher">Преподаватель</option><option value="admin">Админ</option></select></div><div class="form-group"><label>Пароль</label><input type="password" id="editPassword" placeholder="Оставьте пустым"></div><button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button></form></div></div>
+
+    <!-- Модалка информации о слоте -->
+    <div id="infoModal" class="modal"><div class="modal-content" style="max-width:550px;"><span class="close-modal" onclick="CIM()">&times;</span><h3 style="margin-bottom:16px;">Информация о консультации</h3><div id="infoContent"></div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const _s = window.supabase.createClient('https://bimdjjmdxoygeucdzlmu.supabase.co','sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje');
-        let U=null,FF='all';
-        // Пагинация
-        let up=1,sp=1,tp=1;
+        let U=null,FF='all',up=1,sp=1,tp=1;
         const PER=5;
+        let slotsCache=null,bookingsCache=null;
 
         function A(){const s=sessionStorage.getItem('currentUser');if(!s){location.href='index.html';return null;}const u=JSON.parse(s);if(u.role!=='admin'){location.href='index.html';return null;}return u;}
         function L(){sessionStorage.removeItem('currentUser');location.href='index.html';}
         function ST(n,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(n).classList.add('active');if(n==='users')LU();if(n==='subjects')LSB();if(n==='slots')LSL();if(n==='tickets')LT();if(n==='requests')LR();if(n==='stats')LST();}
         function RP(c,page,total,fn){if(total<=PER){c.innerHTML='';return;}const pages=Math.ceil(total/PER);let h='';h+=`<button class="page-btn" onclick="${fn}(${page-1})" ${page<=1?'disabled':''}>&lt;</button>`;for(let i=1;i<=pages;i++)h+=`<button class="page-btn ${i===page?'active':''}" onclick="${fn}(${i})">${i}</button>`;h+=`<button class="page-btn" onclick="${fn}(${page+1})" ${page>=pages?'disabled':''}>&gt;</button>`;c.innerHTML=h;}
 
-        // ПОЛЬЗОВАТЕЛИ (с пагинацией)
+        // ПОЛЬЗОВАТЕЛИ
         async function LU(p=1){up=p;const c=document.getElementById('usersTable');c.innerHTML='<p class="loading">Загрузка...</p>';const search=(document.getElementById('userSearch')?.value||'').toLowerCase();let q=_s.from('users').select('*',{count:'exact'}).order('surname');if(search)q=q.or(`name.ilike.%${search}%,surname.ilike.%${search}%`);const from=(p-1)*PER,to=from+PER-1;const{data,count}=await q.range(from,to);if(!data?.length){c.innerHTML='<p style="color:#666;">Нет пользователей</p>';return;}c.innerHTML=`<table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead><tbody>${data.map(u=>`<tr><td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td><td>${u.role}</td><td><button class="btn btn-primary btn-sm" onclick="EU('${u.id}')">Р</button> <button class="btn btn-danger btn-sm" onclick="DU('${u.id}')">У</button></td></tr>`).join('')}</tbody></table>`;RP(document.getElementById('usersPagination'),p,count||0,'LU');}
-
         async function EU(id){const{data}=await _s.from('users').select('*').eq('id',id).single();if(!data)return;document.getElementById('modalTitle').textContent='Редактировать';document.getElementById('editUserId').value=data.id;document.getElementById('editName').value=data.name;document.getElementById('editSurname').value=data.surname;document.getElementById('editEmail').value=data.email;document.getElementById('editRole').value=data.role;document.getElementById('editPassword').value='';document.getElementById('userModal').classList.add('show');}
         function OA(){document.getElementById('modalTitle').textContent='Добавить';document.getElementById('userForm').reset();document.getElementById('editUserId').value='';document.getElementById('userModal').classList.add('show');}
         function CM(){document.getElementById('userModal').classList.remove('show');}
@@ -53,14 +50,42 @@
         async function AS(){const n=document.getElementById('newSubject').value.trim();if(!n)return;await _s.from('subjects').insert({name:n});document.getElementById('newSubject').value='';LSB();}
         async function DS(n){await _s.from('subjects').delete().eq('name',n);LSB();}
 
-        // СЛОТЫ (с пагинацией)
-        async function LSL(p=1){sp=p;let q=_s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)',{count:'exact'}).order('date',{ascending:false});if(FF!=='all')q=q.eq('status',FF);const from=(p-1)*PER,to=from+PER-1;const{data,count}=await q.range(from,to);const c=document.getElementById('slotsList');if(!data?.length){c.innerHTML='<p style="color:#666;">Нет консультаций</p>';return;}const a=data.filter(s=>s.status==='active'),cm=data.filter(s=>s.status==='completed'),cn=data.filter(s=>s.status==='cancelled');let h='';if(a.length)h+=`<div class="status-section status-active"><h3>Активные</h3>${a.map(RS).join('')}</div>`;if(cm.length)h+=`<div class="status-section status-completed"><h3>Завершённые</h3>${cm.map(RS).join('')}</div>`;if(cn.length)h+=`<div class="status-section status-cancelled"><h3>Отменённые</h3>${cn.map(RS).join('')}</div>`;c.innerHTML=h;RP(document.getElementById('slotsPagination'),p,count||0,'LSL');c.addEventListener('click',function(e){const t=e.target;if(t.classList.contains('cancel-slot-btn'))CSL(t.dataset.sid);if(t.classList.contains('delete-slot-btn'))DSL(t.dataset.sid);if(t.classList.contains('close-reg-btn'))CR(t.dataset.sid);});}
-        function RS(s){return`<div class="slot-card"><div style="display:flex;justify-content:space-between;"><strong>${s.subject}</strong><span class="badge-status badge-${s.status}">${s.status}</span></div><p style="color:#666;font-size:0.85rem;">${s.users?.surname||''} ${s.users?.name||''} | ${s.date} ${s.time_start}-${s.time_end} | ${s.format} | Мест: ${s.max_students}</p><div style="display:flex;gap:6px;margin-top:8px;">${s.status==='active'?`<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${s.id}">Закрыть</button><button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${s.id}">Отменить</button>`:''}<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="${s.id}">Удалить</button></div></div>`;}
-        async function CSL(id){if(!confirm('Отменить?'))return;await _s.from('slots').update({status:'cancelled'}).eq('id',id);await _s.from('bookings').update({status:'cancelled',cancelled_by:'admin'}).eq('slot_id',id).eq('status','active');LSL(sp);}
-        async function DSL(id){if(!confirm('Удалить?'))return;await _s.from('slots').delete().eq('id',id);LSL(sp);}
-        async function CR(id){const{data:s}=await _s.from('slots').select('*').eq('id',id).single();const{count}=await _s.from('bookings').select('*',{count:'exact'}).eq('slot_id',id).eq('status','active');if(!confirm(`Закрыть? Записано: ${count}/${s.max_students}`))return;await _s.from('slots').update({max_students:count>0?count:1}).eq('id',id);LSL(sp);}
+        // СЛОТЫ (оптимизировано с кешированием)
+        async function LSL(p=1,force=false){sp=p;const c=document.getElementById('slotsList');c.innerHTML='<p class="loading">Загрузка...</p>';
+            // Кешируем слоты и записи
+            if(!slotsCache||force){slotsCache=await _s.from('slots').select('*,users!slots_teacher_id_fkey(name,surname)').order('date',{ascending:false});bookingsCache=await _s.from('bookings').select('*,users!bookings_student_id_fkey(name,surname)');}
+            let slots=slotsCache;if(FF!=='all')slots=slotsCache.filter(s=>s.status===FF);
+            const total=slots.length;const from=(p-1)*PER;const pageSlots=slots.slice(from,from+PER);
+            if(!pageSlots.length){c.innerHTML='<p style="color:#666;">Нет консультаций</p>';RP(document.getElementById('slotsPagination'),p,total,'LSL');return;}
+            const a=pageSlots.filter(s=>s.status==='active'),cm=pageSlots.filter(s=>s.status==='completed'),cn=pageSlots.filter(s=>s.status==='cancelled');let h='';
+            if(a.length)h+=`<div class="status-section status-active"><h3>Активные (${slots.filter(s=>s.status==='active').length})</h3>${a.map(s=>RS(s,bookingsCache)).join('')}</div>`;
+            if(cm.length)h+=`<div class="status-section status-completed"><h3>Завершённые</h3>${cm.map(s=>RS(s,bookingsCache)).join('')}</div>`;
+            if(cn.length)h+=`<div class="status-section status-cancelled"><h3>Отменённые</h3>${cn.map(s=>RS(s,bookingsCache)).join('')}</div>`;
+            c.innerHTML=h;RP(document.getElementById('slotsPagination'),p,total,'LSL');
+            c.addEventListener('click',function(e){const t=e.target;if(t.classList.contains('cancel-slot-btn'))CSL(t.dataset.sid);if(t.classList.contains('delete-slot-btn'))DSL(t.dataset.sid);if(t.classList.contains('close-reg-btn'))CR(t.dataset.sid);if(t.classList.contains('info-btn'))SI(t.dataset.sid);});
+        }
+        function RS(s,allB){const sb=(allB||[]).filter(b=>b.slot_id===s.id),ab=sb.filter(b=>b.status==='active');return`<div class="slot-card"><div class="slot-header"><div><strong style="font-size:1.05rem;">${s.subject}</strong><p style="color:#666;font-size:0.85rem;margin-top:2px;">${s.date} | ${s.time_start}-${s.time_end}</p></div><span class="badge-status badge-${s.status}">${s.status==='active'?'Активна':s.status==='completed'?'Завершена':'Отменена'}</span></div><div class="slot-info"><span><strong>Преподаватель:</strong> ${s.users?.surname||''} ${s.users?.name||''}</span><span><strong>Формат:</strong> ${s.format} ${s.room?'| Ауд. '+s.room:''}</span><span><strong>Записано:</strong> <span style="color:#0056a7;font-weight:700;">${ab.length}</span>/${s.max_students}</span></div><div class="slot-actions"><button class="btn btn-outline btn-sm info-btn" data-sid="${s.id}">Инфо</button>${s.status==='active'?`<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${s.id}">Закрыть</button><button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${s.id}">Отменить</button>`:''}<button class="btn btn-danger btn-sm delete-slot-btn" data-sid="${s.id}">Удалить</button></div></div>`;}
+        
+        // ИНФО-ОКНО
+        async function SI(sid){const slot=slotsCache.find(s=>s.id===sid);if(!slot)return;const sb=(bookingsCache||[]).filter(b=>b.slot_id===sid);const ab=sb.filter(b=>b.status==='active');const tp=slot.topics||[];
+            let h=`<div class="info-row"><span class="info-label">Предмет</span><span class="info-value">${slot.subject}</span></div>`;
+            h+=`<div class="info-row"><span class="info-label">Преподаватель</span><span class="info-value">${slot.users?.surname||''} ${slot.users?.name||''}</span></div>`;
+            h+=`<div class="info-row"><span class="info-label">Дата</span><span class="info-value">${slot.date}</span></div>`;
+            h+=`<div class="info-row"><span class="info-label">Время</span><span class="info-value">${slot.time_start} - ${slot.time_end}</span></div>`;
+            h+=`<div class="info-row"><span class="info-label">Формат</span><span class="info-value">${slot.format} ${slot.room?'| Ауд. '+slot.room:''}</span></div>`;
+            h+=`<div class="info-row"><span class="info-label">Мест</span><span class="info-value">${ab.length}/${slot.max_students}</span></div>`;
+            h+=`<div class="info-row"><span class="info-label">Статус</span><span class="info-value">${slot.status==='active'?'Активна':slot.status==='completed'?'Завершена':'Отменена'}</span></div>`;
+            if(slot.description)h+=`<div class="info-row"><span class="info-label">Описание</span><span class="info-value">${slot.description}</span></div>`;
+            if(tp.length){h+=`<div style="margin-top:12px;"><strong style="color:#1a2b3c;">Темы:</strong><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">${tp.map(t=>`<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration||'?'} мин</span></span>`).join('')}</div></div>`;}
+            if(sb.length){h+=`<div style="margin-top:12px;"><strong style="color:#1a2b3c;">Записанные студенты (${ab.length} активных):</strong>${sb.map(b=>`<div class="student-list-item"><div class="student-avatar">${(b.users?.name||'?')[0]}${(b.users?.surname||'?')[0]}</div><div><strong>${b.users?.surname||''} ${b.users?.name||''}</strong><br><small style="color:#0056a7;">Тема: ${b.topic||'Не указана'}</small><br><small style="color:${b.status==='active'?'#0f6e3f':'#c62828'};">${b.status==='active'?'Активна':b.cancelled_by==='admin'?'Отменена админом':b.cancelled_by==='teacher'?'Отменена преподавателем':'Отменена студентом'}</small></div></div>`).join('')}</div>`;}
+            document.getElementById('infoContent').innerHTML=h;document.getElementById('infoModal').classList.add('show');}
+        function CIM(){document.getElementById('infoModal').classList.remove('show');}
 
-        // ТИКЕТЫ (с пагинацией)
+        async function CSL(id){if(!confirm('Отменить?'))return;await _s.from('slots').update({status:'cancelled'}).eq('id',id);await _s.from('bookings').update({status:'cancelled',cancelled_by:'admin'}).eq('slot_id',id).eq('status','active');slotsCache=null;LSL(sp,true);}
+        async function DSL(id){if(!confirm('Удалить?'))return;await _s.from('slots').delete().eq('id',id);slotsCache=null;LSL(sp,true);}
+        async function CR(id){const{data:s}=await _s.from('slots').select('*').eq('id',id).single();const{count}=await _s.from('bookings').select('*',{count:'exact'}).eq('slot_id',id).eq('status','active');if(!confirm(`Закрыть? Записано: ${count}/${s.max_students}`))return;await _s.from('slots').update({max_students:count>0?count:1}).eq('id',id);slotsCache=null;LSL(sp,true);}
+
+        // ТИКЕТЫ
         async function LT(p=1){tp=p;const c=document.getElementById('ticketsList');c.innerHTML='<p class="loading">Загрузка...</p>';const from=(p-1)*PER,to=from+PER-1;const{data,count}=await _s.from('tickets').select('*',{count:'exact'}).order('created_at',{ascending:false}).range(from,to);if(!data?.length){c.innerHTML='<p style="color:#666;">Нет тикетов</p>';UTB();return;}const uids=[...new Set(data.map(t=>t.user_id))];const{data:users}=await _s.from('users').select('id,name,surname,role').in('id',uids);const um={};(users||[]).forEach(u=>{um[u.id]=u;});c.innerHTML=data.map(t=>{const u=um[t.user_id],ms=t.messages||[],open=t.status==='open';return`<div class="ticket-card"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div><strong>${u?u.surname+' '+u.name:'?'}</strong><span style="color:#666;margin-left:8px;">(${u?.role||'?'})</span><span style="margin-left:8px;color:${open?'#0f6e3f':'#c62828'};">${open?'Открыт':'Закрыт'}</span></div><small>${new Date(t.created_at).toLocaleString('ru-RU')}</small></div><div style="margin-bottom:8px;">${ms.map(m=>`<div class="chat-message ${m.sender}"><div class="chat-bubble ${m.sender}">${m.text}</div></div>`).join('')}</div>${open?`<div style="display:flex;gap:6px;"><input type="text" id="AR_${t.id}" placeholder="Ответ..." style="flex:1;padding:8px;border:2px solid #e0e6ed;border-radius:8px;"><button class="btn btn-primary btn-sm" onclick="RT('${t.id}')">Отв</button><button class="btn btn-sm" onclick="CT('${t.id}')" style="background:#ffc107;">Закр</button></div>`:''}<button class="btn btn-danger btn-sm" onclick="DT('${t.id}')" style="margin-top:6px;">Удалить</button></div>`;}).join('');RP(document.getElementById('ticketsPagination'),p,count||0,'LT');UTB();}
         async function RT(id){const i=document.getElementById('AR_'+id),msg=i?.value.trim();if(!msg)return;const{data:t}=await _s.from('tickets').select('messages,user_id').eq('id',id).single();if(!t)return;const ms=[...(t.messages||[]),{sender:'admin',text:msg,timestamp:new Date().toISOString()}];await _s.from('tickets').update({messages:ms}).eq('id',id);await _s.from('notifications').insert({id:'n'+Date.now(),user_id:t.user_id,message:'Администратор ответил на обращение',type:'support',is_read:false});LT(tp);}
         async function CT(id){await _s.from('tickets').update({status:'closed'}).eq('id',id);LT(tp);}
@@ -73,8 +98,8 @@
         // СТАТИСТИКА
         async function LST(){const[{count:u},{count:s},{count:b}]=await Promise.all([_s.from('users').select('*',{count:'exact',head:true}),_s.from('slots').select('*',{count:'exact',head:true}),_s.from('bookings').select('*',{count:'exact',head:true})]);document.getElementById('totalUsers').textContent=u||0;document.getElementById('totalSlots').textContent=s||0;document.getElementById('totalBookings').textContent=b||0;}
 
-        document.addEventListener('DOMContentLoaded',async()=>{U=A();if(!U)return;document.getElementById('logoutBtn').addEventListener('click',L);document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',function(){ST(this.dataset.tab,this);}));document.querySelectorAll('.status-filter-btn').forEach(btn=>btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');FF=this.dataset.filter;sp=1;LSL();}));document.getElementById('addUserBtn').addEventListener('click',OA);document.getElementById('userForm').addEventListener('submit',SU);document.getElementById('addSubjectBtn').addEventListener('click',AS);document.getElementById('userSearch').addEventListener('input',()=>{up=1;LU();});await Promise.all([LU(),LSB(),LSL(),LT(),LST()]);UTB();});
-        window.EU=EU;window.DU=DU;window.DS=DS;window.CS=CSL;window.DSL=DSL;window.RT=RT;window.CT=CT;window.DT=DT;
+        document.addEventListener('DOMContentLoaded',async()=>{U=A();if(!U)return;document.getElementById('logoutBtn').addEventListener('click',L);document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',function(){ST(this.dataset.tab,this);}));document.querySelectorAll('.status-filter-btn').forEach(btn=>btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');FF=this.dataset.filter;sp=1;LSL(1,false);}));document.getElementById('addUserBtn').addEventListener('click',OA);document.getElementById('userForm').addEventListener('submit',SU);document.getElementById('addSubjectBtn').addEventListener('click',AS);document.getElementById('userSearch').addEventListener('input',()=>{up=1;LU();});await Promise.all([LU(),LSB(),LSL(1,true),LT(),LST()]);UTB();});
+        window.EU=EU;window.DU=DU;window.DS=DS;window.RT=RT;window.CT=CT;window.DT=DT;window.SI=SI;window.CIM=CIM;
     </script>
 </body>
 </html>
