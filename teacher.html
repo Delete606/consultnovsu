@@ -155,54 +155,100 @@
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
 
         async function loadDashboard() {
-            // В функции loadDashboard, когда отображаешь upcoming слоты
-container.innerHTML = upcoming.map(slot => {
-    const bookings = DB.getSlotBookings ? [] : [];
-    const free = slot.max_students - (bookings?.length || 0);
-    let st = 'Свободно', sc = '#0f6e3f';
-    if (free <= 0) { st = 'Нет мест'; sc = '#dc3545'; }
-    else if (free <= 2) { st = 'Почти заполнено'; sc = '#ffc107'; }
+    if (!currentUser) return;
     
-    const topics = slot.topics || [];
+    const { data: slots } = await _supabase
+        .from('slots')
+        .select('*')
+        .eq('teacher_id', currentUser.id);
     
-    return `
-        <div class="consultation-card">
-            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
-                <h3 style="margin:0;color:#1a2b3c;">${slot.subject}</h3>
-                <span style="color:${sc};font-weight:600;font-size:0.9rem;">${st}</span>
-            </div>
-            
-            <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;color:#666;font-size:0.9rem;">
-                <span>📅 ${formatDate(slot.date)}</span>
-                <span>⏰ ${slot.time_start} - ${slot.time_end}</span>
-                <span>📍 ${slot.format === 'очно' ? 'Ауд. ' + slot.room : 'Онлайн'}</span>
-                <span>👥 ${bookings?.length || 0}/${slot.max_students}</span>
-            </div>
-            
-            ${topics.length > 0 ? `
-                <div style="margin:15px 0;">
-                    <div style="font-size:0.85rem;color:#666;margin-bottom:8px;">Темы консультации:</div>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                        ${topics.map(topic => `
-                            <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:linear-gradient(135deg,#f0f6ff,#e8f0fe);border:1px solid #c5d9f2;border-radius:12px;transition:all 0.2s;">
-                                <div style="width:8px;height:8px;background:#0056a7;border-radius:50%;"></div>
-                                <span style="font-weight:500;color:#0056a7;">${topic.name}</span>
-                                <span style="background:#0056a7;color:white;padding:2px 8px;border-radius:8px;font-size:0.75rem;">${topic.duration} мин.</span>
-                            </div>
-                        `).join('')}
+    const slotIds = (slots || []).map(s => s.id);
+    const { count: totalB } = await _supabase
+        .from('bookings')
+        .select('*', { count: 'exact' })
+        .eq('status', 'active')
+        .in('slot_id', slotIds.length ? slotIds : ['none']);
+    
+    document.getElementById('totalSlots').textContent = slots?.length || 0;
+    document.getElementById('totalBookings').textContent = totalB || 0;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todaySlots = (slots || []).filter(s => s.date === today && s.status === 'active');
+    document.getElementById('todaySlots').textContent = todaySlots.length;
+    
+    // Ближайшие консультации
+    const upcoming = (slots || [])
+        .filter(s => s.status === 'active' && s.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date) || a.time_start.localeCompare(b.time_start))
+        .slice(0, 5);
+    
+    // ВОТ ЗДЕСЬ БЫЛА ОШИБКА - не была объявлена переменная container
+    const upcomingContainer = document.getElementById('upcomingSlots');
+    
+    if (!upcoming.length) {
+        upcomingContainer.innerHTML = '<div class="consultation-card"><p style="color:#666;text-align:center;padding:20px;">Нет предстоящих консультаций</p></div>';
+        return;
+    }
+    
+    // Получаем количество записавшихся для каждого слота
+    const upcomingIds = upcoming.map(s => s.id);
+    const { data: bookings } = await _supabase
+        .from('bookings')
+        .select('slot_id')
+        .eq('status', 'active')
+        .in('slot_id', upcomingIds);
+    
+    const countMap = {};
+    (bookings || []).forEach(b => {
+        countMap[b.slot_id] = (countMap[b.slot_id] || 0) + 1;
+    });
+    
+    upcomingContainer.innerHTML = upcoming.map(slot => {
+        const free = slot.max_students - (countMap[slot.id] || 0);
+        let st = 'Свободно', sc = '#0f6e3f';
+        if (free <= 0) { st = 'Нет мест'; sc = '#dc3545'; }
+        else if (free <= 2) { st = 'Почти заполнено'; sc = '#ffc107'; }
+        
+        const topics = slot.topics || [];
+        
+        return `
+            <div class="consultation-card">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+                    <h3 style="margin:0;color:#1a2b3c;">${slot.subject}</h3>
+                    <span style="color:${sc};font-weight:600;font-size:0.9rem;">${st}</span>
+                </div>
+                
+                <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;color:#666;font-size:0.9rem;">
+                    <span>${formatDate(slot.date)}</span>
+                    <span>${slot.time_start} - ${slot.time_end}</span>
+                    <span>${slot.format === 'очно' ? 'Ауд. ' + slot.room : 'Онлайн'}</span>
+                    <span>Записано: ${countMap[slot.id] || 0}/${slot.max_students}</span>
+                </div>
+                
+                ${topics.length > 0 ? `
+                    <div style="margin:15px 0;">
+                        <div style="font-size:0.85rem;color:#666;margin-bottom:8px;">Темы консультации:</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                            ${topics.map(topic => `
+                                <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:linear-gradient(135deg,#f0f6ff,#e8f0fe);border:1px solid #c5d9f2;border-radius:12px;">
+                                    <div style="width:8px;height:8px;background:#0056a7;border-radius:50%;"></div>
+                                    <span style="font-weight:500;color:#0056a7;">${topic.name}</span>
+                                    <span style="background:#0056a7;color:white;padding:2px 8px;border-radius:8px;font-size:0.75rem;">${topic.duration} мин.</span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                </div>
-            ` : ''}
-            
-            ${slot.description ? `
-                <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px;color:#666;font-size:0.9rem;">
-                    📝 ${slot.description}
-                </div>
-            ` : ''}
-        </div>
-    `;
-}).join('');
-        }
+                ` : ''}
+                
+                ${slot.description ? `
+                    <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px;color:#666;font-size:0.9rem;">
+                        ${slot.description}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
 
         async function loadTeacherSlots() {
             let query = _supabase.from('slots').select('*').eq('teacher_id', currentUser.id).order('date', { ascending: false });
