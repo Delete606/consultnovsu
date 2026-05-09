@@ -226,3 +226,26 @@ td { padding: 8px; border-bottom: 1px solid #e8edf5; font-size: 0.8rem; }
 .student-list-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #e8edf5; }
 .student-list-item:last-child { border-bottom: none; }
 .student-avatar { width: 32px; height: 32px; background: linear-gradient(135deg,#0056a7,#003d7c); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+
+/* ========== ПАГИНАЦИЯ ========== */
+.pagination { display: flex; gap: 6px; justify-content: center; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+.page-btn { padding: 6px 12px; border: 2px solid #e0e6ed; background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: #666; }
+.page-btn.active { background: #0056a7; color: white; border-color: #0056a7; }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ========== ТИКЕТЫ (дополнительно) ========== */
+.ticket-arrow { display: inline-block; transition: transform 0.3s; font-size: 1.2rem; color: #999; cursor: pointer; user-select: none; }
+.ticket-body { display: none; }
+.ticket-header-row { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.ticket-avatar { width: 40px; height: 40px; background: linear-gradient(135deg,#0056a7,#003d7c); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+.ticket-info { flex: 1; min-width: 0; }
+.ticket-meta { text-align: right; flex-shrink: 0; }
+
+/* ========== ИНФО-МОДАЛКА ========== */
+.info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e8edf5; font-size: 0.9rem; }
+.info-row:last-child { border-bottom: none; }
+.info-label { color: #666; font-weight: 500; min-width: 130px; }
+.info-value { color: #1a2b3c; font-weight: 600; text-align: right; flex: 1; }
+.student-list-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #e8edf5; }
+.student-list-item:last-child { border-bottom: none; }
+.student-avatar { width: 32px; height: 32px; background: linear-gradient(135deg,#0056a7,#003d7c); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
