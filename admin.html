@@ -45,7 +45,7 @@
         
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #333; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e0e6ed; border-radius: 10px; font-size: 14px; background: #fafbfc; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 2px solid #e0e6ed; border-radius: 10px; font-size: 14px; background: #fafbfc; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
         .status-filters { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
@@ -66,8 +66,6 @@
         .badge-completed { background: #e3f2fd; color: #0056a7; }
         .badge-cancelled { background: #ffebee; color: #c62828; }
         
-        .topic-chip { padding: 8px 16px; background: #f0f6ff; border: 1px solid #c5d9f2; border-radius: 20px; font-size: 0.9rem; color: #0056a7; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; margin: 4px; }
-        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
         .modal.show { display: flex; }
         .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative; }
@@ -77,7 +75,6 @@
         th { background: #f0f4fc; padding: 14px; text-align: left; font-weight: 600; color: #003d7c; }
         td { padding: 12px 14px; border-bottom: 1px solid #e8edf5; }
         
-        .badge-notif { background: #dc3545; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 5px; display: none; }
         .loading { text-align: center; padding: 40px; color: #666; }
     </style>
 </head>
@@ -123,6 +120,10 @@
         <div id="subjects" class="tab-content">
             <div class="card">
                 <h2>Предметы</h2>
+                <div style="display:flex;gap:10px;margin-bottom:20px;">
+                    <input type="text" id="newSubject" placeholder="Название предмета" style="flex:1;padding:12px;border:2px solid #e0e6ed;border-radius:10px;">
+                    <button id="addSubjectBtn" class="btn btn-primary">+ Добавить</button>
+                </div>
                 <div id="subjectsList"><p class="loading">Загрузка...</p></div>
             </div>
         </div>
@@ -138,15 +139,8 @@
             <div id="slotsList"><p class="loading">Загрузка...</p></div>
         </div>
 
-        <div id="tickets" class="tab-content">
-            <h2>Тикеты</h2>
-            <div id="ticketsList"><p class="loading">Загрузка...</p></div>
-        </div>
-
-        <div id="requests" class="tab-content">
-            <h2>Запросы</h2>
-            <div id="requestsList"><p class="loading">Загрузка...</p></div>
-        </div>
+        <div id="tickets" class="tab-content"><h2>Тикеты</h2><div id="ticketsList"><p class="loading">Загрузка...</p></div></div>
+        <div id="requests" class="tab-content"><h2>Запросы</h2><div id="requestsList"><p class="loading">Загрузка...</p></div></div>
 
         <div id="stats" class="tab-content">
             <div class="stats">
@@ -175,16 +169,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Конфигурация Supabase
-        const SUPABASE_URL = 'https://bimdjjmdxoygeucdzlmu.supabase.co/rest/v1/';
+        // Конфигурация Supabase (один раз)
+        const SUPABASE_URL = 'https://bimdjjmdxoygeucdzlmu.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_NPy8IPzsq37ts76xKbsCDQ_hZNIwUje';
-        
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let currentUser = null;
         let currentFilter = 'all';
 
-        // Проверка авторизации
         function checkAuth() {
             const saved = sessionStorage.getItem('currentUser');
             if (!saved) { window.location.href = 'index.html'; return null; }
@@ -193,40 +185,113 @@
             return user;
         }
 
-        // Загрузка данных
+        function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+
+        // Загрузка пользователей
         async function loadUsers() {
             const { data, error } = await supabase.from('users').select('*').order('surname');
             if (error) { console.error(error); return; }
             
             const search = document.getElementById('userSearch')?.value.toLowerCase() || '';
-            const users = data.filter(u => !search || u.name.toLowerCase().includes(search) || u.surname.toLowerCase().includes(search) || u.email.toLowerCase().includes(search));
+            const users = (data || []).filter(u => !search || u.name.toLowerCase().includes(search) || u.surname.toLowerCase().includes(search));
             
             document.getElementById('usersTable').innerHTML = `
-                <table>
-                    <thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th>Действия</th></tr></thead>
-                    <tbody>${users.map(u => `
-                        <tr>
-                            <td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td>
-                            <td>${u.role}</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm" onclick="editUser('${u.id}')">Ред.</button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Уд.</button>
-                            </td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
+                <table><thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th>Действия</th></tr></thead>
+                <tbody>${users.map(u => `
+                    <tr><td>${u.id}</td><td>${u.surname} ${u.name}</td><td>${u.email}</td><td>${u.role}</td>
+                    <td><button class="btn btn-primary btn-sm" onclick="editUser('${u.id}')">Ред.</button> <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Уд.</button></td></tr>
+                `).join('')}</tbody></table>
             `;
         }
 
+        async function editUser(id) {
+            const { data } = await supabase.from('users').select('*').eq('id', id).single();
+            if (!data) return;
+            document.getElementById('modalTitle').textContent = 'Редактировать';
+            document.getElementById('editUserId').value = data.id;
+            document.getElementById('editName').value = data.name;
+            document.getElementById('editSurname').value = data.surname;
+            document.getElementById('editEmail').value = data.email;
+            document.getElementById('editRole').value = data.role;
+            document.getElementById('editPassword').value = '';
+            document.getElementById('userModal').classList.add('show');
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Добавить';
+            document.getElementById('userForm').reset();
+            document.getElementById('editUserId').value = '';
+            document.getElementById('userModal').classList.add('show');
+        }
+
+        function closeModal() { document.getElementById('userModal').classList.remove('show'); }
+
+        async function saveUser(e) {
+            e.preventDefault();
+            const id = document.getElementById('editUserId').value;
+            const data = {
+                name: document.getElementById('editName').value,
+                surname: document.getElementById('editSurname').value,
+                email: document.getElementById('editEmail').value,
+                role: document.getElementById('editRole').value,
+                active: true
+            };
+            
+            if (id) {
+                const pass = document.getElementById('editPassword').value;
+                if (pass) data.password = pass;
+                await supabase.from('users').update(data).eq('id', id);
+            } else {
+                data.id = 'u' + Date.now();
+                data.password = document.getElementById('editPassword').value || '123';
+                await supabase.from('users').insert(data);
+            }
+            
+            closeModal();
+            loadUsers();
+            loadStats();
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Удалить?')) return;
+            await supabase.from('users').delete().eq('id', id);
+            loadUsers();
+            loadStats();
+        }
+
+        // Предметы
+        async function loadSubjects() {
+            const { data } = await supabase.from('subjects').select('*').order('name');
+            document.getElementById('subjectsList').innerHTML = (data || []).map(s => `
+                <div style="display:flex;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:5px;">
+                    <span>${s.name}</span>
+                    <button class="btn btn-danger btn-sm" onclick="deleteSubject('${s.name}')">Удалить</button>
+                </div>
+            `).join('') || '<p style="color:#666;">Нет предметов</p>';
+        }
+
+        async function addSubject() {
+            const name = document.getElementById('newSubject').value.trim();
+            if (!name) return;
+            await supabase.from('subjects').insert({ name });
+            document.getElementById('newSubject').value = '';
+            loadSubjects();
+        }
+
+        async function deleteSubject(name) {
+            await supabase.from('subjects').delete().eq('name', name);
+            loadSubjects();
+        }
+
+        // Слоты
         async function loadSlots() {
             let query = supabase.from('slots').select('*, users!slots_teacher_id_fkey(name, surname)').order('date', { ascending: false });
             if (currentFilter !== 'all') query = query.eq('status', currentFilter);
             
-            const { data, error } = await query;
-            if (error) { console.error(error); return; }
-            
+            const { data } = await query;
             const container = document.getElementById('slotsList');
-            if (!data.length) { container.innerHTML = '<p style="color:#666;text-align:center;">Нет консультаций</p>'; return; }
+            
+            if (!data?.length) { container.innerHTML = '<p style="color:#666;text-align:center;">Нет консультаций</p>'; return; }
             
             const active = data.filter(s => s.status === 'active');
             const completed = data.filter(s => s.status === 'completed');
@@ -238,25 +303,49 @@
             if (cancelled.length) html += `<div class="status-section status-cancelled"><h3>Отменённые (${cancelled.length})</h3>${cancelled.map(renderSlot).join('')}</div>`;
             
             container.innerHTML = html;
+            
+            document.querySelectorAll('.cancel-slot-btn').forEach(b => b.addEventListener('click', () => cancelSlot(b.dataset.sid)));
+            document.querySelectorAll('.delete-slot-btn').forEach(b => b.addEventListener('click', () => deleteSlot(b.dataset.sid)));
+            document.querySelectorAll('.close-reg-btn').forEach(b => b.addEventListener('click', () => closeRegistration(b.dataset.sid)));
         }
 
         function renderSlot(slot) {
-            return `
-                <div class="slot-card">
-                    <div style="display:flex;justify-content:space-between;">
-                        <strong>${slot.subject}</strong>
-                        <span class="badge-status badge-${slot.status}">${slot.status}</span>
-                    </div>
-                    <p style="color:#666;">Преподаватель: ${slot.users?.surname || ''} ${slot.users?.name || ''} | ${slot.date} ${slot.time_start}-${slot.time_end}</p>
-                    <p style="color:#666;">Формат: ${slot.format} | Мест: ${slot.max_students}</p>
-                    <div style="display:flex;gap:10px;margin-top:10px;">
-                        ${slot.status === 'active' ? `<button class="btn btn-primary btn-sm" onclick="editSlot('${slot.id}')">Ред.</button><button class="btn btn-danger btn-sm" onclick="cancelSlot('${slot.id}')">Отм.</button>` : ''}
-                        <button class="btn btn-danger btn-sm" onclick="deleteSlot('${slot.id}')">Уд.</button>
-                    </div>
+            return `<div class="slot-card">
+                <div style="display:flex;justify-content:space-between;">
+                    <strong>${slot.subject}</strong>
+                    <span class="badge-status badge-${slot.status}">${slot.status}</span>
                 </div>
-            `;
+                <p style="color:#666;">${slot.users?.surname || ''} ${slot.users?.name || ''} | ${slot.date} ${slot.time_start}-${slot.time_end}</p>
+                <p style="color:#666;">${slot.format} ${slot.room ? '| Ауд. '+slot.room : ''} | Мест: ${slot.max_students}</p>
+                <div style="display:flex;gap:10px;margin-top:10px;">
+                    ${slot.status === 'active' ? `<button class="btn btn-warning btn-sm close-reg-btn" data-sid="${slot.id}">Закрыть запись</button><button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${slot.id}">Отменить</button>` : ''}
+                    <button class="btn btn-danger btn-sm delete-slot-btn" data-sid="${slot.id}">Удалить</button>
+                </div>
+            </div>`;
         }
 
+        async function cancelSlot(id) {
+            if (!confirm('Отменить?')) return;
+            await supabase.from('slots').update({ status: 'cancelled' }).eq('id', id);
+            await supabase.from('bookings').update({ status: 'cancelled', cancelled_by: 'admin' }).eq('slot_id', id).eq('status', 'active');
+            loadSlots();
+        }
+
+        async function deleteSlot(id) {
+            if (!confirm('Удалить?')) return;
+            await supabase.from('slots').delete().eq('id', id);
+            loadSlots();
+        }
+
+        async function closeRegistration(id) {
+            const { data: slot } = await supabase.from('slots').select('*').eq('id', id).single();
+            const { count } = await supabase.from('bookings').select('*', { count: 'exact' }).eq('slot_id', id).eq('status', 'active');
+            if (!confirm(`Закрыть запись? Записано: ${count}/${slot.max_students}`)) return;
+            await supabase.from('slots').update({ max_students: count > 0 ? count : 1 }).eq('id', id);
+            loadSlots();
+        }
+
+        // Статистика
         async function loadStats() {
             const { count: users } = await supabase.from('users').select('*', { count: 'exact', head: true });
             const { count: slots } = await supabase.from('slots').select('*', { count: 'exact', head: true });
@@ -267,48 +356,25 @@
             document.getElementById('totalBookings').textContent = bookings || 0;
         }
 
-        // Действия
-        function editUser(id) { /* реализация */ }
-        async function deleteUser(id) {
-            if (confirm('Удалить?')) {
-                await supabase.from('users').delete().eq('id', id);
-                loadUsers();
-            }
-        }
-        async function cancelSlot(id) {
-            if (confirm('Отменить?')) {
-                await supabase.from('slots').update({ status: 'cancelled' }).eq('id', id);
-                loadSlots();
-            }
-        }
-        async function deleteSlot(id) {
-            if (confirm('Удалить?')) {
-                await supabase.from('slots').delete().eq('id', id);
-                loadSlots();
-            }
+        function switchTab(name, el) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            if (el) el.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            if (name === 'users') loadUsers();
+            if (name === 'subjects') loadSubjects();
+            if (name === 'slots') loadSlots();
+            if (name === 'stats') loadStats();
         }
 
-        // Инициализация
         document.addEventListener('DOMContentLoaded', async () => {
             currentUser = checkAuth();
             if (!currentUser) return;
             
-            document.getElementById('logoutBtn').addEventListener('click', () => {
-                sessionStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
-            });
+            document.getElementById('logoutBtn').addEventListener('click', logout);
             
             document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                    document.getElementById(this.dataset.tab).classList.add('active');
-                    
-                    if (this.dataset.tab === 'users') loadUsers();
-                    if (this.dataset.tab === 'slots') loadSlots();
-                    if (this.dataset.tab === 'stats') loadStats();
-                });
+                tab.addEventListener('click', function() { switchTab(this.dataset.tab, this); });
             });
             
             document.querySelectorAll('.status-filter-btn').forEach(btn => {
@@ -320,7 +386,13 @@
                 });
             });
             
+            document.getElementById('addUserBtn').addEventListener('click', openAddModal);
+            document.getElementById('userForm').addEventListener('submit', saveUser);
+            document.getElementById('addSubjectBtn').addEventListener('click', addSubject);
+            document.getElementById('userSearch').addEventListener('input', loadUsers);
+            
             loadUsers();
+            loadSubjects();
             loadSlots();
             loadStats();
         });
