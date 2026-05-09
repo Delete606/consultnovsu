@@ -61,9 +61,143 @@
         async function UNB(){const{count}=await _s.from('notifications').select('*',{count:'exact',head:true}).eq('user_id',U.id).eq('is_read',false);const b=document.getElementById('notifBadge');if(b){b.textContent=count||0;b.style.display=count>0?'inline':'none';}}
 
         // СТАТИСТИКА
-        async function LST(){const{data:slots}=await _s.from('slots').select('date').eq('teacher_id',U.id);const c=document.getElementById('statsContainer');if(!slots?.length){c.innerHTML='<p style="color:#666;">Нет данных</p>';return;}const days={},dn=['вс','пн','вт','ср','чт','пт','сб'];slots.forEach(s=>{const d=dn[new Date(s.date).getDay()];days[d]=(days[d]||0)+1;});c.innerHTML=`<div class="card"><h4>По дням</h4>${Object.entries(days).map(([d,c2])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;">${d}<strong>${c2}</strong></div>`).join('')}</div>`;}
-
-        // ПОДДЕРЖКА
+       // СТАТИСТИКА (красивый дизайн)
+async function LST() {
+    const c = document.getElementById('statsContainer');
+    c.innerHTML = '<p class="loading">Загрузка...</p>';
+    
+    const { data: slots } = await _s.from('slots')
+        .select('date, status')
+        .eq('teacher_id', U.id);
+    
+    if (!slots || !slots.length) {
+        c.innerHTML = '<div class="card"><p style="color:#666;text-align:center;padding:20px;">Нет данных для отображения</p></div>';
+        return;
+    }
+    
+    // Статистика по дням недели
+    const days = {};
+    const dayNames = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+    const dayShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    
+    slots.forEach(function(s) {
+        const d = new Date(s.date).getDay();
+        const name = dayNames[d];
+        days[name] = (days[name] || 0) + 1;
+    });
+    
+    // Находим максимальное значение для графика
+    const maxVal = Math.max(...Object.values(days), 1);
+    
+    // Статистика по статусам
+    const statusCount = {};
+    slots.forEach(function(s) {
+        statusCount[s.status] = (statusCount[s.status] || 0) + 1;
+    });
+    
+    const totalSlots = slots.length;
+    const activeSlots = statusCount['active'] || 0;
+    const completedSlots = statusCount['completed'] || 0;
+    const cancelledSlots = statusCount['cancelled'] || 0;
+    
+    // Получаем записи для подсчета явки
+    const slotIds = slots.map(function(s) { return s.id; });
+    const { data: bookings } = await _s.from('bookings')
+        .select('attended')
+        .in('slot_id', slotIds.length ? slotIds : ['none']);
+    
+    let attended = 0;
+    let totalBookings = (bookings || []).length;
+    (bookings || []).forEach(function(b) {
+        if (b.attended) attended++;
+    });
+    
+    const attendancePercent = totalBookings ? Math.round((attended / totalBookings) * 100) : 0;
+    
+    // Формируем HTML
+    let h = '';
+    
+    // Карточки статистики
+    h += '<div class="stats" style="margin-bottom:20px;">';
+    h += '<div class="stat-card"><h3>Всего консультаций</h3><p class="stat-number">' + totalSlots + '</p></div>';
+    h += '<div class="stat-card"><h3>Активных</h3><p class="stat-number" style="color:#0f6e3f;">' + activeSlots + '</p></div>';
+    h += '<div class="stat-card"><h3>Завершённых</h3><p class="stat-number" style="color:#0056a7;">' + completedSlots + '</p></div>';
+    h += '<div class="stat-card"><h3>Отменённых</h3><p class="stat-number" style="color:#c62828;">' + cancelledSlots + '</p></div>';
+    h += '</div>';
+    
+    // График по дням недели
+    h += '<div class="card" style="margin-bottom:16px;">';
+    h += '<h4 style="margin-bottom:16px;color:#1a2b3c;">Распределение по дням недели</h4>';
+    h += '<div style="display:flex;align-items:flex-end;gap:12px;height:180px;padding:10px 0;">';
+    
+    dayShort.forEach(function(short, index) {
+        const fullName = dayNames[index];
+        const count = days[fullName] || 0;
+        const height = Math.round((count / maxVal) * 140) || 4;
+        const isToday = new Date().getDay() === index;
+        
+        h += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">';
+        h += '<span style="font-weight:600;color:#0056a7;font-size:0.85rem;">' + count + '</span>';
+        h += '<div style="width:100%;max-width:50px;height:' + height + 'px;background:' + (isToday ? 'linear-gradient(180deg,#0056a7,#0077cc)' : 'linear-gradient(180deg,#c5d9f2,#a0c4e8)') + ';border-radius:8px 8px 0 0;transition:all 0.3s;' + (isToday ? 'box-shadow:0 4px 12px rgba(0,86,167,0.3);' : '') + '"></div>';
+        h += '<span style="font-size:0.75rem;color:' + (isToday ? '#0056a7' : '#666') + ';font-weight:' + (isToday ? '700' : '400') + ';">' + short + '</span>';
+        h += '</div>';
+    });
+    
+    h += '</div>';
+    h += '</div>';
+    
+    // Явка и статусы
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">';
+    
+    // Явка
+    h += '<div class="card">';
+    h += '<h4 style="margin-bottom:12px;color:#1a2b3c;">Явка студентов</h4>';
+    h += '<div style="text-align:center;margin-bottom:12px;">';
+    h += '<div style="position:relative;width:100px;height:100px;margin:0 auto;">';
+    h += '<svg viewBox="0 0 36 36" style="width:100%;height:100%;transform:rotate(-90deg);">';
+    h += '<circle cx="18" cy="18" r="15.5" fill="none" stroke="#e0e6ed" stroke-width="3"></circle>';
+    h += '<circle cx="18" cy="18" r="15.5" fill="none" stroke="#0056a7" stroke-width="3" stroke-dasharray="' + (attendancePercent * 0.97) + ', 100" stroke-linecap="round"></circle>';
+    h += '</svg>';
+    h += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">';
+    h += '<span style="font-size:1.5rem;font-weight:700;color:#0056a7;">' + attendancePercent + '%</span>';
+    h += '</div>';
+    h += '</div>';
+    h += '</div>';
+    h += '<div style="display:flex;justify-content:space-around;text-align:center;">';
+    h += '<div><p style="font-size:1.2rem;font-weight:700;color:#0f6e3f;">' + attended + '</p><p style="font-size:0.75rem;color:#666;">Присутствовало</p></div>';
+    h += '<div><p style="font-size:1.2rem;font-weight:700;color:#c62828;">' + (totalBookings - attended) + '</p><p style="font-size:0.75rem;color:#666;">Не пришло</p></div>';
+    h += '<div><p style="font-size:1.2rem;font-weight:700;color:#0056a7;">' + totalBookings + '</p><p style="font-size:0.75rem;color:#666;">Всего</p></div>';
+    h += '</div>';
+    h += '</div>';
+    
+    // Статусы консультаций
+    h += '<div class="card">';
+    h += '<h4 style="margin-bottom:12px;color:#1a2b3c;">Статусы консультаций</h4>';
+    
+    const statuses = [
+        { label: 'Активные', count: activeSlots, color: '#0f6e3f', bg: '#e8f5e9' },
+        { label: 'Завершённые', count: completedSlots, color: '#0056a7', bg: '#e3f2fd' },
+        { label: 'Отменённые', count: cancelledSlots, color: '#c62828', bg: '#ffebee' }
+    ];
+    
+    statuses.forEach(function(st) {
+        const percent = totalSlots ? Math.round((st.count / totalSlots) * 100) : 0;
+        h += '<div style="margin-bottom:12px;">';
+        h += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">';
+        h += '<span style="font-size:0.85rem;font-weight:500;">' + st.label + '</span>';
+        h += '<span style="font-size:0.85rem;font-weight:600;color:' + st.color + ';">' + st.count + ' (' + percent + '%)</span>';
+        h += '</div>';
+        h += '<div style="background:#e0e6ed;border-radius:6px;height:8px;overflow:hidden;">';
+        h += '<div style="width:' + percent + '%;height:100%;background:' + st.color + ';border-radius:6px;"></div>';
+        h += '</div>';
+        h += '</div>';
+    });
+    
+    h += '</div>';
+    h += '</div>';
+    
+    c.innerHTML = h;
+}        // ПОДДЕРЖКА
        // ПОДДЕРЖКА (как в админке)
 async function LSP() {
     const c = document.getElementById('teacherSupportChat');
