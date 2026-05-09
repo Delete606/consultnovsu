@@ -197,7 +197,10 @@
             const ur=data.filter(n=>!n.is_read).length,badge=document.getElementById('notifBadge');badge.textContent=ur;badge.style.display=ur>0?'inline':'none';
         }
 
-        async function markNotifRead(id){await _supabase.from('notifications').update({is_read:true}).eq('id',id);loadNotifications();}
+        async function markNotifRead(id) {
+    await _supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    loadTeacherNotifications(); // или loadTeacherNotifications() для teacher
+}
 
         async function loadStatistics(){
             const{data:slots}=await _supabase.from('slots').select('*').eq('teacher_id',currentUser.id);
