@@ -272,7 +272,7 @@ function RS(s, allB) {
     c.innerHTML='<p class="loading">Загрузка...</p>';
     const from=(p-1)*PER,to=from+PER-1;
     const{data,count}=await _s.from('tickets').select('*',{count:'exact'}).order('created_at',{ascending:false}).range(from,to);
-    if(!data?.length){c.innerHTML='<p style="color:#666;">Нет тикетов</p>';RP(document.getElementById('ticketsPagination'),p,count||0,'LT');UTB();return;}
+    if(!data?.length){c.innerHTML='<p style="color:#666;text-align:center;padding:20px;">Нет тикетов</p>';RP(document.getElementById('ticketsPagination'),p,count||0,'LT');UTB();return;}
     
     const uids=[...new Set(data.map(t=>t.user_id))];
     const{data:users}=await _s.from('users').select('id,name,surname,role').in('id',uids);
@@ -282,25 +282,45 @@ function RS(s, allB) {
         const u=um[t.user_id],ms=t.messages||[],open=t.status==='open';
         return `<div class="ticket-card" style="border-left:4px solid ${open?'#0f6e3f':'#c62828'};">
             <div class="ticket-header">
-                <div>
-                    <strong style="font-size:1rem;">${u?u.surname+' '+u.name:'Неизвестный'}</strong>
-                    <span style="color:#666;margin-left:8px;font-size:0.85rem;">(${u?.role||'?'})</span>
-                    <span style="margin-left:8px;color:${open?'#0f6e3f':'#c62828'};font-weight:600;font-size:0.85rem;">${open?'Открыт':'Закрыт'}</span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:40px;height:40px;background:linear-gradient(135deg,#0056a7,#003d7c);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.9rem;">
+                        ${(u?.name||'?')[0]}${(u?.surname||'?')[0]}
+                    </div>
+                    <div>
+                        <strong style="font-size:1rem;">${u?u.surname+' '+u.name:'Неизвестный'}</strong>
+                        <div style="display:flex;gap:8px;align-items:center;margin-top:2px;">
+                            <span style="color:#666;font-size:0.8rem;">${u?.role==='student'?'Студент':u?.role==='teacher'?'Преподаватель':'Админ'}</span>
+                            <span style="padding:2px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;color:${open?'#0f6e3f':'#c62828'};background:${open?'#e8f5e9':'#ffebee'};">${open?'Открыт':'Закрыт'}</span>
+                        </div>
+                    </div>
                 </div>
-                <small style="color:#666;">${new Date(t.created_at).toLocaleString('ru-RU')}</small>
+                <small style="color:#999;">${new Date(t.created_at).toLocaleString('ru-RU')}</small>
             </div>
-            <div class="ticket-body">
-                ${ms.map(m=>`<div class="chat-message ${m.sender}">
-                    <div class="chat-bubble ${m.sender}"><p style="margin:0;">${m.text}</p></div>
-                    <div class="chat-meta">${m.sender==='admin'?'Администратор':u?.name||'Пользователь'}</div>
-                </div>`).join('')}
+            
+            <div class="ticket-body" style="margin:15px 0;padding:10px;background:#f8fafc;border-radius:12px;">
+                ${ms.map((m,i)=>
+                    `<div class="chat-message ${m.sender}" style="margin-bottom:${i<ms.length-1?'12px':'0'};">
+                        <div style="display:flex;align-items:flex-end;gap:8px;flex-direction:${m.sender==='admin'?'row-reverse':'row'};">
+                            <div style="width:28px;height:28px;background:${m.sender==='admin'?'linear-gradient(135deg,#0056a7,#003d7c)':'#e0e6ed'};border-radius:50%;display:flex;align-items:center;justify-content:center;color:${m.sender==='admin'?'white':'#666'};font-weight:700;font-size:0.7rem;flex-shrink:0;">
+                                ${m.sender==='admin'?'A':(u?.name||'?')[0]}
+                            </div>
+                            <div class="chat-bubble ${m.sender}" style="max-width:75%;">
+                                <p style="margin:0;font-size:0.88rem;">${m.text}</p>
+                            </div>
+                        </div>
+                        <div class="chat-meta" style="text-align:${m.sender==='admin'?'right':'left'};margin-top:3px;font-size:0.7rem;color:#999;">
+                            ${m.sender==='admin'?'Администратор':u?.name||'Пользователь'} &middot; ${new Date(m.timestamp).toLocaleString('ru-RU')}
+                        </div>
+                    </div>`
+                ).join('')}
             </div>
-            ${open?`<div class="ticket-actions">
-                <input type="text" id="AR_${t.id}" placeholder="Введите ответ...">
-                <button class="btn btn-primary btn-sm" onclick="RT('${t.id}')">Ответить</button>
-                <button class="btn btn-sm" onclick="CT('${t.id}')" style="background:#ffc107;color:#333;">Закрыть</button>
-                <button class="btn btn-danger btn-sm" onclick="DT('${t.id}')">Удалить</button>
-            </div>`:`<button class="btn btn-danger btn-sm" onclick="DT('${t.id}')" style="margin-top:6px;">Удалить</button>`}
+            
+            ${open?`<div class="ticket-actions" style="display:flex;gap:8px;align-items:center;padding:12px;background:#fafbfc;border-radius:12px;border:2px solid #e0e6ed;">
+                <input type="text" id="AR_${t.id}" placeholder="Введите ответ..." style="flex:1;padding:10px 14px;border:2px solid #e0e6ed;border-radius:10px;font-size:0.9rem;transition:all 0.3s;" onfocus="this.style.borderColor='#0056a7';this.style.boxShadow='0 0 0 3px rgba(0,86,167,0.1)';" onblur="this.style.borderColor='#e0e6ed';this.style.boxShadow='none';">
+                <button class="btn btn-primary btn-sm" onclick="RT('${t.id}')" style="padding:10px 16px;font-weight:600;white-space:nowrap;">Ответить</button>
+                <button class="btn btn-sm" onclick="CT('${t.id}')" style="background:#ffc107;color:#333;font-weight:600;white-space:nowrap;">Закрыть</button>
+                <button class="btn btn-danger btn-sm" onclick="DT('${t.id}')" style="white-space:nowrap;">Удалить</button>
+            </div>`:`<button class="btn btn-danger btn-sm" onclick="DT('${t.id}')" style="margin-top:8px;">Удалить</button>`}
         </div>`;
     }).join('');
     
