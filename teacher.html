@@ -155,21 +155,53 @@
         function logout() { sessionStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
 
         async function loadDashboard() {
-            const { data: slots } = await _supabase.from('slots').select('*').eq('teacher_id', currentUser.id);
-            const slotIds = (slots || []).map(s => s.id);
-            const { count: totalB } = await _supabase.from('bookings').select('*', { count: 'exact' }).eq('status', 'active').in('slot_id', slotIds.length ? slotIds : ['none']);
-            document.getElementById('totalSlots').textContent = slots?.length || 0;
-            document.getElementById('totalBookings').textContent = totalB || 0;
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('todaySlots').textContent = (slots || []).filter(s => s.date === today && s.status === 'active').length;
-            const upcoming = (slots || []).filter(s => s.status === 'active' && s.date >= today).sort((a,b) => a.date.localeCompare(b.date)).slice(0, 5);
-            const container = document.getElementById('upcomingSlots');
-            if (!upcoming.length) { container.innerHTML = '<p style="color:#666;">Нет предстоящих консультаций</p>'; return; }
-            container.innerHTML = upcoming.map(slot => {
-                const free = slot.max_students;
-                let st = 'Свободно', sc = '#0f6e3f';
-                return `<div class="consultation-card"><div style="display:flex;justify-content:space-between;"><h3>${slot.subject}</h3><span style="color:${sc};font-weight:600;">${st}</span></div><p style="color:#666;">${formatDate(slot.date)} | ${slot.time_start}-${slot.time_end} | ${slot.format}</p></div>`;
-            }).join('');
+            // В функции loadDashboard, когда отображаешь upcoming слоты
+container.innerHTML = upcoming.map(slot => {
+    const bookings = DB.getSlotBookings ? [] : [];
+    const free = slot.max_students - (bookings?.length || 0);
+    let st = 'Свободно', sc = '#0f6e3f';
+    if (free <= 0) { st = 'Нет мест'; sc = '#dc3545'; }
+    else if (free <= 2) { st = 'Почти заполнено'; sc = '#ffc107'; }
+    
+    const topics = slot.topics || [];
+    
+    return `
+        <div class="consultation-card">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+                <h3 style="margin:0;color:#1a2b3c;">${slot.subject}</h3>
+                <span style="color:${sc};font-weight:600;font-size:0.9rem;">${st}</span>
+            </div>
+            
+            <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;color:#666;font-size:0.9rem;">
+                <span>📅 ${formatDate(slot.date)}</span>
+                <span>⏰ ${slot.time_start} - ${slot.time_end}</span>
+                <span>📍 ${slot.format === 'очно' ? 'Ауд. ' + slot.room : 'Онлайн'}</span>
+                <span>👥 ${bookings?.length || 0}/${slot.max_students}</span>
+            </div>
+            
+            ${topics.length > 0 ? `
+                <div style="margin:15px 0;">
+                    <div style="font-size:0.85rem;color:#666;margin-bottom:8px;">Темы консультации:</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        ${topics.map(topic => `
+                            <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:linear-gradient(135deg,#f0f6ff,#e8f0fe);border:1px solid #c5d9f2;border-radius:12px;transition:all 0.2s;">
+                                <div style="width:8px;height:8px;background:#0056a7;border-radius:50%;"></div>
+                                <span style="font-weight:500;color:#0056a7;">${topic.name}</span>
+                                <span style="background:#0056a7;color:white;padding:2px 8px;border-radius:8px;font-size:0.75rem;">${topic.duration} мин.</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            
+            ${slot.description ? `
+                <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px;color:#666;font-size:0.9rem;">
+                    📝 ${slot.description}
+                </div>
+            ` : ''}
+        </div>
+    `;
+}).join('');
         }
 
         async function loadTeacherSlots() {
@@ -192,22 +224,104 @@
         }
 
         function renderSlot(slot, allBookings) {
-            const slotBookings = (allBookings || []).filter(b => b.slot_id === slot.id);
-            const activeB = slotBookings.filter(b => b.status === 'active');
-            const topics = slot.topics || [];
-            const topicCounts = {};
-            topics.forEach(t => { topicCounts[t.name] = slotBookings.filter(b => b.topic === t.name && b.status === 'active').length; });
-            return `<div class="consultation-card">
-                <div style="display:flex;justify-content:space-between;align-items:start;">
-                    <h3>${slot.subject} - ${formatDate(slot.date)}</h3>
-                    <div style="display:flex;gap:10px;"><span class="badge-status badge-${slot.status}">${slot.status}</span>${slot.status==='active'?`<button class="close-reg-btn" data-sid="${slot.id}">Закрыть запись</button>`:''}</div>
+    const slotBookings = (allBookings || []).filter(b => b.slot_id === slot.id);
+    const activeB = slotBookings.filter(b => b.status === 'active');
+    const topics = slot.topics || [];
+    
+    // Считаем записи по темам
+    const topicCounts = {};
+    topics.forEach(t => { 
+        topicCounts[t.name] = slotBookings.filter(b => b.topic === t.name && b.status === 'active').length; 
+    });
+    
+    return `
+        <div class="consultation-card">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;">
+                <div>
+                    <h3 style="margin:0;color:#1a2b3c;">${slot.subject}</h3>
+                    <p style="margin:5px 0;color:#666;font-size:0.9rem;">${formatDate(slot.date)}</p>
                 </div>
-                <p style="color:#666;">${slot.time_start}-${slot.time_end} | ${slot.format} ${slot.room?'| Ауд. '+slot.room:''} | Записано: ${activeB.length}/${slot.max_students}</p>
-                ${topics.length?`<div style="margin:10px 0;">${topics.map(t=>`<span class="topic-chip"><span>${t.name}</span><span class="duration-badge">${t.duration||'?'} мин.</span><span style="background:${topicCounts[t.name]>0?'#e8f5e9':'#f5f5f5'};padding:2px 8px;border-radius:10px;font-size:0.75rem;">${topicCounts[t.name]||0} зап.</span></span>`).join('')}</div>`:''}
-                ${slotBookings.length?`<div style="margin-top:10px;">${slotBookings.map(b=>{let sb=b.status==='active'?'<span style="color:#0f6e3f;">Активна</span>':b.cancelled_by==='admin'?'<span style="color:#c62828;">Отменена админом</span>':b.cancelled_by==='teacher'?'<span style="color:#e65100;">Отменена вами</span>':'<span style="color:#c62828;">Отменена студентом</span>';return`<div class="student-item"><div><strong>${b.users?.surname||''} ${b.users?.name||''}</strong><br><small>Тема: ${b.topic||'Нет'} | ${sb}</small></div>${b.status==='active'?`<button class="btn btn-sm mark-btn" data-bid="${b.id}" style="background:${b.attended?'#0f6e3f':'#0056a7'};color:white;">${b.attended?'Присутствовал':'Отметить'}</button>`:''}</div>`;}).join('')}</div>`:'<p style="color:#666;">Нет записей</p>'}
-                ${slot.status==='active'?`<button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${slot.id}" style="margin-top:10px;">Отменить консультацию</button>`:''}
-            </div>`;
-        }
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <span class="badge-status badge-${slot.status}">${slot.status === 'active' ? 'Активна' : slot.status === 'completed' ? 'Завершена' : 'Отменена'}</span>
+                    ${slot.status === 'active' ? `<button class="close-reg-btn" data-sid="${slot.id}" style="background:#ffc107;color:#333;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">Закрыть запись</button>` : ''}
+                </div>
+            </div>
+            
+            <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;color:#666;font-size:0.9rem;">
+                <span>⏰ ${slot.time_start} - ${slot.time_end}</span>
+                <span>📍 ${slot.format} ${slot.room ? '| Ауд. ' + slot.room : ''}</span>
+                <span>👥 Записано: ${activeB.length}/${slot.max_students}</span>
+            </div>
+            
+            ${topics.length > 0 ? `
+                <div style="margin:15px 0;">
+                    <div style="font-size:0.85rem;color:#666;margin-bottom:10px;">Темы и записавшиеся:</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        ${topics.map(topic => {
+                            const count = topicCounts[topic.name] || 0;
+                            return `
+                                <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:linear-gradient(135deg,#f0f6ff,#e8f0fe);border:1px solid #c5d9f2;border-radius:12px;">
+                                    <div style="width:8px;height:8px;background:#0056a7;border-radius:50%;"></div>
+                                    <span style="font-weight:500;color:#0056a7;">${topic.name}</span>
+                                    <span style="background:#0056a7;color:white;padding:2px 8px;border-radius:8px;font-size:0.75rem;">${topic.duration} мин.</span>
+                                    <span style="background:${count > 0 ? '#e8f5e9' : '#f5f5f5'};color:${count > 0 ? '#0f6e3f' : '#999'};padding:2px 8px;border-radius:8px;font-size:0.75rem;font-weight:600;">
+                                        ${count} зап.
+                                    </span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            
+            ${slot.description ? `
+                <div style="margin:10px 0;padding:10px;background:#f8fafc;border-radius:8px;color:#666;font-size:0.9rem;">
+                    📝 ${slot.description}
+                </div>
+            ` : ''}
+            
+            ${slotBookings.length > 0 ? `
+                <div style="margin-top:15px;">
+                    <div style="font-size:0.85rem;color:#666;margin-bottom:10px;">Список записавшихся:</div>
+                    ${slotBookings.map(b => {
+                        let statusBadge = '';
+                        if (b.status === 'active') {
+                            statusBadge = '<span style="color:#0f6e3f;font-weight:600;">Активна</span>';
+                        } else if (b.cancelledBy === 'admin') {
+                            statusBadge = '<span style="color:#c62828;">Отменена администратором</span>';
+                        } else if (b.cancelledBy === 'teacher') {
+                            statusBadge = '<span style="color:#e65100;">Отменена вами</span>';
+                        } else {
+                            statusBadge = '<span style="color:#c62828;">Отменена студентом</span>';
+                        }
+                        
+                        return `
+                            <div class="student-item">
+                                <div>
+                                    <strong>${b.users?.surname || ''} ${b.users?.name || ''}</strong>
+                                    <br><small style="color:#0056a7;">Тема: ${b.topic || 'Не указана'}</small>
+                                    <br><small>${statusBadge}</small>
+                                </div>
+                                ${b.status === 'active' ? `
+                                    <button class="btn btn-sm mark-btn" data-bid="${b.id}" 
+                                            style="background:${b.attended ? '#0f6e3f' : '#0056a7'};color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">
+                                        ${b.attended ? '✓ Присутствовал' : 'Отметить явку'}
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            ` : '<p style="color:#666;margin-top:10px;">Нет записавшихся студентов</p>'}
+            
+            ${slot.status === 'active' ? `
+                <button class="btn btn-danger btn-sm cancel-slot-btn" data-sid="${slot.id}" style="margin-top:15px;">
+                    Отменить консультацию
+                </button>
+            ` : ''}
+        </div>
+    `;
+}
 
         async function markAttendance(bid) { const { data: b } = await _supabase.from('bookings').select('attended').eq('id', bid).single(); await _supabase.from('bookings').update({ attended: !b?.attended }).eq('id', bid); loadTeacherSlots(); }
         async function cancelSlot(sid) { if(!confirm('Отменить?'))return; await _supabase.from('slots').update({status:'cancelled'}).eq('id',sid); await _supabase.from('bookings').update({status:'cancelled',cancelled_by:'teacher'}).eq('slot_id',sid).eq('status','active'); loadDashboard(); loadTeacherSlots(); }
@@ -231,21 +345,30 @@
     
     // Объединяем темы
     teacherTopics = [
-        ...(global || []).map(t => ({ name: t.name, subject: t.subject, duration: t.duration, isGlobal: true })),
+        ...(global || []).map(t => ({ id: t.id, name: t.name, subject: t.subject, duration: t.duration, isGlobal: true })),
         ...(myTopics || []).map(t => ({ id: t.id, name: t.name, subject: t.subject, duration: t.duration, isGlobal: false }))
     ];
     
-    // Отображаем
+    // Отображаем темы красиво
     const container = document.getElementById('savedTopicsList');
-    container.innerHTML = teacherTopics.length 
-        ? teacherTopics.map(t => `
-            <span class="saved-topic-item" onclick="useTopic('${t.name}','${t.subject}',${t.duration})">
-                ${t.name} (${t.duration} мин.) ${t.isGlobal ? '[Общая]' : ''}
-            </span>
-        `).join('')
-        : '<p style="color:#666;">Нет сохраненных тем</p>';
     
-    // Загружаем предметы для выпадающего списка
+    if (!teacherTopics.length) {
+        container.innerHTML = '<p style="color:#666;text-align:center;padding:20px;">Нет сохраненных тем</p>';
+    } else {
+        container.innerHTML = teacherTopics.map(t => `
+            <div class="saved-topic-item" style="position:relative;display:flex;align-items:center;gap:12px;padding:12px 16px;background:white;border:2px solid #e0e6ed;border-radius:25px;cursor:pointer;font-size:0.9rem;transition:all 0.3s;" 
+                 onclick="useTopic('${t.name}','${t.subject}',${t.duration})">
+                <span style="font-weight:600;color:#0056a7;">${t.name}</span>
+                <span style="background:#e8f0fe;color:#0056a7;padding:4px 12px;border-radius:15px;font-size:0.8rem;">${t.duration} мин.</span>
+                <span style="color:#666;font-size:0.85rem;">${t.subject}</span>
+                ${t.isGlobal ? '<span style="background:#e8f5e9;color:#0f6e3f;padding:2px 8px;border-radius:10px;font-size:0.7rem;">Общая</span>' : ''}
+                ${!t.isGlobal ? `<button class="btn btn-danger btn-sm" style="position:absolute;top:-8px;right:-8px;padding:2px 8px;border-radius:50%;font-size:0.7rem;" 
+                    onclick="event.stopPropagation();deleteTeacherTopic(${t.id})">X</button>` : ''}
+            </div>
+        `).join('');
+    }
+    
+    // Загружаем предметы
     const { data: subjects } = await _supabase
         .from('subjects')
         .select('name')
@@ -254,6 +377,25 @@
     document.getElementById('newTopicSubject').innerHTML = 
         '<option value="">Выберите предмет</option>' + 
         (subjects || []).map(s => `<option>${s.name}</option>`).join('');
+}
+
+// Функция удаления темы преподавателя
+async function deleteTeacherTopic(id) {
+    if (!confirm('Удалить эту тему?')) return;
+    
+    const { error } = await _supabase
+        .from('teacher_topics')
+        .delete()
+        .eq('id', id)
+        .eq('teacher_id', currentUser.id);
+    
+    if (error) {
+        alert('Ошибка: ' + error.message);
+        return;
+    }
+    
+    console.log('Тема удалена:', id);
+    loadTopics();
 }
 
         function useTopic(name, subject, duration) { document.getElementById('newTopicName').value = name; document.getElementById('newTopicSubject').value = subject; document.getElementById('newTopicDuration').value = duration; }
