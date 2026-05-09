@@ -197,7 +197,28 @@
             while(cur<=end){for(const d of wd){const sd=new Date(cur);sd.setDate(sd.getDate()+d-1);if(sd>=start&&sd<=end){await _supabase.from('slots').insert({...base,id:'s'+Date.now()+Math.random(),date:sd.toISOString().split('T')[0],topics:[...base.topics]});}}cur.setDate(cur.getDate()+7);}
         }
 
-        async function loadNotifications(){const{data}=await _supabase.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(30);const c=document.getElementById('teacherNotificationsList');if(!data?.length){c.innerHTML='<p style="color:#666;">Нет уведомлений</p>';return;}c.innerHTML=data.map(n=>`<div style="padding:14px;background:#fff3cd;border-left:4px solid #ffc107;margin-bottom:10px;border-radius:8px;${n.is_read?'opacity:0.6;':''}"><p>${n.message}</p><small>${new Date(n.created_at).toLocaleString('ru-RU')}</small>${!n.is_read?`<br><button class="btn btn-sm btn-outline" onclick="markNotifRead('${n.id}')">Прочитано</button>`:''}</div>`).join('');const ur=data.filter(n=>!n.is_read).length;document.getElementById('notifBadge').textContent=ur;document.getElementById('notifBadge').style.display=ur>0?'inline':'none';}
+        async function loadNotifications(){
+    const{data}=await _supabase.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(30);
+    const c=document.getElementById('teacherNotificationsList');
+    if(!data?.length){c.innerHTML='<p style="color:#666;">Нет уведомлений</p>';return;}
+    c.innerHTML=data.map(n=>`<div style="padding:14px;background:#fff3cd;border-left:4px solid #ffc107;margin-bottom:10px;border-radius:8px;${n.is_read?'opacity:0.6;':''}"><p>${n.message}</p><small>${new Date(n.created_at).toLocaleString('ru-RU')}</small>${!n.is_read?`<br><button class="btn btn-sm btn-outline read-notif-btn" data-nid="${n.id}">Прочитано</button>`:''}</div>`).join('');
+    
+    // Добавляем обработчики через JS
+    document.querySelectorAll('.read-notif-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            markNotifRead(this.dataset.nid);
+        });
+    });
+    
+    const ur=data.filter(n=>!n.is_read).length;
+    document.getElementById('notifBadge').textContent=ur;
+    document.getElementById('notifBadge').style.display=ur>0?'inline':'none';
+}
+
+async function markNotifRead(id){
+    await _supabase.from('notifications').update({is_read:true}).eq('id',id);
+    loadNotifications();
+}
         async function markNotifRead(id){await _supabase.from('notifications').update({is_read:true}).eq('id',id);loadNotifications();}
 
         async function loadStatistics(){const{data:slots}=await _supabase.from('slots').select('*').eq('teacher_id',currentUser.id);const c=document.getElementById('statsContainer');if(!slots?.length){c.innerHTML='<p style="color:#666;">Нет данных</p>';return;}const days={},dn=['вс','пн','вт','ср','чт','пт','сб'];slots.forEach(s=>{const d=dn[new Date(s.date).getDay()];days[d]=(days[d]||0)+1;});c.innerHTML=`<div class="card"><h4>По дням</h4>${Object.entries(days).map(([d,c2])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;">${d}<strong>${c2}</strong></div>`).join('')}</div>`;}
@@ -208,6 +229,7 @@
 
         document.addEventListener('DOMContentLoaded',async()=>{currentUser=checkAuth();if(!currentUser)return;document.getElementById('teacherName').textContent=currentUser.surname+' '+currentUser.name;document.getElementById('logoutBtn').addEventListener('click',logout);document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',function(){switchTab(this.dataset.tab,this);}));document.querySelectorAll('.status-filter-btn').forEach(btn=>btn.addEventListener('click',function(){document.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');currentFilter=this.dataset.filter;loadTeacherSlots();}));document.getElementById('createSlotForm').addEventListener('submit',createSlot);document.getElementById('addTopicToSlotBtn').addEventListener('click',addTopicToSlot);document.getElementById('sendTeacherSupportBtn').addEventListener('click',sendTeacherSupport);await Promise.all([loadTopics(),loadDashboard(),loadNotifications()]);});
         window.useTopic=useTopic;window.removeTopic=removeTopic;window.deleteTeacherTopic=deleteTeacherTopic;
+        window.markNotifRead = markNotifRead;
     </script>
 </body>
 </html>
